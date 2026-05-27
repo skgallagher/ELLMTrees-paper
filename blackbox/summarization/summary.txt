@@ -1,0 +1,101 @@
+
+Blackbox analysis — figure4
+============================================================
+  Embeddings: (4959, 1536)
+  Records   : 4959
+  Models    : ['claude-haiku-4-5', 'claude-sonnet-4-6', 'gemini-2-5-flash', 'gpt-3.5-turbo', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini', 'llama-3.1-8b', 'llama-3.3-70b', 'o3-mini', 'o4-mini']
+  Datasets  : ['arxiv', 'big_patent', 'billsum', 'cnn_dailymail', 'debatesum', 'dialogsum', 'govreport', 'pubmed', 'samsum', 'xsum']
+
+Empty responses per model (ALL datasets):
+  model                            total   empty      %
+  -------------------------------------------------------
+  claude-haiku-4-5                   500       0   0.0%
+  claude-sonnet-4-6                  500       0   0.0%
+  gemini-2-5-flash                   491       0   0.0%
+  gpt-3.5-turbo                      495       0   0.0%
+  gpt-4.1-mini                       500       0   0.0%
+  gpt-4o                             496       0   0.0%
+  gpt-4o-mini                        500       0   0.0%
+  llama-3.1-8b                       435       0   0.0%
+  llama-3.3-70b                       59       0   0.0%
+  o3-mini                            493     183  37.1%  ←
+  o4-mini                            490     404  82.4%  ←
+
+  Full breakdown saved → empty_responses.csv
+
+Computing per-prompt distance matrices (metric: cosine) …
+  per_prompt shape: (100, 11, 11)   (n_prompts × n_models × n_models)
+
+Model × model average cosine distance:
+                   claude-haiku-4-5claude-sonnet-4-6gemini-2-5-flashgpt-3.5-turbo gpt-4.1-mini  gpt-4o        gpt-4o-mini   llama-3.1-8b  llama-3.3-70b o3-mini       o4-mini       
+claude-haiku-4-5   0.0000        0.0879        0.3693        0.1245        0.0983        0.1047        0.1118        0.1089        0.0647        0.1810        0.0579        
+claude-sonnet-4-6  0.0879        0.0000        0.3578        0.1249        0.0978        0.1033        0.1093        0.1041        0.0688        0.1814        0.0549        
+gemini-2-5-flash   0.3693        0.3578        0.0000        0.3654        0.3588        0.3565        0.3541        0.3232        0.1895        0.3492        0.1559        
+gpt-3.5-turbo      0.1245        0.1249        0.3654        0.0000        0.0979        0.0929        0.0931        0.1081        0.0600        0.1749        0.0564        
+gpt-4.1-mini       0.0983        0.0978        0.3588        0.0979        0.0000        0.0767        0.0806        0.1019        0.0535        0.1585        0.0423        
+gpt-4o             0.1047        0.1033        0.3565        0.0929        0.0767        0.0000        0.0736        0.1014        0.0526        0.1614        0.0494        
+gpt-4o-mini        0.1118        0.1093        0.3541        0.0931        0.0806        0.0736        0.0000        0.1021        0.0511        0.1578        0.0490        
+llama-3.1-8b       0.1089        0.1041        0.3232        0.1081        0.1019        0.1014        0.1021        0.0000        0.0571        0.1654        0.0637        
+llama-3.3-70b      0.0647        0.0688        0.1895        0.0600        0.0535        0.0526        0.0511        0.0571        0.0000        0.0691        0.0089        
+o3-mini            0.1810        0.1814        0.3492        0.1749        0.1585        0.1614        0.1578        0.1654        0.0691        0.0000        0.0612        
+o4-mini            0.0579        0.0549        0.1559        0.0564        0.0423        0.0494        0.0490        0.0637        0.0089        0.0612        0.0000        
+
+Building NJ tree from grand-average distance matrix …
+
+Building consensus tree from 100 per-prompt NJ trees …
+
+Building global consensus tree (10 datasets as layers) …
+
+Building per-dataset consensus trees (prompts as layers) …
+  arxiv: 10 prompts → consensus …
+  big_patent: 10 prompts → consensus …
+  billsum: 10 prompts → consensus …
+  cnn_dailymail: 10 prompts → consensus …
+  debatesum: 10 prompts → consensus …
+  dialogsum: 10 prompts → consensus …
+  govreport: 10 prompts → consensus …
+  pubmed: 10 prompts → consensus …
+  samsum: 10 prompts → consensus …
+  xsum: 10 prompts → consensus …
+  Trees saved → trees_by_dataset/nj_consensus_*.png
+
+Building 2×5 dataset tree grid …
+
+Computing resolution vs. document length …
+  dataset               doc words   resolution
+  ----------------------------------------------
+  govreport                  7356        0.33
+  big_patent                 3494        0.33
+  billsum                     984        0.22
+  debatesum                   870        0.11
+  cnn_dailymail               473        0.22
+  xsum                        308        0.44
+  pubmed                      196        0.33
+  arxiv                       178        0.33
+  dialogsum                    91        0.33
+  samsum                       85        0.22
+
+Computing model fingerprints (mean embedding per model) …
+
+Fingerprint model × model distances:
+Model × model average cosine distance:
+                   claude-haiku-4-5claude-sonnet-4-6gemini-2-5-flashgpt-3.5-turbo gpt-4.1-mini  gpt-4o        gpt-4o-mini   llama-3.1-8b  llama-3.3-70b o3-mini       o4-mini       
+claude-haiku-4-5   0.0000        0.0284        0.2380        0.0896        0.0885        0.0887        0.0904        0.0813        0.1718        0.1183        0.2607        
+claude-sonnet-4-6  0.0284        0.0000        0.1893        0.0600        0.0545        0.0552        0.0572        0.0698        0.1350        0.0835        0.2414        
+gemini-2-5-flash   0.2380        0.1893        0.0000        0.2001        0.1901        0.1943        0.1917        0.2339        0.2539        0.1084        0.2954        
+gpt-3.5-turbo      0.0896        0.0600        0.2001        0.0000        0.0129        0.0083        0.0089        0.0608        0.0847        0.0574        0.1991        
+gpt-4.1-mini       0.0885        0.0545        0.1901        0.0129        0.0000        0.0067        0.0071        0.0799        0.0811        0.0534        0.1951        
+gpt-4o             0.0887        0.0552        0.1943        0.0083        0.0067        0.0000        0.0043        0.0726        0.0748        0.0580        0.2169        
+gpt-4o-mini        0.0904        0.0572        0.1917        0.0089        0.0071        0.0043        0.0000        0.0762        0.0793        0.0561        0.2018        
+llama-3.1-8b       0.0813        0.0698        0.2339        0.0608        0.0799        0.0726        0.0762        0.0000        0.1488        0.0847        0.2123        
+llama-3.3-70b      0.1718        0.1350        0.2539        0.0847        0.0811        0.0748        0.0793        0.1488        0.0000        0.1392        0.3899        
+o3-mini            0.1183        0.0835        0.1084        0.0574        0.0534        0.0580        0.0561        0.0847        0.1392        0.0000        0.1535        
+o4-mini            0.2607        0.2414        0.2954        0.1991        0.1951        0.2169        0.2018        0.2123        0.3899        0.1535        0.0000        
+
+Building NJ tree from fingerprint distances …
+
+Generating PCA plots …
+
+Generating per-prompt distance heatmap …
+
+✓ Analysis complete → /home/sgallagh/ELLMTrees/blackbox/results/figure4/

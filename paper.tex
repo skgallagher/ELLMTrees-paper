@@ -1,0 +1,445 @@
+\documentclass{article}
+\usepackage{iclr2026_conference,times}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{xcolor}
+
+% -----------------------------------------------------------------------
+% Working title — change before submission
+% -----------------------------------------------------------------------
+\title{Fine-Tuning Genealogy Is Written in Weights}
+
+% Authors hidden for double-blind review.
+% \iclrfinalcopy  % Uncomment for camera-ready only.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+% Shorthand for figure path prefix
+\newcommand{\figpath}{figures}
+
+\begin{document}
+\maketitle
+
+% -----------------------------------------------------------------------
+\begin{abstract}
+% TODO: draft after §3--5 are written.
+% Template (from writing_prep.md):
+%   Problem landscape → named formal contributions → breadth claim
+%   (Flan-T5 full FT + LoRA variants + Llama-3.1-8B).
+%
+% Key numbers to hit:
+%   WeightTree: 60\% sig at 7 leaves, 100\% at 8 (Fisher p < 0.0001)
+%   LayerTrace: enc_sak (4\% of params) non-inferior to full weight
+%   LoRA dose-response: Fisher-z r from -0.485 (k_only) to -0.805 (full FT)
+%   Behavioral bridge: within-run r up to -0.40; null control r = -0.006
+\end{abstract}
+
+% -----------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+% -----------------------------------------------------------------------
+% Arc (from writing_prep.md §Suggested intro arc):
+%  1. Models proliferate, histories undocumented — the forking problem
+%  2. Benchmarks tell you what a model does, not where it came from
+%  3. Why it matters: SBOM analog, unlearning, adversarial consistency,
+%     capability prediction
+%  4. Two ways to probe lineage: behavioral (outputs) and whitebox (weights).
+%     Each tells part of the story. Together they triangulate.
+%  5. Research question (in italics)
+%
+% Key framing: "genealogical view" — not macro (embeddings for routing)
+% or micro (pairwise fingerprinting), but full topology recovery against
+% known ground truth. Name the monotone function claim.
+
+\TODO{Write introduction.}
+
+
+% -----------------------------------------------------------------------
+\section{Related Work}
+\label{sec:related}
+% -----------------------------------------------------------------------
+% Organize as: macro / micro / genealogical (our lane).
+%
+% Primary three to engage:
+%   LLM DNA \citep{wu2026llmdna} — behavioral-space counterpart
+%   Unsupervised MoTHer \citep{horwitz2025mother} — closest in goal, no RF
+%   Neural Phylogeny \citep{yu2025neural} — pairwise edges, no full topology
+%
+% One-liner for all: "Prior work on [pairwise detection / behavioral
+% phylogeny] lacks a controlled ground-truth evaluation — none can report
+% RF distance against a known training topology."
+%
+% Also cite: PhyloLM, Neural Lineage, Nikolic et al., Zhu et al.
+% Weight-space geometry: Model Soups, LMC, Task Arithmetic.
+
+\TODO{Write related work.}
+
+
+% -----------------------------------------------------------------------
+\section{Framework}
+\label{sec:framework}
+% -----------------------------------------------------------------------
+
+\subsection{Phylogenetic Tree Recovery}
+\label{sec:framework:phylo}
+% We frame fine-tuning lineage recovery as a phylogenetics problem.
+% Pairwise weight distances → NJ tree → RF vs ground truth → permutation p.
+% Why NJ > directed MST (MoTHer): statistically principled, known properties.
+% Cite: Saitou & Nei 1987 (NJ), Robinson & Foulds 1981 (RF).
+
+\TODO{Write phylogenetic framing.}
+
+\subsection{Distance Metric: Cosine and the SNR Argument}
+\label{sec:framework:metric}
+% Five metrics evaluated: cosine, correlation, L1, L2, threshold.
+% Normalized distances dominate on SNR = E[X]^2 / Var[X].
+% Cosine chosen as primary: best at large tree sizes where power is highest.
+% Correlation = robustness check (Appendix~\ref{app:snr}).
+% This section justifies the single design choice up front.
+
+\TODO{Write metric selection rationale.}
+
+\subsection{Layer-Level Trees as Independent Estimates}
+\label{sec:framework:layers}
+% Each weight tensor → its own NJ tree.
+% Distribution of per-layer RF distances is the data; consensus tree is summary.
+% More statistically principled than any competitor — flag explicitly.
+
+\TODO{Write layer ensemble framing.}
+
+
+% -----------------------------------------------------------------------
+\section{Experiments}
+\label{sec:experiments}
+% -----------------------------------------------------------------------
+
+\subsection{Controlled Branching Trees}
+\label{sec:exp:trees}
+% Base: Flan-T5-base (250M). Bernoulli branching, 4 tasks, 50 replications,
+% 5--8 leaves, known topology by construction.
+% 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
+% Controlled design enables RF evaluation — all competitors lack this.
+
+\TODO{Write experiment setup.}
+
+\subsection{Geometric Mechanism: Task Subspaces}
+\label{sec:exp:geometry}
+% Displacement subspace angles between fine-tuning directions.
+% Cross-task grand mean ~84 degrees (near-orthogonal).
+% Within-task 80.7--86.0 degrees — dose-response confirmed.
+% RTE forgetting probe: classification vs RTE = 64.8 degrees.
+% Cite: Ilharco et al. 2023 (Task Arithmetic) for task vectors.
+
+\TODO{Write geometric mechanism.}
+
+\subsection{LoRA Variants and Full Fine-Tuning}
+\label{sec:exp:lora}
+% Four LoRA scopes (k_only, qkv, full_attn, full_ft_approx) + full FT.
+% Key claim: lineage SURVIVES LoRA at all — not just that more params = more signal.
+% Llama-3.1-8B: decoder-only robustness check.
+% DO NOT frame as "signal concentrates in qkv" — tautological given what LoRA trains.
+
+\TODO{Write LoRA experiment description.}
+
+\subsection{Behavioral Bridge}
+\label{sec:exp:behavioral}
+% Weight proximity predicts behavioral similarity (translation probe, semantic DV).
+% Within-run r up to -0.40; no_translation_v2 null r = -0.006.
+% Full regression details in Appendix~\ref{app:regression}.
+
+\TODO{Write behavioral bridge experiment description.}
+
+\subsection{Blackbox: Frontier Model Families}
+\label{sec:exp:blackbox}
+% GPT, Claude, Gemini, Llama probed via output embeddings across 4 tasks.
+% Family structure recoverable when aggregating tasks.
+% Single-task confounded by formatting (verbosity, markdown).
+% Translation cleanest — language crossing decouples embedding from source content.
+
+\TODO{Write blackbox experiment description.}
+
+
+% -----------------------------------------------------------------------
+\section{Results}
+\label{sec:results}
+% -----------------------------------------------------------------------
+
+\subsection{WeightTree: Lineage Is Recoverable from Weights}
+\label{sec:results:weighttree}
+
+% Table 1: RF by leaf count
+\begin{table}[t]
+\caption{Tree recovery accuracy by tree size (branching\_v3, cosine distance).
+  Observed RF is mean $\pm$ SE across runs; null mean from 1{,}000 random binary trees.
+  \% sig: fraction of runs with $p < 0.05$ vs.\ random null.
+  Fisher $p$: combined significance across runs.}
+\label{tab:rf_by_leaves}
+\begin{center}
+\begin{tabular}{rrrrrr}
+\toprule
+Leaves & $n$ & Null mean (SE) & Observed RF (SE) & \% sig & Fisher $p$ \\
+\midrule
+5 & 11 & 3.21 (0.02) & 0.55 (0.21) &  0\% & 0.003 \\
+6 & 12 & 5.24 (0.02) & 1.92 (0.36) & 50\% & 0.0003 \\
+7 & 15 & 7.33 (0.01) & 2.60 (0.29) & 60\% & $<$0.0001 \\
+8 &  4 & 9.42 (0.03) & 3.75 (0.48) & 100\% & $<$0.0001 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+% Figure 2: behavioral vs whitebox vs null
+\begin{figure}[t]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/behavioral_vs_whitebox.png}
+  \end{center}
+  \caption{RF distance by tree size for whitebox weight distances (cosine, blue triangles),
+    behavioral distances (RTE label agreement, red squares), and random null (gray band,
+    P10--P90). Whitebox sits well below the null at all tree sizes $\geq 5$ leaves;
+    behavioral distances are indistinguishable from random. Behavioral failure is the
+    point: it confirms that weight access is necessary for per-run lineage recovery.}
+  \label{fig:behavioral_vs_whitebox}
+\end{figure}
+
+\TODO{Write WeightTree results prose.
+  Headline: 60\% sig at 7 leaves, 100\% at 8.
+  Per-run significance is the operational claim.
+  Ref Figure~\ref{fig:behavioral_vs_whitebox} and Table~\ref{tab:rf_by_leaves}.}
+
+
+\subsection{LayerTrace: Signal Concentrates in 4\% of the Model}
+\label{sec:results:layertrace}
+
+% Figure 3: per-layer RF profile
+\begin{figure}[t]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/layer_rf_profiles.png}
+  \end{center}
+  \caption{Per-layer RF distance (mean $\pm$ 2 SE, $n=47$ runs) for all five distance metrics.
+    Encoder \textsc{sa.k} layers (highlighted) cluster at the bottom across all metrics ---
+    consistently lowest RF, strongest lineage signal. The cyclical pattern
+    (attention $\to$ FFN $\to$ layer norm repeating across blocks) shows that lineage
+    concentrates in attention keys and dissipates through the FFN.
+    % TODO: add Llama equivalent panel once Wright jobs complete
+  }
+  \label{fig:layer_rf_profiles}
+\end{figure}
+
+\TODO{Write LayerTrace results prose.
+  enc\_sak (4\% of params) non-inferior to full weight at all tree sizes >= 5 leaves;
+  outperforms at 6 leaves (RF 1.38 vs 1.92).
+  Ref Figure~\ref{fig:layer_rf_profiles} and Table~\ref{tab:variants}.}
+
+
+\subsection{Subspace Angles and Geometric Mechanism}
+\label{sec:results:geometry}
+% Cross-task ~84 degrees, FFN gates 88-89, SA.k/q 87-89.
+% Within-task 80.7-86.0 -- lower than cross-task, dose-response confirmed.
+% Layer norms pull within-task means down (52-80) while SA.k / FFN stay near-orthogonal.
+% RTE probe: classification vs RTE = 64.8 degrees -- geometric forgetting mechanism.
+% Subspace angle figure -> Appendix~\ref{app:robustness}.
+
+\TODO{Write subspace angles results.}
+
+
+\subsection{LoRA Dose-Response}
+\label{sec:results:lora}
+
+% Table 2: layer variants + LoRA variants combined
+\begin{table}[t]
+\caption{Lineage signal by training regime (branch structure analysis,
+  cosine distance, \textsc{trained\_only=1} for LoRA groups).
+  Fisher-$z$ $r$: Fisher $z$-averaged within-run correlation between
+  cosine distance and same-branch indicator. \% sig: runs with $p < 0.05$.}
+\label{tab:variants}
+\begin{center}
+\begin{tabular}{lrrrrr}
+\toprule
+Variant & Trained layers & Fisher-$z$ $r$ & SD & $N$ runs & \% sig (7-leaf) \\
+\midrule
+\multicolumn{6}{l}{\textit{LoRA adapter scope (Flan-T5-base)}} \\
+k\_only        &  36 & $-0.485$ & 0.330 & 37 & --- \\
+qkv            &  36 & $-0.594$ & 0.250 & 36 & 58\% \\
+full\_attn     & 144 & $-0.671$ & 0.245 & 32 & 73\% \\
+full\_ft\_approx & 168 & $-0.687$ & 0.242 & 31 & 70\% \\
+\midrule
+\multicolumn{6}{l}{\textit{Full fine-tuning}} \\
+branching\_v3  & all & $-0.805$ & 0.230 & 35 & 60\% \\
+\midrule
+\multicolumn{6}{l}{\textit{LayerTrace variants (full FT, 6-leaf runs)}} \\
+enc\_sak (4\%) & 12 tensors & \multicolumn{4}{l}{RF $1.38 \pm 0.18$ vs full $1.92 \pm 0.36$} \\
+full weight    & 282 tensors & \multicolumn{4}{l}{RF $1.92 \pm 0.36$ (reference)} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+\TODO{Write LoRA dose-response prose.
+  Key sentence: lineage survives LoRA at all.
+  Large gap between full\_ft\_approx and full FT = constrained vs unconstrained updates.
+  Ref Table~\ref{tab:variants}.}
+
+
+\subsection{Behavioral Bridge}
+\label{sec:results:behavioral}
+% One paragraph. Full story in Appendix~\ref{app:regression}.
+% Numbers: within-run r up to -0.40 (lora_k_only); all five groups significant.
+% no_translation_v2 null: r = -0.006. Chain closed.
+
+\TODO{Write behavioral bridge result (one paragraph).}
+
+
+\subsection{Blackbox: Frontier Model Families}
+\label{sec:results:blackbox}
+
+% Figure 4: NJ tree grid (LLM DNA comparable)
+\begin{figure}[t]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/nj_tree_fingerprint_grid.png}
+  \end{center}
+  \caption{Neighbor-joining trees from behavioral fingerprint distances, one panel per task.
+    GPT models (green) cluster consistently across all tasks.
+    Claude clusters in summarization and QA but splits in translation (Haiku
+    migrates due to its unique header-heavy formatting style in that task).
+    Gemini--Llama proximity in QA and classification is a formatting artifact:
+    both produce verbose, structured responses on those tasks, while GPT gives
+    terse label-only answers. The artifact attenuates in summarization, where
+    response length is task-constrained.}
+  \label{fig:blackbox_nj}
+\end{figure}
+
+\TODO{Write blackbox results prose.
+  Key points: Claude siblings tightest; Gemini-Llama proximity = formatting artifact;
+  translation cleanest; multi-task aggregation necessary.
+  Ref Figure~\ref{fig:blackbox_nj}.}
+
+
+% -----------------------------------------------------------------------
+\section{Discussion}
+\label{sec:discussion}
+% -----------------------------------------------------------------------
+
+\subsection{The Provenance Chain}
+\label{sec:discussion:chain}
+% Closed chain: weights -> lineage (WeightTree), concentrated in attention keys
+% (LayerTrace), survives LoRA (§results:lora), predicts behavior (§results:behavioral),
+% visible in blackbox (§results:blackbox).
+% Practical upshot: 4% of parameters sufficient; behavioral-only insufficient.
+
+\TODO{Write provenance chain summary.}
+
+\subsection{Why Attention Keys?}
+\label{sec:discussion:keys}
+% SA.k governs which token positions are attended to.
+% Fine-tuning shifts routing toward task-relevant tokens; shift accumulates up tree.
+% FFN stores task patterns in non-overlapping key-space regions (Geva et al. 2021).
+% Encoder SA.k may be a universal "lineage layer" -- Llama results speak to this.
+
+\TODO{Write mechanistic interpretation.}
+
+\subsection{Whitebox vs.\ Blackbox: Complementary Roles}
+\label{sec:discussion:wb_bb}
+% Whitebox: exact genealogy, requires weight access.
+% Blackbox: approximate family structure, API only.
+% Behavioral projection story (§exp:geometry) explains why blackbox is lossy.
+
+\TODO{Write whitebox vs blackbox discussion.}
+
+\subsection{Limitations and Future Directions}
+\label{sec:discussion:limitations}
+% Controlled trees vs messy real-world genealogies.
+% Single base model (Flan-T5) + Llama robustness check.
+% LoRA rank threshold (post-ICLR rank experiment).
+% Cross-architecture provenance = representational alignment problem.
+% Prospective safety check: pre-training gradient angles predict forgetting.
+
+\TODO{Write limitations and future work.}
+
+
+% -----------------------------------------------------------------------
+\subsubsection*{Acknowledgments}
+\TODO{Add acknowledgments for camera-ready.}
+
+% -----------------------------------------------------------------------
+\bibliography{references}
+\bibliographystyle{iclr2026_conference}
+
+
+% -----------------------------------------------------------------------
+\appendix
+% -----------------------------------------------------------------------
+
+\section{Experimental Details}
+\label{app:details}
+% Tree generation: Bernoulli BFS, depth_factor=2.0, min_depth=1, prob=0.15
+% Trainer: Flan-T5-base, 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16
+% Dataset sources: [TODO]
+
+\TODO{Fill experimental details.}
+
+\section{Layer Variant Definitions}
+\label{app:layers}
+% enc_sak: encoder.block.{0-11}.layer.0.SelfAttention.k (12 tensors)
+% encoder_h: enc_sak + encoder.block.{0-11}.layer.0.layer_norm (24 tensors)
+% etc.
+
+\TODO{Fill layer variant table.}
+
+\section{Null Distribution Construction}
+\label{app:null}
+% 1000 random binary trees per run, same leaf count, uniform topology.
+% p-value = fraction of null trees with RF <= observed RF.
+
+\TODO{Fill null distribution description.}
+
+\section{Blackbox Experiment Details}
+\label{app:blackbox}
+% Models, API versions, prompt templates, sentence-transformer embeddings.
+
+\TODO{Fill blackbox details.}
+
+\section{Metric Selection: SNR Analysis}
+\label{app:snr}
+% Ridge plots of SNR = E[X]^2 / Var[X] by metric family.
+% Figures: snr_ridges.png (>=6 leaves), snr_ridges_all.png (all sizes).
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=0.8\linewidth]{\figpath/snr_ridges.png}
+  \end{center}
+  \caption{SNR distributions by metric family ($\geq 6$-leaf runs).
+    Normalized distances (cosine, correlation) dominate. See \S\ref{sec:framework:metric}.}
+  \label{fig:snr_ridges}
+\end{figure}
+
+\TODO{Write SNR analysis text.}
+
+\section{Behavioral Regression: Full Results}
+\label{app:regression}
+% Mixed-effects tables, HC3 sensitivity analysis, estimator comparison.
+% Main text cites: within-run r up to -0.40, run FE + HC3 p=0.008.
+% Report all estimators here; note that cluster-robust p=0.15 was inflated
+% by between-run heteroscedasticity absorbed by run fixed effects.
+
+\TODO{Fill regression appendix.}
+
+\section{Within-Task and Robustness Results}
+\label{app:robustness}
+% Subspace angles by group, within-task branch structure,
+% LoRA full RF profiles.
+% Grand means: summarization_only 80.7, translation_only 82.4,
+%              qa_only 85.8, classification_only 86.0 degrees.
+
+\TODO{Fill robustness appendix.}
+
+\section{Llama-3.1-8B Experiment Details}
+\label{app:llama}
+% Architecture notes, checkpoint filtering (MIN_CKPT=2), partial checkpoint issue.
+% 30/30 runs per group; ~19-21/30 usable after min-leaves filter.
+
+\TODO{Fill Llama appendix.}
+
+\end{document}
