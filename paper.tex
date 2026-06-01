@@ -426,11 +426,24 @@ full weight    & 282 tensors & \multicolumn{4}{l}{RF $1.92 \pm 0.36$ (reference)
 
 \section{Experimental Details}
 \label{app:details}
-% Tree generation: Bernoulli BFS, depth_factor=2.0, min_depth=1, prob=0.15
-% Trainer: Flan-T5-base, 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16
-% Dataset sources: [TODO]
 
-\TODO{Fill experimental details.}
+\subsection*{Tree Generation}
+\label{app:tree-gen}
+
+Training trees are generated via a Poisson branching process as follows:
+
+\begin{enumerate}
+    \item The root node (pretrained Flan-T5-base) draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children, with a minimum of 1.
+    \item Each subsequent node draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children. Nodes that draw $k = 0$ naturally become leaves --- no separate pruning step is needed.
+    \item BFS expansion continues until either a node budget ($n_\mathrm{nodes} = 14$ training nodes, not counting the root) is exhausted or a maximum depth ($n_\mathrm{layers} = 4$) is reached. The budget cap creates the truncation; any node alive when the budget runs out becomes a leaf.
+    \item Each non-root node is assigned a task and dataset sampled without replacement from 4 task types (summarization, classification, QA, translation) and 36 datasets (9 summarization, 10 classification, 8 QA, 9 translation). The topology (parent--child structure) is fixed by a topology seed; dataset assignments vary across the 50 replications.
+    \item Runs with fewer than 4 leaves are excluded from analysis, as trees with 3 or fewer leaves have trivial topology with no meaningful RF distance.
+\end{enumerate}
+
+This procedure yields trees with 4--8 observed leaves across the 50 replications, with variable depth and branching structure. The ground-truth topology is fully known by construction, enabling exact RF evaluation.
+
+\subsection*{Training Configuration}
+Base model: Flan-T5-base (250M parameters). Each node trained for 2,000 steps, learning rate $3 \times 10^{-4}$, batch size 8, gradient accumulation 4 (effective batch 32), warmup 200 steps, weight decay 0.01, bf16 precision. Up to 10,000 training examples and 1,000 evaluation examples per dataset, fixed dataset seed across all nodes to avoid data variation as a confound.
 
 \section{Layer Variant Definitions}
 \label{app:layers}
