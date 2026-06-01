@@ -89,11 +89,8 @@
 
 In this section, we define our terms and notation and establish the statistical framework underlying our experiments.
 
-We largely borrow the notation of \citep{wu2026llmdna}, which succinctly captures the setup.
-%% paragraph about tasks
-We define an LLM phylogeny as a rooted directed tree with a single root model.  Each node in the tree represents a fine-tuned model $M_{(t)}$, and each edge represents a training task/dataset pair $(T, D)$.  The direction of the edge denotes the direction of fine-tuning.  We denote the phylogeny (i.e., training tree) as $\mathcal{P}$, which consists of those nodes and edges.
 
-Much like \citep{wu2026llmdna}, we use the framework of phylogenies and LLM ``DNA'' to estimate important properties of parent-child training. We assume, unlike \cite{} but like \citep{yu2025neural}, that all node models are derived from a single root model. Unlike prior works, we focus not only on parent-child pairs but on recovering the full phylogeny by estimating $\widehat{\mathcal{P}}$ --- that is, we assume the tree can have depth greater than 1.  We estimate the phylogeny by first estimating a distance matrix and then using neighbor-joining \citep{saitou1987neighbor} to recover the training tree.
+Much like \citep{wu2026llmdna}, we use the framework of phylogenies and LLM ``DNA'' to estimate important properties of parent-child training. We assume, unlike \cite{} but like \citep{yu2025neural}, that all node models are derived from a single root model. Unlike prior works, we focus not only on parent-child pairs but on recovering partial topology across all nodes, not just child-parent pairs.  We estimate the phylogeny by first estimating a distance matrix and then using neighbor-joining \citep{saitou1987neighbor} to recover the training tree.
 
 
 \subsection{Phylogenetic Tree Recovery}
@@ -111,33 +108,31 @@ To estimate $\widehat{\mathcal{P}}$, we use the following recipe:
     $$
     D_{i,j}^{(\ell)} = d(L^{(\ell)}_i, L^{(\ell)}_j)
     $$
-    \item Use all $D_{i,j}^{(\ell)}$ to estimate $\bar{\textbf{D}}$, the average distance matrix over the pairwise layers
-    \item Estimate $\widehat{{\mathcal{P}}}$ using $f(\bar{D}_{i,j})$ where $f$ is the NJ method\footnote{We assume that the models in question are leaves and not internal nodes}
+    \item Assemble $\hat{\textbf{D}}$, where $\hat{\textbf{D}}$ is function of the $D_{i,j}^{(\ell)}$ distances such as the average distance of pairwise weights across all layers
+    \item Estimate $\widehat{{\mathcal{P}}}$ using $f(\hat{\textbf{D}})$ where $f$ is the NJ method\footnote{We assume that the models in question are leaves and not internal nodes}
 \end{enumerate}
 
-\TODO{THEOREM from PHYLO LIT/amy wilson --- Atteson 1999 is the cite for NJ consistency/convergence radius}
-NJ is statistically consistent: it recovers the correct topology with probability approaching 1 as pairwise distance estimates become accurate, provided the distances satisfy the four-point condition (i.e., are tree-additive) \citep{saitou1987neighbor}.
-\citet{atteson1999performance} give a precise convergence radius: NJ is guaranteed to return the correct tree when every estimated distance is within half the minimum branch length of the true distance.
-However, tree-space grows super-exponentially in the number of leaves, so exact topology recovery becomes increasingly stringent as trees grow.
-Instead, researchers commonly use Robinson-Foulds (RF) distance \citep{robinson1981comparison} to measure how ``close'' an estimated phylogeny is to the true one.
-An RF distance of $k$ means the two trees disagree on $k$ bipartitions --- splits present in one tree but absent in the other; lower is better.
-A maximum RF distance can be computed from the total number of leaves, and the ratio (normalized RF) enables comparison across trees of different sizes.
-A normalized RF near 0 indicates near-perfect recovery; near 1 indicates a tree no better than random.
-Statistical significance is assessed against a null distribution of 1,000 uniformly random binary trees with the same leaf count, yielding a permutation $p$-value per run.
-Note that Step 3 above (averaging $D_{i,j}^{(\ell)}$ across layers) produces the primary pooled estimate; we also analyze the per-layer RF distribution directly to identify which layers carry lineage signal (Section~\ref{sec:framework:layers}).
+Step (3) allows us to use different layers to achieve different or even multiple estimates of $\widehat{\mathcal{P}}$, which we can do to evaluate layer importance.  Since phylogeny-space grows super-exponentially in the number of leaves, exact topology recovery is unlikely.
+Instead, researchers commonly use Robinson-Foulds (RF) distance \citep{robinson1981comparison} to measure how ``close'' an estimated phylogeny is to the true one, a measure of partial topology recovery. An RF distance of $k$ means the two trees disagree on $k$ bipartitions, splits present in one tree but absent in the other.
+A maximum RF distance can be computed from the total number of leaves, and the ratio (normalized RF) enables comparison across trees of different sizes. A normalized RF near 0 indicates near-perfect recovery; near 1 indicates a tree no better than random. We compare the RF of our estimated phylogeny against a null distribution of 1,000 uniformly random phylogenies with the same leaf count, yielding a permutation $p$-value per run.
 
 %% that's t he statistical basis for our method.
 
 
 \subsection{Distance Metric: Cosine and the SNR Argument}
 \label{sec:framework:metric}
-% Five metrics evaluated: cosine, correlation, L1, L2, threshold.
-% Normalized distances dominate on SNR = E[X]^2 / Var[X].
-% Cosine chosen as primary: best at large tree sizes where power is highest.
-% Correlation = robustness check (Appendix~\ref{app:snr}).
-% This section justifies the single design choice up front.
 
-\TODO{Write metric selection rationale.}
+One question we sought to answer is what distance (or similarity) metric should we use to  compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are 1) $L_1$, $L_2$, cosine, and correlation.  The first two distances are unbounded and so distances across different layers can have different scales.  The second two distances are scaled between 0 and 1 which forces the layers to be on the same scales.  
+
+To determine which metric to use, we use Signal to Noise Ratio (SNR), $E[X^2]/V[X]$ as a heuristic with the intuition that a larger SNR will lead to easier separation among distances and thus better phylogenies.  The results of this experiment are shown below in Table \ref{tab:metric-snr}.  
+
+We do this by...
+
+One result we see in Tab. \ref{tab:metric-snr} is that cosine similarity generally has the highest SNR across our different experiments.  Intuitively, this makes sense because the larger magnitude layers such as layer norms which are known to be noisy [cite] have less chance to dominate.  Thus, we see that scaling the distance within layers is important.
+
+
+
+
 
 \subsection{Layer-Level Trees as Independent Estimates}
 \label{sec:framework:layers}
@@ -152,6 +147,11 @@ Note that Step 3 above (averaging $D_{i,j}^{(\ell)}$ across layers) produces the
 \section{Experiments}
 \label{sec:experiments}
 % -----------------------------------------------------------------------
+
+We largely borrow the notation of \citep{wu2026llmdna}, which succinctly captures the setup.
+%% paragraph about tasks
+We define an LLM phylogeny as a rooted directed tree with a single root model.  Each node in the tree represents a fine-tuned model $M_{(t)}$, and each edge represents a training task/dataset pair $(T, D)$.  The direction of the edge denotes the direction of fine-tuning.  We denote the phylogeny (i.e., training tree) as $\mathcal{P}$, which consists of those nodes and edges.
+
 
 \subsection{Controlled Branching Trees}
 \label{sec:exp:trees}
