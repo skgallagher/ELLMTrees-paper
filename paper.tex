@@ -122,13 +122,37 @@ A maximum RF distance can be computed from the total number of leaves, and the r
 \subsection{Distance Metric: Cosine and the SNR Argument}
 \label{sec:framework:metric}
 
-One question we sought to answer is what distance (or similarity) metric should we use to  compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are 1) $L_1$, $L_2$, cosine, and correlation.  The first two distances are unbounded and so distances across different layers can have different scales.  The second two distances are scaled between 0 and 1 which forces the layers to be on the same scales.  
+A prerequisite for the permutation test to have power is that the chosen distance metric produces same-branch distances that are stochastically smaller than cross-branch distances --- i.e., SNR $> 0$.
+Metric selection therefore directly determines whether recovery is possible at all, and we treat it as a pre-specified design choice rather than a post-hoc optimization.
 
-To determine which metric to use, we use Signal to Noise Ratio (SNR), $E[X^2]/V[X]$ as a heuristic with the intuition that a larger SNR will lead to easier separation among distances and thus better phylogenies.  The results of this experiment are shown below in Table \ref{tab:metric-snr}.  
+We use vector-based distances for portability across architectures, and consider four candidates: cosine, correlation, $\ell_1$, and $\ell_2$.
+The first two are unbounded, so distances vary in scale across layers of different sizes; the latter two are scale-normalized to $[0, 1]$, placing all layers on a common footing.
+To select among them, we use signal-to-noise ratio $\mathrm{SNR} = \mathbb{E}[X]^2 / \mathrm{Var}[X]$, computed separately for same-branch and cross-branch pairs at each tree size, as a scale-free criterion for distance separability.
+A higher SNR indicates the two distributions are more reliably separated, which from the power argument in Section~\ref{sec:framework:phylo} implies better-powered topology recovery.
 
-We do this by...
+Table~\ref{tab:metric-snr} reports SNR by metric and tree size across our experiments.
+Cosine distance achieves the highest SNR consistently, and the advantage grows at larger tree sizes --- precisely the regime where statistical power matters most.
+This is intuitive: scale normalization prevents large-magnitude layers such as layer norms, which are known to vary substantially across fine-tuning conditions \cite{}, from dominating the distance and drowning out signal in smaller layers.
+Correlation distance performs similarly but slightly below cosine; $\ell_1$ and $\ell_2$ trail throughout.
+We therefore use cosine as the primary metric and report correlation as a robustness check in Appendix~\ref{app:snr}.
 
-One result we see in Tab. \ref{tab:metric-snr} is that cosine similarity generally has the highest SNR across our different experiments.  Intuitively, this makes sense because the larger magnitude layers such as layer norms which are known to be noisy [cite] have less chance to dominate.  Thus, we see that scaling the distance within layers is important.
+\begin{table}[t]
+\centering
+\caption{Mean per-run SNR ($= \mathbb{E}[X]^2/\mathrm{Var}[X]$ of per-layer RF values) by metric and tree size, computed over \texttt{runs\_branching\_v3}. Higher SNR indicates that more layers consistently carry lineage signal with less variance --- a prerequisite for permutation test power. Normalized metrics (cosine, correlation) strongly outperform unnormalized metrics ($\ell_1$, $\ell_2$) at large tree sizes, where statistical power matters most. \emph{n} = number of runs per cell.}
+\label{tab:metric-snr}
+\begin{tabular}{lcccc}
+\toprule
+Metric & 4 leaves ($n$=2--3) & 5 leaves ($n$=9--11) & 6 leaves ($n$=10--12) & 7 leaves ($n$=13--15) \\
+\midrule
+Cosine      &  0.02 &  5.1  & 47.8  & 60.4  \\
+Correlation &  0.02 & 16.1  & 33.3  & 71.7  \\
+$\ell_2$    &  0.04 &  3.6  & 44.8  & 81.3  \\
+$\ell_1$    &  0.04 &  3.6  & 46.0  & 76.2  \\
+\bottomrule
+\end{tabular}
+\smallskip
+
+\noindent\textit{Note:} At 8 leaves ($n$=3--4), cosine and correlation SNR reaches $\sim$330--340 vs.\ $\sim$18 for $\ell_1$/$\ell_2$ --- an $\sim$18$\times$ advantage at the largest tree size. \end{table}
 
 
 
@@ -147,11 +171,6 @@ One result we see in Tab. \ref{tab:metric-snr} is that cosine similarity general
 \section{Experiments}
 \label{sec:experiments}
 % -----------------------------------------------------------------------
-
-We largely borrow the notation of \citep{wu2026llmdna}, which succinctly captures the setup.
-%% paragraph about tasks
-We define an LLM phylogeny as a rooted directed tree with a single root model.  Each node in the tree represents a fine-tuned model $M_{(t)}$, and each edge represents a training task/dataset pair $(T, D)$.  The direction of the edge denotes the direction of fine-tuning.  We denote the phylogeny (i.e., training tree) as $\mathcal{P}$, which consists of those nodes and edges.
-
 
 \subsection{Controlled Branching Trees}
 \label{sec:exp:trees}
