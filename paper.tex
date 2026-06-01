@@ -87,6 +87,15 @@
 \label{sec:framework}
 % -----------------------------------------------------------------------
 
+In this section, we define our terms and notation and show how our mathematical intuition guides our experiments and thus empirical results.
+
+We largely borrow the notation of \cite{}(the good one?) since it succinctly surmises the set up.  
+%% paragraph about tasks
+We define a LLM phlogeny as a unidirectional tree from a single root model.  Each node in the tree represents a fine-tuned model $M_{(t)}$, and each edge represents a training task/data set pair $(T, D)$.  The direction of the edge denotes the direction of fine-tuning.  We denote the phylogeny (i.e. training tree) as $\mathcal{P}$ which consists of those nodes and vertices. 
+
+Much like \cite{}, we use the framework of phylogenies and LLM ``DNA'' to estimate important properties of parent-child training. We assume, unlike \cite{} but like \cite{}, that the node models are derived from a single root model. Unlike the previous works, we focus not only on parent-child pairs but focus on recovering the full phylogeny by estimating $\widehat{\mathcal{P}}$.  That is, we assume that the tree can have depth greater than 1.  We estimate the phylogeny by first estimating a distance matrix and then using known phylogenetic methods (e.g. NJ \cite{}) to estimate the training tree.
+
+
 \subsection{Phylogenetic Tree Recovery}
 \label{sec:framework:phylo}
 % We frame fine-tuning lineage recovery as a phylogenetics problem.
@@ -94,7 +103,23 @@
 % Why NJ > directed MST (MoTHer): statistically principled, known properties.
 % Cite: Saitou & Nei 1987 (NJ), Robinson & Foulds 1981 (RF).
 
-\TODO{Write phylogenetic framing.}
+To estimate $\widehat{\mathcal{P}}$, we use the following recipe:
+
+\begin{enumerate}
+    \item Choose set of layers $\mathcal{L}$ and distance (or similarity) metric ($d$)
+    \item For layer $L^{(\ell)}$, estimate the distance between the layer weights from model $i$ to model $j$,
+    $$
+    D_{i,j}^{(\ell)} = d(L^{(\ell)}_i, L^{(\ell)}_j)
+    $$
+    \item Use all $D_{i,j}^{(\ell)}$ to estimate $\bar{\textbf{D}}$, the average distance matrix over the pairwise layers
+    \item Estimate $\widehat{{\mathcal{P}}}$ using $f(\bar{D}_{i,j})$ where $f$ is the NJ method\footnote{We assume that the models in question are leaves and not internal nodes}
+\end{enumerate}
+
+\TODO{THEOREM from PHYLO LIT/amy wilson}
+Now, $\widehat{P} X_n \overset{d}{\to} P$ when ??? are met.  Now while this estimator is consistent under these conditions, it converges slowly because tree-space is very, very large.  Instead, many researchers use Robin-Foulds (RF) distance instead \cite{} to show that phylogenies are ``close enough.'' A RF distance of one means that the tree requires one edit (get precise wording), to become equivalent to the true phylogeny.   A maximum RF distance can be computed based on the total number of leaves.  The number of edits over the maximum is called the normalized RF and is used to compare phylogenies with different leaves counts.  A RF close to 0 is a very close estimate and a RF close to 1 is a very poor estimate.
+
+%% that's t he statistical basis for our method.
+
 
 \subsection{Distance Metric: Cosine and the SNR Argument}
 \label{sec:framework:metric}
