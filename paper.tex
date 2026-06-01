@@ -122,11 +122,11 @@ A maximum RF distance can be computed from the total number of leaves, and the r
 \subsection{Distance Metric: Cosine and the SNR Argument}
 \label{sec:framework:metric}
 
-One question we sought to answer is what distance (or similarity) metric should we use to compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are $\ell_1$, $\ell_2$, cosine, and correlation.  The first two distances are unbounded and so distances across different layers can have different scales.  The second two distances are scaled between 0 and 1 which forces the layers to be on the same scales.
+One question we sought to answer is what distance (or similarity) metric should we use to compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are  cosine, correlation, $\ell_1$ and $\ell_2$ (the latter of which was used in MoTHER \cite{}).  The first two distances are bounded by 1 and so the distances are comparable across different layers.  The second two distances are unbounded, which can allow different magnitudes of weights to dominate the distance.
 
-To determine which metric to use, we use Signal to Noise Ratio (SNR), $\mathbb{E}[X]^2/\mathrm{Var}[X]$, as a heuristic with the intuition that a larger SNR will lead to easier separation among distances and thus better phylogenies.  The results of this experiment are shown in Table~\ref{tab:metric-snr}.
+To determine which metric to use, we use within-run Signal to Noise Ratio (SNR), $\mathbb{E}[X]^2/\mathrm{Var}[X]$, as a heuristic with the intuition that a larger SNR will lead to easier separation among distances and thus better phylogenies.  The results of this experiment are shown in Table~\ref{tab:metric-snr}.
 
-One result we see in Table~\ref{tab:metric-snr} is that cosine similarity generally has the highest SNR across our different experiments.  Intuitively, this makes sense because the larger magnitude layers such as layer norms which are known to be noisy \cite{} have less chance to dominate.  Thus, we see that scaling the distance within layers is important.
+One result we see in Table~\ref{tab:metric-snr} is that cosine distance and correlation generally have the highest SNR across our different experiments.  Intuitively, this makes sense because the larger magnitude layers such as layer norms which are known to be noisy \cite{} have less chance to dominate.  Thus, we see that scaling the distance within layers is important.  For the rest of the analysis, we choose cosine similarity over correlation because we view them as largely as comparable with cosine distance having more prominence in layer weight analyses \cite{}.
 
 \begin{table}[t]
 \centering
@@ -151,13 +151,16 @@ $\ell_2$    & 3.6 (2.1; 6.4)     & 44.8 (27.4; 86.7)  & \textbf{81.3} (22.3; 80.
 
 
 
-\subsection{Layer-Level Trees as Independent Estimates}
+\subsection{Per Layer Estimated Phylogenies}
 \label{sec:framework:layers}
 % Each weight tensor → its own NJ tree.
 % Distribution of per-layer RF distances is the data; consensus tree is summary.
 % More statistically principled than any competitor — flag explicitly.
 
-\TODO{Write layer ensemble framing.}
+One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies are estimated across multiple genes, the assumption being that different genes encode different information on how changes are occurring \cite{}.
+
+Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify, the most and least important layers in training by examining which layers change the most or least across multiple training runs.
+
 
 
 % -----------------------------------------------------------------------
