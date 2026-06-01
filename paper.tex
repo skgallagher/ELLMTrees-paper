@@ -122,37 +122,30 @@ A maximum RF distance can be computed from the total number of leaves, and the r
 \subsection{Distance Metric: Cosine and the SNR Argument}
 \label{sec:framework:metric}
 
-A prerequisite for the permutation test to have power is that the chosen distance metric produces same-branch distances that are stochastically smaller than cross-branch distances --- i.e., SNR $> 0$.
-Metric selection therefore directly determines whether recovery is possible at all, and we treat it as a pre-specified design choice rather than a post-hoc optimization.
+One question we sought to answer is what distance (or similarity) metric should we use to compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are $\ell_1$, $\ell_2$, cosine, and correlation.  The first two distances are unbounded and so distances across different layers can have different scales.  The second two distances are scaled between 0 and 1 which forces the layers to be on the same scales.
 
-We use vector-based distances for portability across architectures, and consider four candidates: cosine, correlation, $\ell_1$, and $\ell_2$.
-The first two are unbounded, so distances vary in scale across layers of different sizes; the latter two are scale-normalized to $[0, 1]$, placing all layers on a common footing.
-To select among them, we use signal-to-noise ratio $\mathrm{SNR} = \mathbb{E}[X]^2 / \mathrm{Var}[X]$, computed separately for same-branch and cross-branch pairs at each tree size, as a scale-free criterion for distance separability.
-A higher SNR indicates the two distributions are more reliably separated, which from the power argument in Section~\ref{sec:framework:phylo} implies better-powered topology recovery.
+To determine which metric to use, we use Signal to Noise Ratio (SNR), $\mathbb{E}[X]^2/\mathrm{Var}[X]$, as a heuristic with the intuition that a larger SNR will lead to easier separation among distances and thus better phylogenies.  The results of this experiment are shown in Table~\ref{tab:metric-snr}.
 
-Table~\ref{tab:metric-snr} reports SNR by metric and tree size across our experiments.
-Cosine distance achieves the highest SNR consistently, and the advantage grows at larger tree sizes --- precisely the regime where statistical power matters most.
-This is intuitive: scale normalization prevents large-magnitude layers such as layer norms, which are known to vary substantially across fine-tuning conditions \cite{}, from dominating the distance and drowning out signal in smaller layers.
-Correlation distance performs similarly but slightly below cosine; $\ell_1$ and $\ell_2$ trail throughout.
-We therefore use cosine as the primary metric and report correlation as a robustness check in Appendix~\ref{app:snr}.
+One result we see in Table~\ref{tab:metric-snr} is that cosine similarity generally has the highest SNR across our different experiments.  Intuitively, this makes sense because the larger magnitude layers such as layer norms which are known to be noisy \cite{} have less chance to dominate.  Thus, we see that scaling the distance within layers is important.
 
 \begin{table}[t]
 \centering
-\caption{Mean per-run SNR ($= \mathbb{E}[X]^2/\mathrm{Var}[X]$ of per-layer RF values) by metric and tree size, computed over \texttt{runs\_branching\_v3}. Higher SNR indicates that more layers consistently carry lineage signal with less variance --- a prerequisite for permutation test power. Normalized metrics (cosine, correlation) strongly outperform unnormalized metrics ($\ell_1$, $\ell_2$) at large tree sizes, where statistical power matters most. \emph{n} = number of runs per cell.}
+\caption{Mean SNR ($= \mathbb{E}[X]^2/\mathrm{Var}[X]$ of per-layer RF values) with standard error in parentheses, by metric and tree size. Computed over \texttt{runs\_branching\_v3}. At 5--7 leaves all metrics are comparable; at 8 leaves normalized metrics (cosine, correlation) outperform $\ell_1$/$\ell_2$ by $\sim$18$\times$.}
 \label{tab:metric-snr}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-Metric & 4 leaves ($n$=2--3) & 5 leaves ($n$=9--11) & 6 leaves ($n$=10--12) & 7 leaves ($n$=13--15) \\
+Metric & 5 leaves & 6 leaves & 7 leaves & 8 leaves & $n$ (5--7 / 8) \\
 \midrule
-Cosine      &  0.02 &  5.1  & 47.8  & 60.4  \\
-Correlation &  0.02 & 16.1  & 33.3  & 71.7  \\
-$\ell_2$    &  0.04 &  3.6  & 44.8  & 81.3  \\
-$\ell_1$    &  0.04 &  3.6  & 46.0  & 76.2  \\
+Cosine      & 5.1 (4.0; 11.9)    & \textbf{47.8} (24.7; 85.6)  & 60.4 (14.5; 56.0)   & 331 (270; 540)  & 9--15 / 4 \\
+Correlation & \textbf{16.1} (8.6; 28.4)   & 33.3 (13.5; 44.8)  & 71.7 (21.0; 81.3)   & \textbf{339} (269; 537)  & 11--15 / 4 \\
+$\ell_1$    & 3.6 (2.1; 6.4)     & 46.0 (27.4; 86.5)  & 76.2 (21.6; 77.7)   & 18.4 (8.0; 13.8) & 9--13 / 3 \\
+$\ell_2$    & 3.6 (2.1; 6.4)     & 44.8 (27.4; 86.7)  & \textbf{81.3} (22.3; 80.3)   & 18.5 (7.9; 13.7) & 9--13 / 3 \\
 \bottomrule
 \end{tabular}
 \smallskip
 
-\noindent\textit{Note:} At 8 leaves ($n$=3--4), cosine and correlation SNR reaches $\sim$330--340 vs.\ $\sim$18 for $\ell_1$/$\ell_2$ --- an $\sim$18$\times$ advantage at the largest tree size. \end{table}
+\noindent\textit{Note:} Cell format is mean (SE; SD). 4-leaf runs excluded (SNR $\approx 0$ across all metrics, $n$=2--3). Bold indicates highest value in each row and column. Large SEs at 8 leaves reflect high run-to-run variance with small $n$; the normalized vs.\ unnormalized gap is nonetheless $\sim$18$\times$.
+\end{table}
 
 
 
