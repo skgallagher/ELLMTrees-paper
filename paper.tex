@@ -87,13 +87,13 @@
 \label{sec:framework}
 % -----------------------------------------------------------------------
 
-In this section, we define our terms and notation and show how our mathematical intuition guides our experiments and thus empirical results.
+In this section, we define our terms and notation and establish the statistical framework underlying our experiments.
 
-We largely borrow the notation of \cite{}(the good one?) since it succinctly surmises the set up.  
+We largely borrow the notation of \citep{wu2026llmdna}, which succinctly captures the setup.
 %% paragraph about tasks
-We define a LLM phlogeny as a unidirectional tree from a single root model.  Each node in the tree represents a fine-tuned model $M_{(t)}$, and each edge represents a training task/data set pair $(T, D)$.  The direction of the edge denotes the direction of fine-tuning.  We denote the phylogeny (i.e. training tree) as $\mathcal{P}$ which consists of those nodes and vertices. 
+We define an LLM phylogeny as a rooted directed tree with a single root model.  Each node in the tree represents a fine-tuned model $M_{(t)}$, and each edge represents a training task/dataset pair $(T, D)$.  The direction of the edge denotes the direction of fine-tuning.  We denote the phylogeny (i.e., training tree) as $\mathcal{P}$, which consists of those nodes and edges.
 
-Much like \cite{}, we use the framework of phylogenies and LLM ``DNA'' to estimate important properties of parent-child training. We assume, unlike \cite{} but like \cite{}, that the node models are derived from a single root model. Unlike the previous works, we focus not only on parent-child pairs but focus on recovering the full phylogeny by estimating $\widehat{\mathcal{P}}$.  That is, we assume that the tree can have depth greater than 1.  We estimate the phylogeny by first estimating a distance matrix and then using known phylogenetic methods (e.g. NJ \cite{}) to estimate the training tree.
+Much like \citep{wu2026llmdna}, we use the framework of phylogenies and LLM ``DNA'' to estimate important properties of parent-child training. We assume, unlike \cite{} but like \citep{yu2025neural}, that all node models are derived from a single root model. Unlike prior works, we focus not only on parent-child pairs but on recovering the full phylogeny by estimating $\widehat{\mathcal{P}}$ --- that is, we assume the tree can have depth greater than 1.  We estimate the phylogeny by first estimating a distance matrix and then using neighbor-joining \citep{saitou1987neighbor} to recover the training tree.
 
 
 \subsection{Phylogenetic Tree Recovery}
@@ -115,8 +115,16 @@ To estimate $\widehat{\mathcal{P}}$, we use the following recipe:
     \item Estimate $\widehat{{\mathcal{P}}}$ using $f(\bar{D}_{i,j})$ where $f$ is the NJ method\footnote{We assume that the models in question are leaves and not internal nodes}
 \end{enumerate}
 
-\TODO{THEOREM from PHYLO LIT/amy wilson}
-Now, $\widehat{P} X_n \overset{d}{\to} P$ when ??? are met.  Now while this estimator is consistent under these conditions, it converges slowly because tree-space is very, very large.  Instead, many researchers use Robin-Foulds (RF) distance instead \cite{} to show that phylogenies are ``close enough.'' A RF distance of one means that the tree requires one edit (get precise wording), to become equivalent to the true phylogeny.   A maximum RF distance can be computed based on the total number of leaves.  The number of edits over the maximum is called the normalized RF and is used to compare phylogenies with different leaves counts.  A RF close to 0 is a very close estimate and a RF close to 1 is a very poor estimate.
+\TODO{THEOREM from PHYLO LIT/amy wilson --- Atteson 1999 is the cite for NJ consistency/convergence radius}
+NJ is statistically consistent: it recovers the correct topology with probability approaching 1 as pairwise distance estimates become accurate, provided the distances satisfy the four-point condition (i.e., are tree-additive) \citep{saitou1987neighbor}.
+\citet{atteson1999performance} give a precise convergence radius: NJ is guaranteed to return the correct tree when every estimated distance is within half the minimum branch length of the true distance.
+However, tree-space grows super-exponentially in the number of leaves, so exact topology recovery becomes increasingly stringent as trees grow.
+Instead, researchers commonly use Robinson-Foulds (RF) distance \citep{robinson1981comparison} to measure how ``close'' an estimated phylogeny is to the true one.
+An RF distance of $k$ means the two trees disagree on $k$ bipartitions --- splits present in one tree but absent in the other; lower is better.
+A maximum RF distance can be computed from the total number of leaves, and the ratio (normalized RF) enables comparison across trees of different sizes.
+A normalized RF near 0 indicates near-perfect recovery; near 1 indicates a tree no better than random.
+Statistical significance is assessed against a null distribution of 1,000 uniformly random binary trees with the same leaf count, yielding a permutation $p$-value per run.
+Note that Step 3 above (averaging $D_{i,j}^{(\ell)}$ across layers) produces the primary pooled estimate; we also analyze the per-layer RF distribution directly to identify which layers carry lineage signal (Section~\ref{sec:framework:layers}).
 
 %% that's t he statistical basis for our method.
 
