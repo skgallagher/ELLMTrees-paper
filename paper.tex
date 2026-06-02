@@ -115,7 +115,21 @@ To estimate $\widehat{\mathcal{P}}$, we use the following recipe:
 
 Step (3) allows us to use different layers to achieve different or even multiple estimates of $\widehat{\mathcal{P}}$, which we can do to evaluate layer importance.  Since phylogeny-space grows super-exponentially in the number of leaves, exact topology recovery is unlikely.
 Instead, researchers commonly use Robinson-Foulds (RF) distance \citep{robinson1981comparison} to measure how ``close'' an estimated phylogeny is to the true one, a measure of partial topology recovery. An RF distance of $k$ means the two trees disagree on $k$ bipartitions, splits present in one tree but absent in the other.
-A maximum RF distance can be computed from the total number of leaves, and the ratio (normalized RF) enables comparison across trees of different sizes. A normalized RF near 0 indicates near-perfect recovery; near 1 indicates a tree no better than random. We compare the RF of our estimated phylogeny against a null distribution of 1,000 uniformly random phylogenies with the same leaf count, yielding a permutation $p$-value per run.
+A maximum RF distance can be computed from the total number of leaves, and the ratio (normalized RF) enables comparison across trees of different sizes. A normalized RF near 0 indicates near-perfect recovery; near 1 indicates a tree no better than random.
+
+We assess significance via a permutation test. Let $\mathrm{RF}(\widehat{\mathcal{P}},
+\mathcal{P}^*)$ denote the Robinson-Foulds distance between the estimated and
+ground-truth trees for a given run. The null hypothesis is that $\widehat{\mathcal{P}}$
+carries no lineage information:
+$$
+H_0: \mathrm{RF}(\widehat{\mathcal{P}}, \mathcal{P}^*) \ge
+     \mathrm{RF}(\mathcal{P}_{\text{rand}}, \mathcal{P}^*)
+$$
+where $\mathcal{P}_{\text{rand}}$ is drawn uniformly from the space of binary trees
+on $n$ leaves. We approximate this null distribution with 1{,}000 random trees per
+run, yielding a permutation $p$-value for each run. To combine evidence across the
+50 independent runs, we apply Fisher's method: $-2\sum_{i=1}^{50} \log p_i \sim
+\chi^2(100)$ under the global null.
 
 %% that's t he statistical basis for our method.
 
@@ -168,7 +182,10 @@ Thus, a model with $L$ layers can result in $L$ distance matrices.  These distan
 \section{Experiments}
 \label{sec:experiments}
 % -----------------------------------------------------------------------
-Our methods bridge the gap between weight-level connections to peformance level connections such as predicted behavior.  We first create experiments to determine whether changes in weight structure can be used to recover (partial) the training trees, then determine whether distances in weights are associated with prediction capability in behavior.  We finally show an updated latent blackbox ancestry tree on some frontier models.
+We structure our experiments around three questions: whether weight changes
+recover training lineage, whether they predict downstream behavior, and
+whether family structure is visible from behavioral outputs alone in
+frontier models without weight access.
 
 \subsection{Controlled Branching Trees}
 \label{sec:exp:trees}
@@ -218,17 +235,45 @@ both globally (pooling all weight matrices) and per-layer, which can identify if
 
 \subsection{Can Weight Changes Predict Behavior?}
 \label{sec:exp:behavioral}
-% Weight proximity predicts behavioral similarity (translation probe, semantic DV).
-% Within-run r up to -0.40; no_translation_v2 null r = -0.006.
-% Full regression details in Appendix~\ref{app:regression}.
 
-While recovering ancestral information about a model is important for model provenance and auditing, it is also useful to have a practical interpretation of weight changes with regards to model behavior.  Here, we test whether difference in model weight distance is statistically significant in predicting model behavior on a new task.
+While recovering ancestral information about a model is important for
+provenance and auditing, a practical question is whether weight-space
+proximity predicts anything useful about model behavior. Here we test
+whether whitebox weight distance is a significant predictor of behavioral
+similarity on a probe task, after controlling for run-level variation.
 
-We test for significance in two ways. First, we used a mixed effects regression model (see App. \ref{app:regression}), to determine whether the change in weight distance is a significant predictor for the outcome variable of change in benchmark score.  We also test for significance using the same model but for the outcome variable of semantic similarity from token embeddings.  
+We operationalize behavioral similarity in two ways: task performance
+(ROUGE-L) and semantic similarity between model outputs measured via
+sentence-embedding cosine distance, with the latter as our primary
+dependent variable. In both cases we fit a mixed-effects regression with
+weight distance as the key predictor and run as a random interceptWe assess significance via a permutation test. Let $\mathrm{RF}(\widehat{\mathcal{P}},
+\mathcal{P}^*)$ denote the Robinson-Foulds distance between the estimated and
+ground-truth trees for a given run. The null hypothesis is that $\widehat{\mathcal{P}}$
+carries no lineage information --- formally, that the observed RF is no smaller than
+what would be obtained from a uniformly random binary tree with the same leaf count:
+$$
+H_0: \mathrm{RF}(\widehat{\mathcal{P}}, \mathcal{P}^*) \ge
+     \mathrm{RF}(\mathcal{P}_{\text{rand}}, \mathcal{P}^*)
+$$
+where $\mathcal{P}_{\text{rand}}$ is drawn uniformly from the space of binary trees
+on $n$ leaves. We approximate this null distribution with 1{,}000 random trees per
+run, yielding a permutation $p$-value for each run. To combine evidence across the
+50 independent runs, we apply Fisher's method: $-2\sum_{i=1}^{50} \log p_i \sim
+\chi^2(100)$ under the global null.
+(see Appendix~\ref{app:regression} for full model specifications and
+sensitivity analyses).
 
-For Flan,  we train the model on trees where the hold-out task is translation.  For Llama, we train the model on the four standard tasks and the holdout is HellaSwag, a multiple choice data set where the model must guess the best sentence continuation.  The experiments differ in holdout task because we found that Flan performs terribly on HellaSwag, regardless of the fine-tuning task/dataset.
-
-
+For Flan-T5-base, we use translation as the probe task, training models
+on summarization, QA, and classification only and withholding translation
+as the holdout. For Llama-3.1-8B, we use HellaSwag --- a commonsense
+sentence-completion benchmark --- as the held-out probe. The probes differ
+across architectures because Flan-T5-base lacks the base commonsense
+ability required for HellaSwag, producing degenerate outputs regardless
+of fine-tuning condition (see Appendix~\ref{app:translation_probe}).
+Llama-3.1-8B, by contrast, retains strong commonsense ability after
+LoRA fine-tuning, making HellaSwag a meaningful held-out test of whether
+weight proximity predicts behavioral similarity beyond the training
+distribution.
 
 \subsection{Behavior from Blackbox, Frontier Models}
 \label{sec:exp:blackbox}
