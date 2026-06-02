@@ -182,14 +182,17 @@ To create a controlled experiment, we generate stochastic phylogenies or trainin
 %% This probably gets moved to intro or somewhere -- it's a real scenario
 The motivation for this controlled experiment is from an industry-type training where a base model is given to different departments and each department is able to perform its own fine tuning on a model.  A question may arise if a new department begins and is interested in using an already fine-tuned model on a new task.  Which one should they pick?
 
-The generated phylogenies are then used as fine-tuning instructions, the details of which can be found in Appendix [add-fine-tuning-instructions].  At each node in the phylogeny, a new model is trained and we can access each \textit{leaf} model's weights.  
+The generated phylogenies are then used as fine-tuning instructions, the details of which can be found in Appendix [add-fine-tuning-instructions].  At each node in the phylogeny, a new model is trained and we can access each \textit{leaf} model's weights. 
+
+\subsection{Do weight changes carry model lineage?}
+\label{sec:exp:weights}
 
 Once we have the trained leaf models, we can use the steps in Section \ref{sec:framework:phylo} to estimate a phylogeny from the weight changes.  Since we know the actual training trees, we then can use RF distance to compare how far the estimated phylogeny is from the known training tree, unlike previous works.  We repeat this process for each generated phylogeny.
 
 In our experiments, we vary the root model, task types, and which layers we train. We examine both an encoder-decoder model and a decoder-only model: Flan-T5-base (250M parameters) and Llama-3.1-8B, respectively. The tasks we fine-tune on include Q\&A, classification, translation, and text summarization. For Flan-T5-base, we run both full fine-tuning and four LoRA \citep{hu2022lora} adapter configurations varying the scope of trained parameters: key projection matrices only, query/key/value projections, all four attention projections (including output), and all projection matrices. Llama-3.1-8B serves as both a decoder-only and entry into more frontier-like models.  Llama-3.1-8B is trained with the key-only and query/key/value LoRA configurations; full fine-tuning is omitted at this scale due to memory constraints. Detailed training hyperparameters for all conditions are in Appendix~\ref{app:details}.
 
-\subsection{Geometric Mechanism: Task Subspaces}
-\label{sec:exp:geometry}
+%\subsubsection{Geometric Mechanism: Task Subspaces}
+%\label{sec:exp:geometry}
 % Displacement subspace angles between fine-tuning directions.
 % Cross-task grand mean ~84 degrees (near-orthogonal).
 % Within-task 80.7--86.0 degrees — dose-response confirmed.
@@ -213,7 +216,7 @@ does it primarily reduce their magnitude? We apply the subspace angle analysis
 both globally (pooling all weight matrices) and per-layer, which can identify if certain layers are more variable in task/data set fine-tuning process.
 
 
-\subsection{Behavioral Bridge}
+\subsection{Can Weight Changes Predict Behavior?}
 \label{sec:exp:behavioral}
 % Weight proximity predicts behavioral similarity (translation probe, semantic DV).
 % Within-run r up to -0.40; no_translation_v2 null r = -0.006.
@@ -227,14 +230,17 @@ For Flan,  we train the model on trees where the hold-out task is translation.  
 
 
 
-\subsection{Blackbox: Frontier Model Families}
+\subsection{Behavior from Blackbox, Frontier Models}
 \label{sec:exp:blackbox}
 % GPT, Claude, Gemini, Llama probed via output embeddings across 4 tasks.
 % Family structure recoverable when aggregating tasks.
 % Single-task confounded by formatting (verbosity, markdown).
 % Translation cleanest — language crossing decouples embedding from source content.
 
-\TODO{Write blackbox experiment description.}
+Sometimes model weights are unavailable, and provenance must be inferred from behavioral outputs alone. Recent work has shown that frontier model families cluster meaningfully in behavioral embedding space
+\citep{wu2026llmdna, grayson2024phylolm}. We extend this line of work by probing 16 frontier models (GPT, Claude, Gemini, and open-weight families including Llama and Mistral) across four task types --- summarization, QA, classification, and translation --- using the same neighbor joining pipeline applied to pairwise sentence-embedding distances between model outputs. This design allows us to examine how much the recovered family structure depends
+on task choice, and whether aggregating across tasks recovers structure that
+single-task probes miss.
 
 
 % -----------------------------------------------------------------------
