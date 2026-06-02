@@ -168,6 +168,7 @@ Thus, a model with $L$ layers can result in $L$ distance matrices.  These distan
 \section{Experiments}
 \label{sec:experiments}
 % -----------------------------------------------------------------------
+Our methods bridge the gap between weight-level connections to peformance level connections such as predicted behavior.  We first create experiments to determine whether changes in weight structure can be used to recover (partial) the training trees, then determine whether distances in weights are associated with prediction capability in behavior.  We finally show an updated latent blackbox ancestry tree on some frontier models.
 
 \subsection{Controlled Branching Trees}
 \label{sec:exp:trees}
@@ -176,7 +177,16 @@ Thus, a model with $L$ layers can result in $L$ distance matrices.  These distan
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
 % Controlled design enables RF evaluation — all competitors lack this.
 
-\TODO{Write experiment setup.}
+To create a controlled experiment, we generate stochastic phylogenies or training trees, beginning from a root model.  The tree generating process is described in detail in Appenidx \ref{app:details}.  Our generating process produces fairly balanced phylogenies with up to 8 leaf nodes.  We generate 50 such phylogenies, each constituting the basic structure for a single training tree. We then assign task/dataset pairs to each edge. At each split in the tree, a child model is fine-tuned from its parent model on a random task/data set pair.  First a training task is randomly sampled and then a dataset within that task is randomly sampled.  The resulting pair is assigned to that edge.
+
+%% This probably gets moved to intro or somewhere -- it's a real scenario
+The motivation for this controlled experiment is from an industry-type training where a base model is given to different departments and each department is able to perform its own fine tuning on a model.  A question may arise if a new department begins and is interested in using an already fine-tuned model on a new task.  Which one should they pick?
+
+The generated phylogenies are then used as fine-tuning instructions, the details of which can be found in Appendix [add-fine-tuning-instructions].  At each node in the phylogeny, a new model is trained and we can access each \textit{leaf} model's weights.  
+
+Once we have the trained leaf models, we can use the steps in Section \ref{sec:framework:phylo} to estimate a phylogeny from the weight changes.  Since we know the actual training trees, we then can use RF distance to compare how far the estimated phylogeny is from the known training tree, unlike previous works.  We repeat this process for each generated phylogeny.
+
+In our experiments, we vary the root model, task types, and which layers we train. We examine both an encoder-decoder model and a decoder-only model: Flan-T5-base (250M parameters) and Llama-3.1-8B, respectively. The tasks we fine-tune on include Q\&A, classification, translation, and text summarization. For Flan-T5-base, we run both full fine-tuning and four LoRA \citep{hu2022lora} adapter configurations varying the scope of trained parameters: key projection matrices only, query/key/value projections, all four attention projections (including output), and all projection matrices. Llama-3.1-8B serves as both a decoder-only and entry into more frontier-like models.  Llama-3.1-8B is trained with the key-only and query/key/value LoRA configurations; full fine-tuning is omitted at this scale due to memory constraints. Detailed training hyperparameters for all conditions are in Appendix~\ref{app:details}.
 
 \subsection{Geometric Mechanism: Task Subspaces}
 \label{sec:exp:geometry}
@@ -186,16 +196,22 @@ Thus, a model with $L$ layers can result in $L$ distance matrices.  These distan
 % RTE forgetting probe: classification vs RTE = 64.8 degrees.
 % Cite: Ilharco et al. 2023 (Task Arithmetic) for task vectors.
 
-\TODO{Write geometric mechanism.}
+To understand geometrically \textit{why} fine-tuning ancestry is recoverable from
+weights, we measure the directions in which different training runs displace a model
+from its starting point. For each fine-tuned checkpoint, we compute the weight
+displacement $\Delta W = W_{\text{fine-tuned}} - W_{\text{base}}$, which captures
+the net effect of all gradient updates relative to the pre-trained initialization.
+We then measure the principal angles between the subspaces spanned by these
+displacement vectors for pairs of fine-tuned models \citep{ilharco2023editing}.
+Near-$90^\circ$ angles indicate that two training runs push the model into nearly
+orthogonal regions of weight space; smaller angles indicate overlap.
 
-\subsection{LoRA Variants and Full Fine-Tuning}
-\label{sec:exp:lora}
-% Four LoRA scopes (k_only, qkv, full_attn, full_ft_approx) + full FT.
-% Key claim: lineage SURVIVES LoRA at all — not just that more params = more signal.
-% Llama-3.1-8B: decoder-only robustness check.
-% DO NOT frame as "signal concentrates in qkv" — tautological given what LoRA trains.
+We investigate three questions with this analysis. First, do different task types
+induce near-orthogonal displacement directions. Second, does within-task training (same task type, different datasets) produce less orthogonal displacements than cross-task training? Third, does
+LoRA's low-rank constraint alter the \textit{direction} of weight updates, or
+does it primarily reduce their magnitude? We apply the subspace angle analysis
+both globally (pooling all weight matrices) and per-layer, which can identify if certain layers are more variable in task/data set fine-tuning process.
 
-\TODO{Write LoRA experiment description.}
 
 \subsection{Behavioral Bridge}
 \label{sec:exp:behavioral}
@@ -203,7 +219,13 @@ Thus, a model with $L$ layers can result in $L$ distance matrices.  These distan
 % Within-run r up to -0.40; no_translation_v2 null r = -0.006.
 % Full regression details in Appendix~\ref{app:regression}.
 
-\TODO{Write behavioral bridge experiment description.}
+While recovering ancestral information about a model is important for model provenance and auditing, it is also useful to have a practical interpretation of weight changes with regards to model behavior.  Here, we test whether difference in model weight distance is statistically significant in predicting model behavior on a new task.
+
+We test for significance in two ways. First, we used a mixed effects regression model (see App. \ref{app:regression}), to determine whether the change in weight distance is a significant predictor for the outcome variable of change in benchmark score.  We also test for significance using the same model but for the outcome variable of semantic similarity from token embeddings.  
+
+For Flan,  we train the model on trees where the hold-out task is translation.  For Llama, we train the model on the four standard tasks and the holdout is HellaSwag, a multiple choice data set where the model must guess the best sentence continuation.  The experiments differ in holdout task because we found that Flan performs terribly on HellaSwag, regardless of the fine-tuning task/dataset.
+
+
 
 \subsection{Blackbox: Frontier Model Families}
 \label{sec:exp:blackbox}
@@ -436,7 +458,7 @@ Training trees are generated via a Poisson branching process as follows:
 \begin{enumerate}
     \item The root node (pretrained Flan-T5-base) draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children, with a minimum of 1.
     \item Each subsequent node draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children. Nodes that draw $k = 0$ naturally become leaves --- no separate pruning step is needed.
-    \item BFS expansion continues until either a node budget ($n_\mathrm{nodes} = 14$ training nodes, not counting the root) is exhausted or a maximum depth ($n_\mathrm{layers} = 4$) is reached. The budget cap creates the truncation; any node alive when the budget runs out becomes a leaf.
+    \item Breadth First Search expansion continues until either a node budget ($n_\mathrm{nodes} = 14$ training nodes, not counting the root) is exhausted or a maximum depth ($n_\mathrm{layers} = 4$) is reached. The budget cap creates the truncation; any node alive when the budget runs out becomes a leaf.
     \item Each non-root node is assigned a task and dataset sampled without replacement from 4 task types (summarization, classification, QA, translation) and 36 datasets (9 summarization, 10 classification, 8 QA, 9 translation). The topology (parent--child structure) is fixed by a topology seed; dataset assignments vary across the 50 replications.
     \item Runs with fewer than 4 leaves are excluded from analysis, as trees with 3 or fewer leaves have trivial topology with no meaningful RF distance.
 \end{enumerate}
