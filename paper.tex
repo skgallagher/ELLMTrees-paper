@@ -529,4 +529,87 @@ Base model: Flan-T5-base (250M parameters). Each node trained for 2,000 steps, l
 
 \TODO{Fill Llama appendix.}
 
+
+\section{Translation Probe Outputs for TaskHoldout Models}
+\label{app:translation_probe}
+
+The \texttt{runs\_no\_translation\_v2} condition trains models on summarization,
+QA, and classification only, with translation withheld from the task pool. We use
+the translation probe to test whether weight distance predicts behavioral similarity
+even when the probe task was never trained. However, this condition reveals a
+fundamental limitation of behavioral probing on out-of-distribution tasks: models
+whose most recent fine-tuning was on classification have overwritten the base
+model's translation ability entirely, producing degenerate single-token outputs
+rather than translations.
+
+Table~\ref{tab:translation_probe_examples} shows representative outputs for three
+leaf nodes from a single run (\texttt{run\_001}). Nodes trained most recently on
+summarization or QA retain the base model's translation ability and produce
+coherent (if imperfect) French output. Nodes trained most recently on
+classification output only the label vocabulary of their fine-tuning task,
+regardless of input.
+
+\begin{table}[h]
+\caption{Translation probe outputs for three leaf nodes in \texttt{run\_001}
+  (TaskHoldout condition, translation withheld from training).
+  The same three English source sentences are shown for each node.
+  Classification-trained nodes output label tokens only.}
+\label{tab:translation_probe_examples}
+\small
+\begin{center}
+\begin{tabular}{p{2.2cm} p{1.8cm} p{8.2cm}}
+\toprule
+Node & Last task & Model output \\
+\midrule
+\multicolumn{3}{l}{\textit{Source 1: ``And, most recently, it cannot excuse the failure to design a simple website more than three years since the Affordable Care Act was signed.''}} \\
+n0  & QA/Summ.  & \textit{Et, plus r\'{e}cemment, il ne peut excuser le manque de conception d'une simple website plus de trois ann\'{e}es depuis le signe de la Loi sur le soins de sant\'{e}.} \\
+n7  & Classification & \texttt{negative} \\
+n8  & Classification & \texttt{entailment} \\
+\midrule
+\multicolumn{3}{l}{\textit{Source 2: ``Since the Tribunal has declared it admissible, it would need to proceed to the second stage, the preliminary hearings.''}} \\
+n0  & QA/Summ.  & \textit{Puisque le Tribunal a d\'{e}clar\'{e} admissible, il faudrait proc\'{e}der \`{a} la second \'{e}tape, les audiences pr\'{e}liminaires.} \\
+n7  & Classification & \texttt{positive} \\
+n8  & Classification & \texttt{entailment} \\
+\midrule
+\multicolumn{3}{l}{\textit{Source 3: ``The bikes are jostling to get in front and take photos.''}} \\
+n0  & QA/Summ.  & \textit{Les bikes sont jotling to get in front and take photos.} \\
+n7  & Classification & \texttt{negative} \\
+n8  & Classification & \texttt{entailment} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+Because classification-trained nodes produce degenerate outputs, pairwise semantic
+similarity between nodes is driven by whether each model can translate at all,
+not by genealogical proximity. This renders standard regression analysis
+uninterpretable for this condition. We therefore treat the TaskHoldout condition
+as a qualitative null: the absence of a meaningful weight--behavior link is
+confirmed by construction, since behavioral similarity on the translation probe
+is dominated by task identity (translating vs.\ not translating) rather than
+lineage signal.
+
+
+\section{Behavioral Regression Diagnostics}
+\label{app:regression_diagnostics}
+
+Figure~\ref{fig:regression_diagnostics} shows the within-run partial association
+between cosine weight distance and semantic output similarity for each fine-tuning
+condition. Points are within-run demeaned (run fixed effects removed); the red line
+is the OLS fit on the demeaned data. A negative slope indicates that model pairs
+closer in weight space produce more similar translation outputs. The effect is
+consistent in direction across all five conditions.
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/regression_diagnostics_semantic.png}
+  \end{center}
+  \caption{Within-run partial association between cosine weight distance and
+    semantic output similarity (translation probe), for all five fine-tuning
+    conditions. Points are within-run demeaned; Fisher $z$-averaged within-run
+    $r$ and run count shown per panel. All slopes are negative, confirming that
+    weight proximity predicts behavioral similarity across training regimes.}
+  \label{fig:regression_diagnostics}
+\end{figure}
+
 \end{document}
