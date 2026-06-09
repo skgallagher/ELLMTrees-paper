@@ -421,7 +421,26 @@ full weight    & 282 tensors & \multicolumn{4}{l}{RF $1.92 \pm 0.36$ (reference)
 \subsection{Blackbox: Frontier Model Families}
 \label{sec:results:blackbox}
 
-% Figure 4: NJ tree grid (LLM DNA comparable)
+% Hero figure: cross-task Frechet phylogeny + BHV tree-space MDS
+\begin{figure}[t]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/hero_phylogeny_treespace.png}
+  \end{center}
+  \caption{\textbf{A behavioral phylogeny of frontier and open models, with its support in tree space.}
+    \textbf{(a)} Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean of 20 per-dataset
+    neighbor-joining trees, each built from pairwise output-embedding distances over four task
+    families (16 models common to all tasks); branches are coloured by developer. The mean is rendered
+    as a cladogram because its internal edges are short ($\sim$3\% of total edge length), so topology
+    is more informative than scaled branch length. Claude Sonnet and Haiku form the most stable clade
+    (sisters in 80\% of per-dataset trees); the GPT family and the Llama pair are also recovered.
+    \textbf{(b)} The same 20 per-dataset trees embedded in BHV tree space (classical MDS of pairwise
+    geodesic distances). Trees group by task---summarization tightest, translation the clear
+    outlier---and the Fr\'echet mean ($\star$) lies at the centre, confirming the averaged phylogeny
+    in (a) is representative rather than an artifact of any single task.}
+  \label{fig:blackbox_hero}
+\end{figure}
+
+% Figure: NJ tree grid (LLM DNA comparable)
 \begin{figure}[t]
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/nj_tree_fingerprint_grid.png}
@@ -437,10 +456,17 @@ full weight    & 282 tensors & \multicolumn{4}{l}{RF $1.92 \pm 0.36$ (reference)
   \label{fig:blackbox_nj}
 \end{figure}
 
-\TODO{Write blackbox results prose.
-  Key points: Claude siblings tightest; Gemini-Llama proximity = formatting artifact;
-  translation cleanest; multi-task aggregation necessary.
-  Ref Figure~\ref{fig:blackbox_nj}.}
+Aggregating across tasks yields a single behavioral phylogeny
+(Figure~\ref{fig:blackbox_hero}a) whose recovered clades match known model families, and the
+per-task neighbor-joining trees in Figure~\ref{fig:blackbox_nj} show how that structure varies by
+task. The tree-space embedding (Figure~\ref{fig:blackbox_hero}b) shows the per-dataset trees cluster
+by task with the Fr\'echet mean at the centre, so the aggregate tree is representative rather than an
+artifact of any one task.
+
+\TODO{Expand blackbox results prose.
+  Key points: Claude siblings tightest (80\% of per-dataset trees); Gemini-Llama proximity =
+  formatting artifact; translation cleanest / also the tree-space outlier; multi-task aggregation
+  necessary. Ref Figures~\ref{fig:blackbox_hero} and~\ref{fig:blackbox_nj}.}
 
 
 % -----------------------------------------------------------------------
