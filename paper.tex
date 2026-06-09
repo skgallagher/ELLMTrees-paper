@@ -298,20 +298,24 @@ single-task probes miss.
 
 % Table 1: RF by leaf count
 \begin{table}[t]
-\caption{Tree recovery accuracy by tree size (branching\_v3, cosine distance).
-  Observed RF is mean $\pm$ SE across runs; null mean from 1{,}000 random binary trees.
-  \% sig: fraction of runs with $p < 0.05$ vs.\ random null.
-  Fisher $p$: combined significance across runs.}
+\caption{Polytomy-aware tree recovery by tree size (branching\_v3, cosine). The training
+  trees are multifurcating, so any binary reconstruction is forced to add resolving edges;
+  we therefore decompose RF into FN (true clades missed --- the real error) and FP
+  (binary-forced edges the polytomous truth never specified). Clade recovery
+  $= 1 - \mathrm{FN}/|\text{true splits}|$; refinement $=$ \% of runs whose reconstruction
+  contains the \emph{entire} true tree (FN$=0$). \% sig: runs with $p<0.05$ vs.\ the
+  random-tree null (identical for FN and total RF). RF matches the stored pipeline value in
+  529/530 runs.}
 \label{tab:rf_by_leaves}
 \begin{center}
-\begin{tabular}{rrrrrr}
+\begin{tabular}{rrrrrrrr}
 \toprule
-Leaves & $n$ & Null mean (SE) & Observed RF (SE) & \% sig & Fisher $p$ \\
+Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig \\
 \midrule
-5 & 11 & 3.21 (0.02) & 0.55 (0.21) &  0\% & 0.003 \\
-6 & 12 & 5.24 (0.02) & 1.92 (0.36) & 50\% & 0.0003 \\
-7 & 15 & 7.33 (0.01) & 2.60 (0.29) & 60\% & $<$0.0001 \\
-8 &  4 & 9.42 (0.03) & 3.75 (0.48) & 100\% & $<$0.0001 \\
+5 & 12 & 0.58 (0.19) & 0.08 (0.08) & 0.50 (0.15) & 96\% & 92\% &   0\% \\
+6 & 12 & 1.75 (0.35) & 0.33 (0.19) & 1.42 (0.19) & 85\% & 75\% &  50\% \\
+7 & 16 & 2.62 (0.27) & 0.19 (0.14) & 2.44 (0.18) & 90\% & 88\% &  60\% \\
+8 &  4 & 3.75 (0.48) & 0.25 (0.25) & 3.50 (0.29) & 88\% & 75\% & 100\% \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -320,13 +324,16 @@ Leaves & $n$ & Null mean (SE) & Observed RF (SE) & \% sig & Fisher $p$ \\
 % Figure 2: behavioral vs whitebox vs null
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/behavioral_vs_whitebox.png}
+    \includegraphics[width=\linewidth]{\figpath/fig2_fn.png}
   \end{center}
-  \caption{RF distance by tree size for whitebox weight distances (cosine, blue triangles),
-    behavioral distances (RTE label agreement, red squares), and random null (gray band,
-    P10--P90). Whitebox sits well below the null at all tree sizes $\geq 5$ leaves;
-    behavioral distances are indistinguishable from random. Behavioral failure is the
-    point: it confirms that weight access is necessary for per-run lineage recovery.}
+  \caption{FN (true clades missed) by tree size for whitebox weight distances (cosine, blue),
+    behavioral distances (held-out translation probe, semantic; \texttt{no\_translation\_v2}),
+    and random null (gray, mean $\pm$ 2\,SE). Plotting FN rather than total RF removes the
+    binary-forced FP that the multifurcating truth induces equally for signal and null.
+    Whitebox FN is $\approx 0$ at every tree size --- it recovers essentially all true clades ---
+    while the behavioral probe tracks the null: behavioral similarity is a pairwise lineage
+    gradient (quantified by the branch-structure and regression analyses), not a recoverable
+    topology. Weight access is what enables per-run tree recovery.}
   \label{fig:behavioral_vs_whitebox}
 \end{figure}
 
@@ -342,15 +349,15 @@ Leaves & $n$ & Null mean (SE) & Observed RF (SE) & \% sig & Fisher $p$ \\
 % Figure 3: per-layer RF profile
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/layer_rf_profiles.png}
+    \includegraphics[width=\linewidth]{\figpath/fig3_fn.png}
   \end{center}
-  \caption{Per-layer RF distance (mean $\pm$ 2 SE, $n=47$ runs) for all five distance metrics.
-    Encoder \textsc{sa.k} layers (highlighted) cluster at the bottom across all metrics ---
-    consistently lowest RF, strongest lineage signal. The cyclical pattern
-    (attention $\to$ FFN $\to$ layer norm repeating across blocks) shows that lineage
-    concentrates in attention keys and dissipates through the FFN.
-    % TODO: add Llama equivalent panel once Wright jobs complete
-  }
+  \caption{Per-layer FN-rate (\% of true clades missed; mean $\pm$ 2\,SE, $n=44$ runs, cosine),
+    encoder and decoder shown separately. The key matrices recur once per block and miss the
+    fewest true clades: encoder \textsc{SelfAttention.k} reaches 4\% FN (vs.\ 9\% elsewhere),
+    while \textsc{LayerNorm} is the periodic maximum. In the decoder the lineage-carrying low
+    cluster is the encoder--decoder \textsc{cross-attention} (\textsc{ca.k} lowest); decoder
+    self-attention is weak --- the signal there lives in cross-attention, which a decoder-only
+    model lacks.}
   \label{fig:layer_rf_profiles}
 \end{figure}
 
@@ -395,9 +402,9 @@ full\_ft\_approx & 168 & $-0.687$ & 0.242 & 31 & 70\% \\
 \multicolumn{6}{l}{\textit{Full fine-tuning}} \\
 branching\_v3  & all & $-0.805$ & 0.230 & 35 & 60\% \\
 \midrule
-\multicolumn{6}{l}{\textit{LayerTrace variants (full FT, 6-leaf runs)}} \\
-enc\_sak (4\%) & 12 tensors & \multicolumn{4}{l}{RF $1.38 \pm 0.18$ vs full $1.92 \pm 0.36$} \\
-full weight    & 282 tensors & \multicolumn{4}{l}{RF $1.92 \pm 0.36$ (reference)} \\
+\multicolumn{6}{l}{\textit{LayerTrace variants (full FT, 6-leaf runs); FN $=$ true clades missed}} \\
+enc\_sak (4\%) & 12 tensors & \multicolumn{4}{l}{FN $0.08 \pm 0.08$ vs full weight $0.33 \pm 0.19$} \\
+full weight    & 282 tensors & \multicolumn{4}{l}{FN $0.33 \pm 0.19$ (reference)} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -443,16 +450,16 @@ full weight    & 282 tensors & \multicolumn{4}{l}{RF $1.92 \pm 0.36$ (reference)
 % Figure: NJ tree grid (LLM DNA comparable)
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/nj_tree_fingerprint_grid.png}
+    \includegraphics[width=\linewidth]{\figpath/fig4_trees_fn.png}
   \end{center}
-  \caption{Neighbor-joining trees from behavioral fingerprint distances, one panel per task.
-    GPT models (green) cluster consistently across all tasks.
-    Claude clusters in summarization and QA but splits in translation (Haiku
-    migrates due to its unique header-heavy formatting style in that task).
-    Gemini--Llama proximity in QA and classification is a formatting artifact:
-    both produce verbose, structured responses on those tasks, while GPT gives
-    terse label-only answers. The artifact attenuates in summarization, where
-    response length is task-constrained.}
+  \caption{\emph{Top:} neighbor-joining trees from behavioral fingerprint distances, one panel
+    per task (branches coloured by developer family; shared legend below). GPT models cluster
+    consistently across all tasks; Claude clusters in summarization and QA but splits in
+    translation (Haiku migrates due to its header-heavy formatting there).
+    \emph{Bottom:} pairwise FN between the task trees --- clades present in the row task's tree
+    that are missing from the column task's. Translation is the most divergent task topology
+    (FN 11--13 from the others), consistent with its position as the tree-space outlier in
+    Fig.~\ref{fig:blackbox_hero}.}
   \label{fig:blackbox_nj}
 \end{figure}
 
