@@ -1,0 +1,20 @@
+# LaTeX build artifacts — regenerated on every compile, don't track
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+*.run.xml
+*.bcf
+*.tmp
+tmp*.tmp
+paper.pdf
