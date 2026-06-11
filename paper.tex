@@ -343,10 +343,18 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
   \label{fig:behavioral_vs_whitebox}
 \end{figure}
 
-\TODO{Write WeightTree results prose.
-  Headline: 60\% sig at 7 leaves, 100\% at 8.
-  Per-run significance is the operational claim.
-  Ref Figure~\ref{fig:behavioral_vs_whitebox} and Table~\ref{tab:rf_by_leaves}.}
+% DRAFT BULLETS — to be expanded to prose.
+\begin{itemize}
+  \item Whitebox weight distances recover essentially all true clades: FN $\approx 0$ at every
+    tree size (Fig.~\ref{fig:behavioral_vs_whitebox}), with clade recovery 85--96\% across
+    5--8 leaves (Table~\ref{tab:rf_by_leaves}).
+  \item Per-run significance against the random-tree null rises monotonically with tree size:
+    0\% (5 leaves) $\to$ 50\% (6) $\to$ 60\% (7) $\to$ 100\% (8). Per-run recovery, not just an
+    aggregate trend, is the operational claim --- at 8 leaves every run beats the null.
+  \item The held-out behavioral probe tracks the null (Fig.~\ref{fig:behavioral_vs_whitebox}):
+    behavioral similarity is a pairwise lineage gradient, not a recoverable topology. Weight
+    access is what enables per-run tree recovery.
+\end{itemize}
 
 
 \subsection{LayerTrace: Signal Concentrates in 4\% of the Model}
@@ -367,10 +375,18 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
   \label{fig:layer_rf_profiles}
 \end{figure}
 
-\TODO{Write LayerTrace results prose.
-  enc\_sak (4\% of params) non-inferior to full weight at all tree sizes >= 5 leaves;
-  outperforms at 6 leaves (RF 1.38 vs 1.92).
-  Ref Figure~\ref{fig:layer_rf_profiles} and Table~\ref{tab:variants}.}
+% DRAFT BULLETS — to be expanded to prose.
+\begin{itemize}
+  \item Lineage signal concentrates in the attention \emph{key} matrices: encoder
+    \textsc{SelfAttention.k} misses only 4\% of true clades vs.\ $\sim$9\% elsewhere, while
+    \textsc{LayerNorm} is the periodic maximum (Fig.~\ref{fig:layer_rf_profiles}).
+  \item \texttt{enc\_sak} (12 tensors, 4\% of parameters) is non-inferior to the full-weight tree
+    at $\geq 5$ leaves and \emph{outperforms} it at 6 leaves (RF 1.38 vs.\ 1.92; FN 0.08 vs.\ 0.33,
+    Table~\ref{tab:variants}). Most of the model is noise for lineage recovery.
+  \item In the decoder the signal lives in the encoder--decoder \emph{cross-attention}
+    (\textsc{ca.k} lowest); decoder self-attention is weak --- a carrier that decoder-only models
+    structurally lack (revisited in \S\ref{sec:discussion:keys}).
+\end{itemize}
 
 
 \subsection{Subspace Angles and Geometric Mechanism}
@@ -381,7 +397,20 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 % RTE probe: classification vs RTE = 64.8 degrees -- geometric forgetting mechanism.
 % Subspace angle figure -> Appendix~\ref{app:robustness}.
 
-\TODO{Write subspace angles results.}
+% DRAFT BULLETS — to be expanded to prose.
+\begin{itemize}
+  \item Cross-task displacement subspaces are near-orthogonal: grand mean $\sim$84$^\circ$, with
+    FFN gates 88--89$^\circ$ and SA.k/q, EncDecAttn.k/q at 87--89$^\circ$.
+  \item Within-task displacements are less orthogonal (dose-response by data similarity): grand
+    means 80.7$^\circ$ (summarization), 82.4$^\circ$ (translation), 85.8$^\circ$ (QA),
+    86.0$^\circ$ (classification) --- all below the cross-task $\sim$84$^\circ$.
+  \item Orthogonality is driven by \emph{data distribution}, not abstract task category: same
+    dataset $\to \sim$25$^\circ$; different datasets of the same task type $\to \sim$87$^\circ$.
+    Layer norms pull within-task means down (52--80$^\circ$) while SA.k/FFN stay $\sim$87--89$^\circ$.
+  \item Forgetting probe: classification vs.\ RTE displacement = 64.8$^\circ$ (decoder final
+    LayerNorm), uniquely non-orthogonal --- subspace overlap is the geometric signature of
+    catastrophic forgetting. Full angle tables in Appendix~\ref{app:robustness}.
+\end{itemize}
 
 
 \subsection{LoRA Dose-Response}
@@ -423,10 +452,18 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
 \end{center}
 \end{table}
 
-\TODO{Write LoRA dose-response prose.
-  Key sentence: lineage survives LoRA at all.
-  Large gap between full\_ft\_approx and full FT = constrained vs unconstrained updates.
-  Ref Table~\ref{tab:variants}.}
+% DRAFT BULLETS — to be expanded to prose.
+\begin{itemize}
+  \item Lineage survives LoRA at every adapter scope: all variants show a significant
+    same-branch $<$ cross-branch ordering (Table~\ref{tab:variants}). A tiny low-rank
+    perturbation on a frozen pretrained init still carries legible ancestry.
+  \item Both the ordering signal and topology recovery scale monotonically with trained-parameter
+    scope: Fisher-$z$ $r = -0.597$ (k\_only) $\to -0.670$ (qkv) $\to -0.671$ (full\_attn) $\to
+    -0.687$ (full\_ft\_approx) $\to -0.802$ (full FT); clade recovery 82\% $\to$ 90\% over the same
+    series.
+  \item Diminishing returns past qkv (qkv $\approx$ full\_attn): the large gap to full FT reflects
+    moving from rank-constrained to unconstrained updates, not adding more modules.
+\end{itemize}
 
 
 \subsection{Behavioral Bridge}
@@ -435,7 +472,23 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
 % Numbers: within-run r up to -0.40 (lora_k_only); all five groups significant.
 % no_translation_v2 null: r = -0.006. Chain closed.
 
-\TODO{Write behavioral bridge result (one paragraph).}
+% DRAFT BULLETS — to be expanded to prose.
+\begin{itemize}
+  \item Weight distance predicts behavioral (translation-output) similarity within run across all
+    five Flan-T5 conditions, all with significant negative $\beta$(cosine\_dist): lora\_k\_only
+    $\beta=-0.19$ ($p=1.2\!\times\!10^{-8}$), branching\_v3 $-7.40$ ($p=8.5\!\times\!10^{-5}$),
+    lora\_qkv $-16.6$ ($p=0.003$), lora\_full\_attn $-32.0$ ($p=0.006$), lora\_full\_ft\_approx
+    $-52.2$ ($p=0.001$).
+  \item Raw $\beta$ scale is \emph{not} comparable across groups --- LoRA conditions have much
+    smaller absolute cosine distances, inflating $\beta$ --- so the within-run correlation is the
+    apples-to-apples summary: $r$ from $-0.114$ to $-0.40$ (strongest lora\_k\_only). Null control
+    \texttt{no\_translation\_v2} (translation never trained) gives $r=-0.006$, $\beta$ n.s.,
+    confirming the probe measures task-specific adaptation, not base-model noise.
+  \item The bridge holds in decoder-only Llama-3.1-8B but is weaker: $\beta=-0.020$
+    ($p=2\!\times\!10^{-5}$, $r=-0.183$) on the standard probe and $\beta=-0.048$ ($p=0.012$,
+    $r=-0.059$) on held-out HellaSwag --- weight proximity predicts behavior even on a task the
+    model never trained on. Full model specifications in Appendix~\ref{app:regression}.
+\end{itemize}
 
 
 \subsection{Blackbox: Frontier Model Families}
@@ -483,10 +536,20 @@ task. The tree-space embedding (Figure~\ref{fig:blackbox_hero}b) shows the per-d
 by task with the Fr\'echet mean at the centre, so the aggregate tree is representative rather than an
 artifact of any one task.
 
-\TODO{Expand blackbox results prose.
-  Key points: Claude siblings tightest (80\% of per-dataset trees); Gemini-Llama proximity =
-  formatting artifact; translation cleanest / also the tree-space outlier; multi-task aggregation
-  necessary. Ref Figures~\ref{fig:blackbox_hero} and~\ref{fig:blackbox_nj}.}
+% DRAFT BULLETS — to be expanded to prose.
+\begin{itemize}
+  \item Claude Sonnet/Haiku are the tightest clade (sisters in 80\% of per-dataset trees,
+    Fig.~\ref{fig:blackbox_hero}a); the GPT family and the Llama pair are also recovered.
+  \item Single-task trees are confounded by output formatting: Claude clusters in summarization and
+    QA but splits in translation, where Haiku migrates due to header-heavy formatting
+    (Fig.~\ref{fig:blackbox_nj}).
+  \item Translation is both the cleanest per-prompt signal (language crossing decouples the
+    embedding from source content) and the tree-space outlier (FN 11--13 from the other task
+    trees) --- task topology varies enough that no single task is representative.
+  \item Multi-task aggregation is therefore necessary: the BHV Fr\'echet mean sits at the centre of
+    the per-dataset trees in tree space (Fig.~\ref{fig:blackbox_hero}b), recovering family
+    structure that single-task probes miss.
+\end{itemize}
 
 
 % -----------------------------------------------------------------------
