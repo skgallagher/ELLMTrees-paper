@@ -383,28 +383,32 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 
 % Table 2: layer variants + LoRA variants combined
 \begin{table}[t]
-\caption{Lineage signal by training regime (branch structure analysis,
-  cosine distance, \textsc{trained\_only=1} for LoRA groups).
-  Fisher-$z$ $r$: Fisher $z$-averaged within-run correlation between
-  cosine distance and same-branch indicator. \% sig: runs with $p < 0.05$.}
+\caption{Lineage signal by training regime (cosine distance, \textsc{trained\_only=1} for
+  LoRA groups). \emph{Ordering signal:} Fisher-$z$ $r$ is the Fisher $z$-averaged within-run
+  correlation between cosine distance and the same-branch indicator (SD and $N$ over runs with
+  within-run variation, $\geq 4$ leaves). \emph{Topology recovery:} RF and FN (true clades
+  missed) are means of the polytomy-aware NJ reconstruction over all $\geq 4$-leaf runs
+  ($N=40$--$47$); FN isolates the real error (RF additionally counts binary-forced edges that
+  the multifurcating truth never specified). Both the ordering signal and topology recovery
+  strengthen monotonically with trained-parameter scope.}
 \label{tab:variants}
 \begin{center}
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Variant & Trained layers & Fisher-$z$ $r$ & SD & $N$ runs & \% sig (7-leaf) \\
+Variant & Trained layers & Fisher-$z$ $r$ & SD & $N$ & RF & FN \\
 \midrule
-\multicolumn{6}{l}{\textit{LoRA adapter scope (Flan-T5-base)}} \\
-k\_only        &  36 & $-0.485$ & 0.330 & 37 & --- \\
-qkv            &  36 & $-0.594$ & 0.250 & 36 & 58\% \\
-full\_attn     & 144 & $-0.671$ & 0.245 & 32 & 73\% \\
-full\_ft\_approx & 168 & $-0.687$ & 0.242 & 31 & 70\% \\
+\multicolumn{7}{l}{\textit{LoRA adapter scope (Flan-T5-base)}} \\
+k\_only          &  36 & $-0.597$ & 0.330 & 37 & 2.11 & 0.34 \\
+qkv              &  36 & $-0.670$ & 0.250 & 36 & 1.98 & 0.28 \\
+full\_attn       & 144 & $-0.671$ & 0.245 & 32 & 1.83 & 0.21 \\
+full\_ft\_approx & 168 & $-0.687$ & 0.242 & 31 & 1.85 & 0.22 \\
 \midrule
-\multicolumn{6}{l}{\textit{Full fine-tuning}} \\
-branching\_v3  & all & $-0.805$ & 0.230 & 35 & 60\% \\
+\multicolumn{7}{l}{\textit{Full fine-tuning}} \\
+branching\_v3    & all & $-0.802$ & 0.230 & 37 & 1.81 & 0.19 \\
 \midrule
-\multicolumn{6}{l}{\textit{LayerTrace variants (full FT, 6-leaf runs); FN $=$ true clades missed}} \\
-enc\_sak (4\%) & 12 tensors & \multicolumn{4}{l}{FN $0.08 \pm 0.08$ vs full weight $0.33 \pm 0.19$} \\
-full weight    & 282 tensors & \multicolumn{4}{l}{FN $0.33 \pm 0.19$ (reference)} \\
+\multicolumn{7}{l}{\textit{LayerTrace variants (full FT, 6-leaf runs); FN $=$ true clades missed}} \\
+enc\_sak (4\%) & 12 tensors & \multicolumn{5}{l}{FN $0.08 \pm 0.08$ vs full weight $0.33 \pm 0.19$} \\
+full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)} \\
 \bottomrule
 \end{tabular}
 \end{center}
