@@ -1,0 +1,144 @@
+\documentclass[border=4pt]{standalone}
+\usepackage{times}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usetikzlibrary{arrows.meta,positioning,backgrounds,fit,calc,shapes.geometric}
+
+% ---- palette ----
+\definecolor{stagefill}{HTML}{F4F6FB}
+\definecolor{stageline}{HTML}{C7CFE0}
+\definecolor{ink}{HTML}{1F2733}
+\definecolor{flow}{HTML}{5B6B86}
+\definecolor{rootc}{HTML}{2B2F3A}
+\definecolor{bannerfill}{HTML}{EAEEF7}
+\definecolor{bannerline}{HTML}{B7C2D8}
+\definecolor{estc}{HTML}{3F7CAC}
+\definecolor{truthc}{HTML}{2B2F3A}
+\definecolor{nullc}{HTML}{B9C0CE}
+\definecolor{okc}{HTML}{4FA06B}
+% frontier family colors
+\definecolor{fClaude}{HTML}{C7693C}
+\definecolor{fGPT}{HTML}{4FA06B}
+\definecolor{fGemini}{HTML}{3F7CAC}
+\definecolor{fOpen}{HTML}{8A6FB0}
+
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily,
+  >={Stealth[length=2.6mm,width=2.2mm]},
+  panel/.style={draw=stageline,line width=0.8pt,rounded corners=4pt,fill=stagefill},
+  ptitle/.style={font=\sffamily\footnotesize\bfseries,text=ink},
+  scap/.style={font=\sffamily\scriptsize,text=flow,align=center},
+  mdl/.style={draw=stageline,fill=white,rounded corners=1.2pt,minimum width=3.6mm,minimum height=2.6mm,line width=0.5pt,inner sep=0pt},
+  flowarrow/.style={->,line width=1.3pt,draw=flow},
+]
+
+% ===================== TOP CLAIM BANNER =====================
+\node[draw=bannerline,fill=bannerfill,rounded corners=4pt,line width=0.8pt,
+      text width=15.6cm,align=center,inner sep=5pt,
+      font=\sffamily\small\bfseries,text=ink] (banner) at (7.9,5.55)
+  {Fine-tuning leaves a path-dependent signature in weight space ---
+   a model \emph{genealogy} that we validate against known trees, link to behavior,
+   and recover from frontier models with no weight access.};
+
+% ===================== PANEL A: controlled whitebox =====================
+\begin{scope}
+  \node[panel,minimum width=5.05cm,minimum height=4.5cm] (PA) at (2.65,2.2){};
+  \node[ptitle,anchor=north] at (PA.north) {\,A.\ Controlled recovery \textit{(known truth)}};
+
+  % true tree (left)
+  \node[font=\sffamily\scriptsize,text=truthc] at (1.05,3.55) {true tree $\mathcal{P}^{*}$};
+  \coordinate (tr) at (1.05,3.05);
+  \coordinate (ta) at (0.55,2.45); \coordinate (tb) at (1.55,2.45);
+  \coordinate (ta1) at (0.30,1.85);\coordinate (ta2) at (0.80,1.85);
+  \coordinate (tb1) at (1.30,1.85);\coordinate (tb2) at (1.80,1.85);
+  \draw[truthc,line width=1.1pt] (tr)--(ta) (tr)--(tb) (ta)--(ta1) (ta)--(ta2) (tb)--(tb1) (tb)--(tb2);
+  \node[circle,fill=rootc,inner sep=0pt,minimum size=2.4mm] at (tr){};
+  \foreach \p in {ta,tb}{\node[circle,fill=stageline,inner sep=0pt,minimum size=1.6mm] at (\p){};}
+  \foreach \p in {ta1,ta2,tb1,tb2}{\node[mdl] at (\p){};}
+
+  % recovered tree (right)
+  \node[font=\sffamily\scriptsize,text=estc] at (4.20,3.55) {recovered $\widehat{\mathcal{P}}$};
+  \coordinate (er) at (4.20,3.05);
+  \coordinate (ea) at (3.70,2.45); \coordinate (eb) at (4.70,2.45);
+  \coordinate (ea1) at (3.45,1.85);\coordinate (ea2) at (3.95,1.85);
+  \coordinate (eb1) at (4.45,1.85);\coordinate (eb2) at (4.95,1.85);
+  \draw[estc,line width=1.1pt] (er)--(ea) (er)--(eb) (ea)--(ea1) (ea)--(ea2) (eb)--(eb1) (eb)--(eb2);
+  \node[circle,fill=estc,inner sep=0pt,minimum size=2.2mm] at (er){};
+  \foreach \p in {ea,eb}{\node[circle,fill=estc,inner sep=0pt,minimum size=1.5mm] at (\p){};}
+  \foreach \p in {ea1,ea2,eb1,eb2}{\node[mdl,draw=estc] at (\p){};}
+
+  % compare arrow + RF tag
+  \draw[<->,line width=1.0pt,draw=flow] (2.05,2.42)--(3.25,2.42);
+  \node[font=\sffamily\scriptsize,text=ink] at (2.65,2.70) {RF\,/\,FN};
+  \node[draw=okc,rounded corners=2pt,line width=0.7pt,fill=okc!12,
+        font=\sffamily\scriptsize,text=okc,inner sep=2pt] at (2.65,1.30)
+        {$\checkmark$ better than random tree};
+  \node[scap,anchor=north] at (2.65,0.95) {weights $\to$ neighbor-joining,\\scored against the tree we built};
+\end{scope}
+
+% arrow A->B
+\draw[flowarrow] (5.25,2.2)--(5.95,2.2);
+
+% ===================== PANEL B: weights -> behavior =====================
+\begin{scope}
+  \node[panel,minimum width=4.55cm,minimum height=4.5cm] (PB) at (8.45,2.2){};
+  \node[ptitle,anchor=north] at (PB.north) {\,B.\ Weights predict behavior};
+
+  % scatter axes
+  \begin{scope}[shift={(6.85,1.55)}]
+    \draw[->,line width=0.8pt,draw=flow] (0,0)--(3.05,0);
+    \draw[->,line width=0.8pt,draw=flow] (0,0)--(0,2.05);
+    \node[font=\sffamily\scriptsize,text=flow,anchor=north] at (1.55,-0.07) {weight distance};
+    \node[font=\sffamily\scriptsize,text=flow,rotate=90,anchor=south] at (-0.12,1.0) {behavioral sim.};
+    % points (negative trend)
+    \foreach \x/\y in {0.30/1.78,0.55/1.55,0.70/1.66,0.95/1.40,1.15/1.30,1.35/1.42,1.60/1.05,1.85/1.12,2.05/0.82,2.30/0.70,2.55/0.78,2.78/0.52}{
+      \fill[estc!85!white] (\x,\y) circle (1.5pt);
+    }
+    \draw[truthc,line width=1.1pt,dashed] (0.20,1.78)--(2.85,0.52);
+  \end{scope}
+  \node[scap,anchor=north] at (8.45,1.12) {closer in weights $\Rightarrow$ more\\similar outputs --- even on a\\held-out task ($r<0$, within run)};
+\end{scope}
+
+% arrow B->C
+\draw[flowarrow] (10.75,2.2)--(11.45,2.2);
+
+% ===================== PANEL C: frontier blackbox =====================
+\begin{scope}
+  \node[panel,minimum width=4.95cm,minimum height=4.5cm] (PC) at (13.55,2.2){};
+  \node[ptitle,anchor=north] at (PC.north) {\,C.\ Frontier phylogeny \textit{(no weights)}};
+
+  % behavioral cladogram clustering families
+  \coordinate (root) at (11.55,2.35);
+  \coordinate (n1) at (12.25,3.10);   % top group
+  \coordinate (n2) at (12.25,1.55);   % bottom group
+  \coordinate (n1a) at (13.05,3.45);
+  \coordinate (n1b) at (13.05,2.75);
+  \coordinate (n2a) at (13.05,1.90);
+  \coordinate (n2b) at (13.05,1.15);
+  \draw[flow,line width=1.0pt] (root)--(n1) (root)--(n2)
+        (n1)--(n1a) (n1)--(n1b) (n2)--(n2a) (n2)--(n2b);
+  % leaf clades (two tips each), colored by family
+  \def\leaf#1#2#3{\draw[#3,line width=1.0pt] (#1)--($(#1)+(0.55,0.16)$) (#1)--($(#1)+(0.55,-0.16)$);
+        \node[mdl,draw=#3] at ($(#1)+(0.62,0.16)$){}; \node[mdl,draw=#3] at ($(#1)+(0.62,-0.16)$){};
+        \node[font=\sffamily\scriptsize,text=#3,anchor=west] at ($(#1)+(0.86,0)$){#2};}
+  \leaf{n1a}{Claude}{fClaude}
+  \leaf{n1b}{GPT}{fGPT}
+  \leaf{n2a}{Gemini}{fGemini}
+  \leaf{n2b}{Llama\,/\,Mistral}{fOpen}
+  \node[circle,fill=flow,inner sep=0pt,minimum size=1.8mm] at (root){};
+  \node[scap,anchor=north] at (13.55,0.78) {same NJ pipeline on model\\outputs recovers known\\frontier families};
+\end{scope}
+
+% ===================== BOTTOM ACCESS AXIS =====================
+\draw[->,line width=1.1pt,draw=flow] (0.7,-0.15)--(15.1,-0.15);
+\node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (2.65,-0.30)
+  {full weight access,\\known lineage};
+\node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (8.45,-0.30)
+  {weight\,$\to$\,behavior link};
+\node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (13.7,-0.30)
+  {outputs only,\\real frontier models};
+
+\end{tikzpicture}
+\end{document}
