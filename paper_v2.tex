@@ -318,19 +318,17 @@ Mann--Whitney, and within-run $r$ statistics) has power tending to $1$ once $M\c
 Because it pools, ordering is detected even when the per-pair $\SNR$---and hence coherence---is low.
 \end{theorem}
 
-\begin{theorem}[Topology --- the hard regime, no additivity]\label{thm:topo}
-If the worst per-triple ratio satisfies $\SNR^\ast\gtrsim 3\ln n$, then all $\binom{n}{3}$ rooted
-triples are called correctly with high probability and \textsc{Build} returns the true tree
-$\mathcal{P}^\ast$ exactly. Equivalently, topology is recovered only once coherence exceeds a threshold
-that grows slowly (logarithmically) with the number of leaves $n$.
-\end{theorem}
-
-\begin{corollary}[Why ordering and topology dissociate]\label{cor:diss}
-At intermediate coherence---too low per pair to clear the topology threshold, but with enough pairs $M$
-to pass the ordering test---lineage \emph{ordering} is detected while \emph{topology} is not. ``More
-orthogonal'' is therefore not uniformly worse: it can keep ordering alive while starving topology. This
-is exactly the decoder-only Llama regime (\S\ref{sec:results:weighttree}, Appendix~\ref{app:llama}).
-\end{corollary}
+\paragraph{Topology is harder (an identifiability remark).} Recovering the full tree needs every local
+relationship right at once, so it is governed by the \emph{worst} per-triple signal, not a pooled
+average. The signal is nonetheless \emph{identifiable} from ordinal information alone: once the
+per-triple signal-to-noise clears $\approx 3\ln n$, all rooted triples are called correctly and
+\textsc{Build} reconstructs the exact tree with no additivity assumption---equivalently, topology
+becomes recoverable once coherence clears a threshold growing only logarithmically in the number of
+leaves $n$ (Theorem~\ref{thm:topo}, Appendix~\ref{app:proofs}). We do not run \textsc{Build}: the
+pipeline reconstructs with neighbor-joining and we report topology recovery empirically (\S\ref{sec:results}),
+where coherence is what predicts it (Table~\ref{tab:coherence}). The two regimes therefore dissociate---at
+intermediate coherence, pooling keeps \emph{ordering} detectable while \emph{topology} stays out of
+reach, exactly the decoder-only Llama regime (Appendix~\ref{app:llama}).
 
 \paragraph{Coherence is bimodal and predicts recovery.} Across our experiments $c$ is sharply bimodal
 and gates topology recovery where the rank fraction $s=r/d$ does not. Groups that recover the
@@ -818,6 +816,13 @@ permutation, Mann--Whitney, and within-run $r$ statistics are monotone in $\bar 
 power.
 \end{proof}
 
+\begin{theorem}[Topology identifiability]\label{thm:topo}
+Let $\SNR^\ast$ be the worst single-comparison ratio over all triples. Each triple is called correctly
+with probability at least $1-2e^{-c_0\SNR^\ast}$, so all $2\binom{n}{3}$ comparisons hold together with
+probability at least $1-n^3 e^{-c_0\SNR^\ast}$; on that event \textsc{Build} reconstructs
+$\mathcal{P}^\ast$ exactly. Hence topology is identifiable once $\SNR^\ast\gtrsim 3\ln n$.
+\end{theorem}
+
 \begin{proof}[Proof of Theorem~\ref{thm:topo}]
 Fix a triple $ij\,|\,k$ and one of its comparisons, $Y=D_{ik}-D_{ij}$, with $\E[Y]\ge\gamma$
 (Assumption~\ref{asm:mono}). Writing each squared distance as
@@ -838,6 +843,11 @@ rooted triple is correct; this set is complete and tree-consistent, so \textsc{B
 $n^3e^{-c_0\SNR^\ast}\le\delta$ iff $\SNR^\ast\ge(3\ln n-\ln\delta)/c_0$. The constants $c_0,b$ depend
 on the sub-Gaussian noise parameters; this is an order-of-magnitude threshold, not a tight bound.
 \end{proof}
+
+\begin{corollary}[Ordering/topology dissociation]\label{cor:diss}
+If $\SNR^\ast\ll 3\ln n\ll M\cdot\overline{\SNR}$, ordering is detected (Theorem~\ref{thm:order}) but
+topology is not recovered: more orthogonal updates can keep ordering alive while starving topology.
+\end{corollary}
 
 \begin{proof}[Proof of Corollary~\ref{cor:diss}]
 In the stated range $M\,\overline{\SNR}\gg1$, so Theorem~\ref{thm:order} gives detection power
