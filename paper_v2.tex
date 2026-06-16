@@ -97,71 +97,66 @@
 % -----------------------------------------------------------------------
 \section{Related Work}
 \label{sec:related}
-% -----------------------------------------------------------------------
-% Organize as: macro / micro / genealogical (our lane).
-%
-% Primary three to engage:
-%   LLM DNA \citep{wu2026llmdna} — behavioral-space counterpart
-%   Unsupervised MoTHer \citep{horwitz2025mother} — closest in goal, no RF
-%   Neural Phylogeny \citep{yu2025neural} — pairwise edges, no full topology
-%
-% One-liner for all: "Prior work on [pairwise detection / behavioral
-% phylogeny] lacks a controlled ground-truth evaluation — none can report
-% RF distance against a known training topology."
-%
-% Also cite: PhyloLM, Neural Lineage, Nikolic et al., Zhu et al.
-% Weight-space geometry: Model Soups, LMC, Task Arithmetic.
+% ----------------------------------------------------------------------
 
-% DRAFT OUTLINE — topic sentences + citations, to be expanded to prose.
-% Spine: prior work probes lineage at two levels (macro behavioral / micro pairwise); we add the
-% missing middle — genealogical topology recovery against a known ground-truth tree, with a
-% geometric mechanism and a weight->behavior bridge. Differentiating line: no prior method reports
-% RF against a known training topology.
+LLM lineage has become an increasingly studied topic, appearing in three broad forms:
+\emph{model-parameter} studies, \emph{weight--behavior} studies that align parameters with
+outputs, and \emph{response-output} studies. Across these forms the work is driven by a range of
+applications: provenance and intellectual property (IP)
+\citep{horwitz2024mother, zeng2024huref, nikolic2025provenance}, model poisoning and misalignment
+\citep{cloud2025subliminal}, inheritance of traits from parent models
+\citep{cloud2025subliminal, agents2026same}, and data inquiries and auditing
+\citep{zhu2025independence}.
 
-\paragraph{Two lenses on model lineage.} Prior work probes provenance at two levels. \emph{Macro}
-methods read family structure from behavioral outputs --- PhyloLM \citep{yax2025phylolm} and LLM DNA
-\citep{wu2026llmdna} build dendrograms over hundreds of organic models from output similarity ---
-while \emph{micro} methods do pairwise detection (``is $B$ derived from $A$?''). We occupy the
-\emph{genealogical} middle: recovering multi-leaf training topology and scoring it against a known
-ground truth.
+\textbf{Model parameters.} Some works study how changes in parameters due to fine-tuning or
+reinforcement learning with human feedback (RLHF) in child models can be traced back to parent
+models. MoTHer \citep{horwitz2024mother} recovers model family trees from weight similarity over
+public checkpoints via a directed minimum spanning tree. \citet{yu2025neural} show that
+parent--child and grandparent--child lineage can be recovered both with a learning-free approximation
+of the fine-tuning step and with a learned detector, the latter exceeding $99\%$ accuracy. Beyond
+direct lineage, \citet{ghostspec2025} show that similarly trained models carry spectral weight
+``fingerprints'' that can identify common ancestry. Spectral DeTuning \citep{horwitz2024spectral}
+further shows that base weights are recoverable from a set of shared low-rank adapter (LoRA)
+variants, indicating that the full model set is not required to estimate ancestry. However, none of
+these works recovers a full training-topology tree, nor evaluates against a known ground-truth
+training tree.
 
-\paragraph{Weight-space lineage and model trees (closest competitors).} MoTHer and its unsupervised
-follow-up \citep{horwitz2024mother, horwitz2025mother} recover model family trees from weight
-similarity over public checkpoints via a directed minimum spanning tree; Neural Lineage / Neural
-Phylogeny \citep{yu2025neural} detect parent--child pairs and edge direction; spectral and
-distributional fingerprints (GhostSpec; \citealp{nikolic2025provenance}) and independence tests
-\citep{zhu2025independence} do pairwise verification. \textbf{Differentiator:} all operate on organic
-collections with no known topology, so none reports an accuracy measure (RF) against a ground-truth
-training tree, and none recovers a multi-leaf tree. Spectral DeTuning
-(\TODO{add spectral-detuning bib key, Horwitz ICML 2024}) shows base weights are recoverable from
-shared-LoRA variants --- direct motivation for why LoRA weight geometry encodes ancestry.
+Other works examine \emph{why} lineage carries from parent to
+child. Models fine-tuned from a shared initialization remain within a single connected low-loss basin
+\citep{wortsman2022model, frankle2020linear}, so pairwise weight distance is a meaningful proxy for
+genealogical distance. The displacement a task induces the \emph{task vector}
+$\Delta\theta=\theta_{\mathrm{ft}}-\theta_{\mathrm{base}}$ \citep{ilharco2023editing}.  Across different tasks, these task vectors are near-orthogonal, so
+distinct lineages contribute largely independent directions rather than canceling. Centered Kernel
+Alignment (CKA) \citep{kornblith2019similarity} is a standard tool for comparing trained models. Low-rank adaptation \citep{hu2022lora} and
+intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why a small update suffices
+and why the \emph{rank} of that update bounds how much lineage is legible, while near-orthogonal task
+subspaces have been linked to catastrophic forgetting \citep{kirkpatrick2017overcoming}. 
 
-\paragraph{Behavioral / output-space phylogeny.} PhyloLM \citep{yax2025phylolm} and LLM DNA
-\citep{wu2026llmdna} (also attesting-lineage and behavioral-fingerprint provenance work
-\TODO{add shang2026, behavioral-fingerprint bib keys}) show output similarity recovers family
-structure but require no weights and have no controlled ground truth. Our behavioral bridge is a
-controlled test of this idea --- weight proximity predicts output similarity even on a held-out task
---- with a null control (\texttt{no\_translation\_v2}) that the organic-collection setting cannot
-provide.
+\textbf{Model parameters $\leftrightarrow$ response output.} A second group connects how changes in parameters produce differences in behavior. \citet{cloud2025subliminal} show that child models inherit
+``subliminal'' traits from a parent even when every reference to the trait is filtered out of the training text, and prove that under suitable conditions (a large enough training signal) a parent's preference is preserved with respect to the trait's loss---provided the parent and child share an initialization. Representation-level methods sit here too: REEF \citep{zhang2025reef} compares the internal representations (via CKA) of a suspect and a victim model to decide derivation, and gradient-response fingerprints \citep{tensorguard2025} classify model families from how parameters react to probe inputs. These works establish that parameter proximity tracks behavioral and
+representational similarity, but only qualitatively and pairwise---none predicts behavioral similarity on a \emph{held-out} task under a controlled tree, which is precisely what our behavioral bridge does
+(\S\ref{sec:exp:behavioral}): we withhold an entire task from training and test whether weight distance still predicts output similarity.
 
-\paragraph{Why the signal exists: weight geometry, LoRA, task subspaces.} Fine-tuned models from a
-shared initialization lie in a connected low-error basin \citep{wortsman2022model, frankle2020linear},
-so pairwise weight distance carries ancestry. Task arithmetic \citep{ilharco2023editing} names the
-displacement vectors $\Delta\theta$ that our subspace-angle analysis measures; LoRA \citep{hu2022lora}
-and intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why a low-rank update
-suffices and why rank ($s=r/d$) governs how much lineage is legible; subspace geometry has been tied
-to catastrophic forgetting \citep{kirkpatrick2017overcoming} \TODO{add steele2026 subspace-forgetting
-key}, complementing our near-orthogonal cross-task angles. CKA \citep{kornblith2019similarity} is the
-expected model-similarity baseline to position our cosine weight distance against.
+\textbf{Response output.} The most studied track infers lineage from behavior alone. Its appeal is
+practical: it is learning-free, requiring only inference rather than further training, and---unlike
+weight comparison, which typically needs matching architectures and parameter layouts---it needs only
+text or benchmark outputs to compare \citep{yax2025phylolm, wu2026llmdna}. PhyloLM
+\citep{yax2025phylolm} builds phylogenetic trees of LLMs from output similarity and predicts benchmark
+performance, while LLM DNA \citep{wu2026llmdna} defines a functional ``DNA'' representation that carries
+lineage; both reconstruct phylogenies over hundreds of models. Related output-only methods test
+pairwise provenance from next-token distributions \citep{nikolic2025provenance} or via statistical
+independence of model outputs \citep{zhu2025independence}. However, this line is typically unsupervised
+and depends on model prompting or probes, with no known ground-truth topology to score against.
 
-\paragraph{Foundations we adopt.} We reconstruct trees with neighbor-joining
-\citep{saitou1987neighbor} and score them with Robinson--Foulds distance \citep{robinson1981comparison};
-the behavioral DV uses sentence-embedding similarity \citep{reimers2019sentence}.
+Our work fills this gap by building a full bridge from parameter-based lineage to behavioral lineage
+while (1) attempting full training-tree topology recovery and (2) evaluating against ground-truth
+training trees. This lets us quantify the link between changes in weights and changes in behavior,
+and---mirroring the result of \citet{cloud2025subliminal}---we prove an analogous theorem: lineage is
+recoverable exactly when the per-edge updates share a dominant direction (high coherence), the same
+shared-initialization alignment that drives subliminal trait transfer.
 
-\TODO{Add missing bib entries: Spectral DeTuning (Horwitz ICML 2024), Neural Lineage (Yu \& Wang CVPR
-2024, distinct from yu2025neural), GhostSpec (AAAI 2025), Attesting Lineage (Shang 2026), Steele 2026
-subspace forgetting, TIES-Merging, Mirzadeh LMC, CheckList (Ribeiro 2020). Also fix \texttt{grayson2024phylolm}
--> \texttt{yax2025phylolm} in \S\ref{sec:exp:blackbox}.}
+
+
 
 
 % -----------------------------------------------------------------------x
