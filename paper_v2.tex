@@ -215,32 +215,39 @@ run, yielding a permutation $p$-value for each run. To combine evidence across t
 %% that's t he statistical basis for our method.
 
 
-\subsection{Distance Metric: Cosine and the SNR Argument}
+\subsection{Distance Metric and Shared-Direction Coherence}
 \label{sec:framework:metric}
 
 One question we sought to answer is what distance (or similarity) metric should we use to compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are  cosine, correlation, $\ell_1$ and $\ell_2$ (the latter of which was used in MoTHER \cite{}).  The first two distances are bounded by 1 and so the distances are comparable across different layers.  The second two distances are unbounded, which can allow different magnitudes of weights to dominate the distance.
 
-To determine which metric to use, we use within-run Signal to Noise Ratio (SNR), $\mathbb{E}[X]^2/\mathrm{Var}[X]$, as a heuristic with the intuition that a larger SNR will lead to easier separation among distances and thus better phylogenies.  The results of this experiment are shown in Table~\ref{tab:metric-snr}.
+We use cosine distance throughout: it is bounded and scale-invariant across layers, so no single high-magnitude tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$. A per-metric signal-to-noise comparison corroborating this choice---cosine and correlation separate same- from cross-branch distances far better than $\ell_1$/$\ell_2$---is given in Appendix~\ref{app:snr}.
 
-One result we see in Table~\ref{tab:metric-snr} is that cosine distance and correlation generally have the highest SNR across our different experiments.  Intuitively, this makes sense because the larger magnitude layers such as layer norms which are known to be noisy \cite{} have less chance to dominate.  Thus, we see that scaling the distance within layers is important.  For the rest of the analysis, we choose cosine similarity over correlation because we view them as largely as comparable with cosine distance having more prominence in layer weight analyses \cite{}.
+Given the metric, the quantity that determines whether weight distances carry \emph{recoverable} lineage is the shared-direction coherence $c=\lambda_1(S)/n$ (defined in \S\ref{sec:framework:theory}): the fraction of update energy along a single shared direction. Table~\ref{tab:coherence} reports $c$ (mean over runs, standard deviation in parentheses) by training condition, with polytomy-aware clade recovery and the fraction of runs significant against the label permutation. Coherence is sharply \emph{bimodal}: every condition that recovers topology sits at $c\approx0.99$ (sibling updates nearly parallel), while every diluted low-rank decoder condition sits at $c\approx0.20$ (updates nearly orthogonal), with nothing in between; the rank fraction $s=r/d$ does not separate the two groups. A single threshold on $c$ predicts which conditions admit topology recovery (\S\ref{sec:results:weighttree}).
 
 \begin{table}[t]
 \centering
-\caption{Mean SNR ($= \mathbb{E}[X]^2/\mathrm{Var}[X]$ of per-layer RF values) with standard error in parentheses, by metric and tree size. Computed over \texttt{runs\_branching\_v3}. At 5--7 leaves all metrics are comparable; at 8 leaves normalized metrics (cosine, correlation) outperform $\ell_1$/$\ell_2$ by $\sim$18$\times$.}
-\label{tab:metric-snr}
-\begin{tabular}{lccccc}
+\caption{Shared-direction coherence $c=\lambda_1(S)/n$ (mean over runs, SD in parentheses) by training
+  condition, with polytomy-aware clade recovery and the fraction of runs significant vs.\ the label
+  permutation. Coherence is bimodal and cleanly separates conditions that recover topology
+  ($c\approx0.99$) from the diluted low-rank decoder ``dead zone'' ($c\approx0.20$); the rank fraction
+  $s=r/d$ does not. Full-FT Llama-3.2-1B (pilot) likewise sits in the recovering regime
+  ($c\approx1.0$), confirming the gate is coherence, not architecture or scale.}
+\label{tab:coherence}
+\begin{tabular}{lccc}
 \toprule
-Metric & 5 leaves & 6 leaves & 7 leaves & 8 leaves & $n$ (5--7 / 8) \\
+Condition & Coherence $c$ & Clade recovery & \% sig vs.\ label \\
 \midrule
-Cosine      & 5.1 (4.0)   & \textbf{47.8} (24.7) & 60.4 (14.5) & 331 (270) & 9--15 / 4 \\
-Correlation & \textbf{16.1} (8.6)  & 33.3 (13.5) & 71.7 (21.0) & \textbf{339} (269) & 11--15 / 4 \\
-$\ell_1$    & 3.6 (2.1)   & 46.0 (27.4) & 76.2 (21.6) & 18.4 (8.0) & 9--13 / 3 \\
-$\ell_2$    & 3.6 (2.1)   & 44.8 (27.4) & \textbf{81.3} (22.3) & 18.5 (7.9) & 9--13 / 3 \\
+\multicolumn{4}{l}{\textit{Recovering regime ($c\approx0.99$)}} \\
+Flan-T5 full FT (\texttt{branching\_v3}) & 0.992 (0.001) & 90.4\% & 38.3\% \\
+Flan-T5 LoRA (qkv)                       & 0.998 (0.001) & 83.3\% & 32.6\% \\
+Pythia-160M full FT                      & 1.000 (0.001) & 97.5\% & 46.8\% \\
+\midrule
+\multicolumn{4}{l}{\textit{Dead zone ($c\approx0.20$)}} \\
+Llama-8B LoRA (k\_only)                  & 0.201 (0.044) & 19.6\% & 0.0\% \\
+Llama-3.2-1B LoRA (qkv)                  & 0.200 (0.043) & 29.4\% & 0.0\% \\
+Llama-3.2-1B (base) LoRA (qkv)           & 0.201 (0.045) & 29.3\% & 0.0\% \\
 \bottomrule
 \end{tabular}
-\smallskip
-
-\noindent\textit{Note:} Cell format is mean (SE). 4-leaf runs excluded (SNR $\approx 0$ across all metrics, $n$=2--3). Bold indicates highest value in each row and column. Large SEs at 8 leaves reflect high run-to-run variance with small $n$; the normalized vs.\ unnormalized gap is nonetheless $\sim$18$\times$.
 \end{table}
 
 
@@ -258,95 +265,82 @@ One contribution we have in our methodology is the use of per-layer distance mat
 Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify the most and least important layers in training by examining which layers change the most or least across multiple training runs.
 
 
-\subsection{Two Regimes for Lineage Recovery: A Signal-to-Noise Theorem}
+\subsection{Two Regimes for Lineage Recovery, and Coherence as the Governing Variable}
 \label{sec:framework:theory}
 
-We now give a statistical account of \emph{when} the recipe of \S\ref{sec:framework:phylo}
-succeeds. Model each fine-tuning step as a displacement in weight space. Fine-tuning along a known
-rooted tree $\mathcal{P}^*$, every node is a model; the root is the starting checkpoint
-$w_0\in\mathbb{R}^d$, and fine-tuning node $v$ from its parent adds a displacement
-$w_v = w_{\mathrm{pa}(v)} + \Delta_v$ that we split into a task-systematic part and run-to-run noise,
-\[
-  \Delta_v \;=\; \underbrace{\bd_{\tau(v)}}_{\text{task vector}}
-  \;+\; \underbrace{\beps_v}_{\text{noise}},
-\]
-where $\bd_\tau$ is the average direction in which task $\tau$ pushes the model (children inherit
-their ancestors' task vectors by summation down the tree), $\rho<1$ is the cosine similarity between
-two \emph{distinct} task vectors, and $\beps_v$ is mean-zero run noise independent across nodes with
-$\E\norm{\beps_v}^2=\nu$. We observe the $n$ leaves and measure squared weight distances
-$D_{ij}=\norm{w_i-w_j}^2$.
+We now give a statistical account of \emph{when} the recipe of \S\ref{sec:framework:phylo} succeeds.
+Fine-tuning a child from its parent adds a displacement in weight space, which we model as a shared,
+task-systematic direction (a ``task vector'') plus independent run-to-run noise: siblings trained on
+similar data share more of that direction, unrelated branches less. The pairwise weight distances we
+feed to neighbor-joining are therefore a lineage \emph{signal}---how the shared directions differ along
+the tree---buried in \emph{noise} that accumulates over the connecting edges. Whether lineage is
+recoverable comes down to one quantity: how much of each update lies along the shared direction versus
+in orthogonal noise. The formal model and all proofs are deferred to Appendix~\ref{app:proofs}; here we
+state the consequences and the variable that controls them.
 
-Two qualitatively different questions hide inside ``reading the lineage.'' \emph{Ordering} asks only
-whether same-branch pairs are closer than cross-branch pairs \emph{on average}; \emph{topology} asks
-to reassemble the entire tree, which needs the local relationships to be right everywhere at once.
-Our central empirical puzzle---decoder models that pass ordering but fail topology
-(\S\ref{sec:results:weighttree}, Appendix~\ref{app:llama})---is exactly the gap between these two
-questions. We replace the usual \emph{tree-additivity} requirement (which orthogonal updates violate)
-with a weaker, purely ordinal assumption stated in terms of \emph{rooted triples}: for leaves
-$i,j,k$, the triple $ij\,|\,k$ records which pair branched off together most recently, and a classical
-algorithm (\textsc{Build}, \citealp{aho1981build}) rebuilds the whole tree from a complete consistent
-set of correct triples without ever using exact distances.
+\paragraph{Two regimes.} ``Reading the lineage'' hides two questions of very different difficulty.
+\emph{Ordering} asks only whether same-branch pairs are closer than cross-branch pairs \emph{on
+average}; it pools many comparisons, so even a tiny per-pair signal accumulates into a detectable
+trend. \emph{Topology} asks to reconstruct the entire tree, which needs the local relationships right
+\emph{everywhere at once}---a few wrong calls anywhere break it. We obtain the topology result
+\emph{without} the tree-additivity condition neighbor-joining nominally needs (and that near-orthogonal
+updates violate), by reasoning about \emph{rooted triples}---ordinal facts of the form ``$i$ and $j$
+branched off together more recently than $k$''---which the classical \textsc{Build} algorithm
+\citep{aho1981build} assembles into the unique tree using only the \emph{order} of distances, never
+their exact values.
 
 \begin{assumption}[Lineage monotonicity]\label{asm:mono}
-For every true triple $ij\,|\,k$, the closer pair has the smaller expected distance:
-$\E[D_{ij}]<\E[D_{ik}]$ and $\E[D_{ij}]<\E[D_{jk}]$. Write $\gamma$ for the smallest such gap.
+For every true triple $ij\,|\,k$, the closer pair has the smaller expected distance,
+$\E[D_{ij}]<\E[D_{ik}]$ and $\E[D_{ij}]<\E[D_{jk}]$; write $\gamma$ for the smallest such gap.
+Tree-additivity implies this but not conversely, so it holds even in the near-orthogonal regime where
+additivity fails---which is why our results never need the metric to behave like tree branch lengths.
 \end{assumption}
 
-Tree-additivity implies Assumption~\ref{asm:mono} but not conversely, so the ordinal version survives
-the near-orthogonal regime where additivity decays. Two lemmas show the task vectors are exactly what
-create the gap (proofs in Appendix~\ref{app:proofs}).
+\paragraph{Coherence is the governing variable.} Both regimes are controlled by the fraction of each
+update that lies along the shared lineage direction rather than in orthogonal noise. We measure this
+fraction directly and without labels: from a run's pairwise cosine-similarity matrix $S=\mathbf{1}-D$
+of the trained-module updates, define the \emph{shared-direction coherence}
+\[
+  c \;=\; \lambda_1(S)/n \;\in\; [\,1/n,\;1\,],
+\]
+where $\lambda_1(S)$ is the largest (leading) eigenvalue of $S$ and $n$ is the number of leaves. Since
+$S$ is positive semidefinite with $\mathrm{tr}\,S=n$, $c$ is the share of update energy along the
+single dominant direction---$c=1$ when all sibling updates are parallel, $c=1/n$ when they are mutually
+orthogonal. Coherence is the measurable form of the
+per-comparison signal-to-noise ratio $\SNR$ that the theorems below are stated in: high coherence means
+the lineage direction dominates the noise. (We phrase the theorems in $\SNR$ because that is the
+quantity the concentration bounds use; $c$ is what we actually compute from the distance matrices, and
+the two move together.)
 
-\begin{lemma}[Expected distance]\label{lem:mean}
-$\E[D_{ij}]=\norm{\bsig_{ij}}^2+\nu\,\ell_{ij}$, where $\bsig_{ij}$ is the deterministic sum of task
-vectors on the two root-paths and $\ell_{ij}$ is the number of edges separating $i$ and $j$. No
-tree-additivity is used.
-\end{lemma}
-
-\begin{lemma}[Each extra branch adds a fixed margin]\label{lem:margin}
-For the canonical triple $ij\,|\,k$, averaging over task assignments,
-$\E[D_{ij}]=2(1-\rho)\norm{\bd}^2+2\nu$ and $\E[D_{ik}]=(3-2\rho)\norm{\bd}^2+3\nu$, so the gap is
-$\gamma=\norm{\bd}^2+\nu$. The alignment $\rho$ cancels from the gap (it sets only how tight siblings
-are).
-\end{lemma}
-
-Define the per-comparison signal-to-noise ratio $\SNR=\gamma^2/\Var[X]$ with
-$X=D_{\text{cross}}-D_{\text{same}}$. The same ratio drives both grades of recovery, but they
-aggregate it differently.
-
-\begin{theorem}[Ordering---the easy grade]\label{thm:order}
-Pooling $M$ comparable pairs, the averaged standardized gap grows like $\sqrt{M\,\overline{\SNR}}$, so
-``siblings closer than cousins'' (our permutation / Mann--Whitney / within-run $r$ tests) is detected
-as soon as $M\cdot\overline{\SNR}\gg1$. Ordering therefore survives a per-pair $\SNR$ far below one.
+\begin{theorem}[Ordering --- the easy regime]\label{thm:order}
+Pooling $M$ comparable pairs, the ``same-branch closer than cross-branch'' test (our permutation,
+Mann--Whitney, and within-run $r$ statistics) has power tending to $1$ once $M\cdot\overline{\SNR}\gg1$.
+Because it pools, ordering is detected even when the per-pair $\SNR$---and hence coherence---is low.
 \end{theorem}
 
-\begin{theorem}[Topology---the hard grade, no additivity]\label{thm:topo}
-Let $\SNR^\ast$ be the worst single-comparison ratio over all triples. Each triple is called correctly
-with probability at least $1-2e^{-c_0\SNR^\ast}$, so all $2\binom{n}{3}$ comparisons hold together
-with probability at least $1-n^3 e^{-c_0\SNR^\ast}$; on that event \textsc{Build} reconstructs
-$\mathcal{P}^*$ exactly. Hence topology is recovered once $\SNR^\ast\gtrsim 3\ln n$.
+\begin{theorem}[Topology --- the hard regime, no additivity]\label{thm:topo}
+If the worst per-triple ratio satisfies $\SNR^\ast\gtrsim 3\ln n$, then all $\binom{n}{3}$ rooted
+triples are called correctly with high probability and \textsc{Build} returns the true tree
+$\mathcal{P}^\ast$ exactly. Equivalently, topology is recovered only once coherence exceeds a threshold
+that grows slowly (logarithmically) with the number of leaves $n$.
 \end{theorem}
 
-\begin{corollary}[Why the two come apart]\label{cor:diss}
-If $\SNR^\ast\ll 3\ln n\ll M\cdot\overline{\SNR}$, ordering is detected but topology is not recovered.
-``More orthogonal'' is therefore not simply better: it can keep ordering alive while starving
-topology.
+\begin{corollary}[Why ordering and topology dissociate]\label{cor:diss}
+At intermediate coherence---too low per pair to clear the topology threshold, but with enough pairs $M$
+to pass the ordering test---lineage \emph{ordering} is detected while \emph{topology} is not. ``More
+orthogonal'' is therefore not uniformly worse: it can keep ordering alive while starving topology. This
+is exactly the decoder-only Llama regime (\S\ref{sec:results:weighttree}, Appendix~\ref{app:llama}).
 \end{corollary}
 
-\paragraph{The measurable bridge: shared-direction coherence.}
-Theorem~\ref{thm:topo} says recovery is governed by the lineage-informative \emph{fraction} of the
-update---how much of each sibling's displacement lies along a shared direction rather than in
-mutually orthogonal noise. We measure this directly and label-free. For each run we form the
-cosine-similarity Gram $S=\mathbf{1}-D$ of the (trained-module) updates and define
-\emph{shared-direction coherence} $\;c=\lambda_1(S)/n\in[1/n,1]$, the fraction of update energy along
-the single dominant shared direction ($c=1$: all sibling updates parallel; $c=1/n$: mutually
-orthogonal). Empirically $c$ is sharply \emph{bimodal} and gates topology recovery: groups that
-recover (Flan-T5 full FT and LoRA, Pythia-160M full FT, full-FT Llama-3.2-1B) sit at $c\approx0.99$,
-while every diluted low-rank decoder group (Llama-8B/1B LoRA) sits at $c\approx0.20$ with nothing in
-between. A single threshold on $c$ classifies ``recovers topology'' with $100\%$ accuracy across our
-groups, whereas the rank fraction $s=r/d$ does not---it misclassifies high-$s$ diluted Llama groups
-(\S\ref{sec:results:lora}, Appendix~\ref{app:llama}). Coherence is thus the operational form of the
-$\SNR$ in Theorem~\ref{thm:topo}, and low rank is only \emph{one} of several mechanisms (high width,
-fused projections, near-floor displacement) that destroy it.
+\paragraph{Coherence is bimodal and predicts recovery.} Across our experiments $c$ is sharply bimodal
+and gates topology recovery where the rank fraction $s=r/d$ does not. Groups that recover the
+topology---Flan-T5 (full FT and LoRA), Pythia-160M (full FT), and full-FT Llama-3.2-1B---sit at
+$c\approx0.99$ (updates nearly parallel), while every diluted low-rank decoder group (Llama-8B and 1B
+LoRA) sits at $c\approx0.20$ (updates nearly orthogonal), with nothing in between. A single threshold
+on $c$ separates ``recovers topology'' from ``does not'' with $100\%$ accuracy across our groups,
+whereas $s=r/d$ misclassifies the high-$s$ diluted Llama groups (Table~\ref{tab:coherence}). Low rank is
+then just one of several mechanisms---alongside large model width, fused projections, and near-floor
+displacement---that drive coherence down.
 
 
 % -----------------------------------------------------------------------
@@ -384,30 +378,22 @@ In our experiments, we vary the root model, task types, and which layers we trai
 
 While recovering ancestral information about a model is important for
 provenance and auditing, a practical question is whether weight-space
-proximity predicts anything useful about model behavior. Here we test
-whether whitebox weight distance is a significant predictor of behavioral
-similarity on a probe task, after controlling for run-level variation.
+proximity predicts anything useful about model behavior. Here we estimate
+how strongly whitebox weight distance predicts behavioral similarity on a
+probe task, after absorbing run-level variation.
 
 We operationalize behavioral similarity in two ways: task performance
 (ROUGE-L) and semantic similarity between model outputs measured via
 sentence-embedding cosine distance, with the latter as our primary
-dependent variable. In both cases we fit a mixed-effects regression with
-weight distance as the key predictor and run as a random interceptWe assess significance via a permutation test. Let $\mathrm{RF}(\widehat{\mathcal{P}},
-\mathcal{P}^*)$ denote the Robinson-Foulds distance between the estimated and
-ground-truth trees for a given run. The null hypothesis is that $\widehat{\mathcal{P}}$
-carries no lineage information --- formally, that the observed RF is no smaller than
-what would be obtained from a uniformly random binary tree with the same leaf count:
-$$
-H_0: \mathrm{RF}(\widehat{\mathcal{P}}, \mathcal{P}^*) \ge
-     \mathrm{RF}(\mathcal{P}_{\text{rand}}, \mathcal{P}^*)
-$$
-where $\mathcal{P}_{\text{rand}}$ is drawn uniformly from the space of binary trees
-on $n$ leaves. We approximate this null distribution with 1{,}000 random trees per
-run, yielding a permutation $p$-value for each run. To combine evidence across the
-50 independent runs, we apply Fisher's method: $-2\sum_{i=1}^{50} \log p_i \sim
-\chi^2(100)$ under the global null.
-(see Appendix~\ref{app:regression} for full model specifications and
-sensitivity analyses).
+dependent variable. In both cases we fit a fixed-effects regression of
+behavioral similarity on weight distance with a per-run fixed intercept
+(run fixed effects, which absorb run-level variation), and report the
+\emph{standardized} coefficient $\beta$---both weight distance and the
+behavioral outcome $z$-scored within run. So standardized, $\beta$ equals
+the within-run correlation $r$ and is the one effect size comparable across
+conditions, since the raw slope inherits each condition's output variance
+(see Appendix~\ref{app:regression} for the full specification, the raw and
+semi-standardized coefficients, and sensitivity analyses).
 
 For Flan-T5-base, we use translation as the probe task, training models
 on summarization, QA, and classification only and withholding translation
@@ -772,6 +758,26 @@ than $k$; it is the atom of tree structure, and \textsc{Build} \citep{aho1981bui
 unique tree displaying a complete consistent set of correct triples using only orderings of distances,
 never their exact values.
 
+\paragraph{Model.} Fine-tuning node $v$ from its parent adds $\Delta_v=\bd_{\tau(v)}+\beps_v$: a task
+vector $\bd_{\tau}$ (the average direction in which task $\tau$ moves the model; children inherit their
+ancestors' task vectors by summation down the tree) plus independent mean-zero run noise $\beps_v$ with
+$\E\norm{\beps_v}^2=\nu$. Distinct task vectors share a common length $\norm{\bd}$ and pairwise cosine
+$\rho<1$. We observe the $n$ leaves and their squared distances $D_{ij}=\norm{w_i-w_j}^2$, and write
+the per-comparison signal-to-noise ratio $\SNR=\gamma^2/\Var[X]$ with $X=D_{\text{cross}}-D_{\text{same}}$,
+where $\gamma$ is the gap of Assumption~\ref{asm:mono} (stated in \S\ref{sec:framework:theory}).
+
+\begin{lemma}[Expected distance]\label{lem:mean}
+$\E[D_{ij}]=\norm{\bsig_{ij}}^2+\nu\,\ell_{ij}$, where $\bsig_{ij}$ is the deterministic sum of task
+vectors on the two root-paths and $\ell_{ij}$ is the number of edges separating $i$ and $j$. No
+tree-additivity is used.
+\end{lemma}
+
+\begin{lemma}[Each extra branch adds a fixed margin]\label{lem:margin}
+For the canonical triple $ij\,|\,k$, averaging over task assignments,
+$\E[D_{ij}]=2(1-\rho)\norm{\bd}^2+2\nu$ and $\E[D_{ik}]=(3-2\rho)\norm{\bd}^2+3\nu$, so the gap is
+$\gamma=\norm{\bd}^2+\nu$ (the alignment $\rho$ cancels; it sets only how tight siblings are).
+\end{lemma}
+
 \begin{proof}[Proof of Lemma~\ref{lem:mean}]
 Since $\bsig_{ij}$ is deterministic,
 $D_{ij}=\norm{\bsig_{ij}}^2+2\langle\bsig_{ij},\bnoise_{ij}\rangle+\norm{\bnoise_{ij}}^2$. The noise
@@ -861,7 +867,7 @@ $\E\norm{P_V x}^2=r/d$ for any unit $x$). This makes $s=r/d$ \emph{one} mechanis
 $\SNR$. It is not the only one, and it is not directly observable per run; our experiments instead use
 shared-direction coherence $c=\lambda_1(S)/n$ (\S\ref{sec:framework:theory}), which is measurable from
 the distance matrices alone and, unlike $s=r/d$, classifies topology recovery across all our groups
-without error (\S\ref{sec:results:lora}, Appendix~\ref{app:llama}).
+without error (Table~\ref{tab:coherence}, Appendix~\ref{app:llama}).
 
 
 \section{Experimental Details}
