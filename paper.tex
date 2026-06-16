@@ -59,6 +59,22 @@
 % or micro (pairwise fingerprinting), but full topology recovery against
 % known ground truth. Name the monotone function claim.
 
+\begin{figure}[t]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/fig1_paper_overview.pdf}
+  \end{center}
+  \caption{\textbf{Overview.} Fine-tuning leaves a path-dependent signature in weight
+  space that we read as a model genealogy across three levels of access.
+  \textbf{(A)}~In controlled fine-tuning trees with known ground-truth topology, weight
+  distances feed neighbor-joining to recover a phylogeny $\widehat{\mathcal{P}}$ that we
+  score against the true tree $\mathcal{P}^{*}$ via RF/FN distance and a random-tree
+  permutation null. \textbf{(B)}~Weight-space proximity predicts behavioral similarity,
+  even on a held-out task. \textbf{(C)}~The same neighbor-joining pipeline applied to
+  model outputs recovers known frontier-model families with no weight access. Access to
+  model internals decreases from left to right.}
+  \label{fig:overview}
+\end{figure}
+
 \TODO{Write introduction.}
 
 
@@ -80,7 +96,56 @@
 % Also cite: PhyloLM, Neural Lineage, Nikolic et al., Zhu et al.
 % Weight-space geometry: Model Soups, LMC, Task Arithmetic.
 
-\TODO{Write related work.}
+% DRAFT OUTLINE — topic sentences + citations, to be expanded to prose.
+% Spine: prior work probes lineage at two levels (macro behavioral / micro pairwise); we add the
+% missing middle — genealogical topology recovery against a known ground-truth tree, with a
+% geometric mechanism and a weight->behavior bridge. Differentiating line: no prior method reports
+% RF against a known training topology.
+
+\paragraph{Two lenses on model lineage.} Prior work probes provenance at two levels. \emph{Macro}
+methods read family structure from behavioral outputs --- PhyloLM \citep{yax2025phylolm} and LLM DNA
+\citep{wu2026llmdna} build dendrograms over hundreds of organic models from output similarity ---
+while \emph{micro} methods do pairwise detection (``is $B$ derived from $A$?''). We occupy the
+\emph{genealogical} middle: recovering multi-leaf training topology and scoring it against a known
+ground truth.
+
+\paragraph{Weight-space lineage and model trees (closest competitors).} MoTHer and its unsupervised
+follow-up \citep{horwitz2024mother, horwitz2025mother} recover model family trees from weight
+similarity over public checkpoints via a directed minimum spanning tree; Neural Lineage / Neural
+Phylogeny \citep{yu2025neural} detect parent--child pairs and edge direction; spectral and
+distributional fingerprints (GhostSpec, \citealp{ghostspec2025}; \citealp{nikolic2025provenance}) and independence tests
+\citep{zhu2025independence} do pairwise verification. \textbf{Differentiator:} all operate on organic
+collections with no known topology, so none reports an accuracy measure (RF) against a ground-truth
+training tree, and none recovers a multi-leaf tree. Spectral DeTuning
+(\TODO{add spectral-detuning bib key, Horwitz ICML 2024}) shows base weights are recoverable from
+shared-LoRA variants --- direct motivation for why LoRA weight geometry encodes ancestry.
+
+\paragraph{Behavioral / output-space phylogeny.} PhyloLM \citep{yax2025phylolm} and LLM DNA
+\citep{wu2026llmdna} (also attesting-lineage and behavioral-fingerprint provenance work
+\TODO{add shang2026, behavioral-fingerprint bib keys}) show output similarity recovers family
+structure but require no weights and have no controlled ground truth. Our behavioral bridge is a
+controlled test of this idea --- weight proximity predicts output similarity even on a held-out task
+--- with a null control (\texttt{no\_translation\_v2}) that the organic-collection setting cannot
+provide.
+
+\paragraph{Why the signal exists: weight geometry, LoRA, task subspaces.} Fine-tuned models from a
+shared initialization lie in a connected low-error basin \citep{wortsman2022model, frankle2020linear},
+so pairwise weight distance carries ancestry. Task arithmetic \citep{ilharco2023editing} names the
+displacement vectors $\Delta\theta$ that our subspace-angle analysis measures; LoRA \citep{hu2022lora}
+and intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why a low-rank update
+suffices and why rank ($s=r/d$) governs how much lineage is legible; subspace geometry has been tied
+to catastrophic forgetting \citep{kirkpatrick2017overcoming} \TODO{add steele2026 subspace-forgetting
+key}, complementing our near-orthogonal cross-task angles. CKA \citep{kornblith2019similarity} is the
+expected model-similarity baseline to position our cosine weight distance against.
+
+\paragraph{Foundations we adopt.} We reconstruct trees with neighbor-joining
+\citep{saitou1987neighbor} and score them with Robinson--Foulds distance \citep{robinson1981comparison};
+the behavioral DV uses sentence-embedding similarity \citep{reimers2019sentence}.
+
+\TODO{Add missing bib entries: Spectral DeTuning (Horwitz ICML 2024), Neural Lineage (Yu \& Wang CVPR
+2024, distinct from yu2025neural), Attesting Lineage (Shang 2026), Steele 2026
+subspace forgetting, TIES-Merging, Mirzadeh LMC, CheckList (Ribeiro 2020). Also fix \texttt{grayson2024phylolm}
+-> \texttt{yax2025phylolm} in \S\ref{sec:exp:blackbox}.}
 
 
 % -----------------------------------------------------------------------
@@ -283,7 +348,7 @@ distribution.
 % Translation cleanest — language crossing decouples embedding from source content.
 
 Sometimes model weights are unavailable, and provenance must be inferred from behavioral outputs alone. Recent work has shown that frontier model families cluster meaningfully in behavioral embedding space
-\citep{wu2026llmdna, grayson2024phylolm}. We extend this line of work by probing 16 frontier models (GPT, Claude, Gemini, and open-weight families including Llama and Mistral) across four task types --- summarization, QA, classification, and translation --- using the same neighbor joining pipeline applied to pairwise sentence-embedding distances between model outputs. This design allows us to examine how much the recovered family structure depends
+\citep{wu2026llmdna, yax2025phylolm}. We extend this line of work by probing 16 frontier models (GPT, Claude, Gemini, and open-weight families including Llama and Mistral) across four task types --- summarization, QA, classification, and translation --- using the same neighbor joining pipeline applied to pairwise sentence-embedding distances between model outputs. This design allows us to examine how much the recovered family structure depends
 on task choice, and whether aggregating across tasks recovers structure that
 single-task probes miss.
 
