@@ -217,30 +217,27 @@ One question we sought to answer is what distance (or similarity) metric should 
 
 We use cosine distance throughout: it is bounded and scale-invariant across layers, so no single high-magnitude tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$. A per-metric signal-to-noise comparison corroborating this choice---cosine and correlation separate same- from cross-branch distances far better than $\ell_1$/$\ell_2$---is given in Appendix~\ref{app:snr}.
 
-Given the metric, the quantity that determines whether weight distances carry \emph{recoverable} lineage is the shared-direction coherence $c=\lambda_1(S)/n$ (defined in \S\ref{sec:framework:theory}): the fraction of update energy along a single shared direction. Table~\ref{tab:coherence} reports $c$ (mean over runs, standard deviation in parentheses) by training condition, with polytomy-aware clade recovery and the fraction of runs significant against the label permutation. Coherence is sharply \emph{bimodal}: every condition that recovers topology sits at $c\approx0.99$ (sibling updates nearly parallel), while every diluted low-rank decoder condition sits at $c\approx0.20$ (updates nearly orthogonal), with nothing in between; the rank fraction $s=r/d$ does not separate the two groups. A single threshold on $c$ predicts which conditions admit topology recovery (\S\ref{sec:results:weighttree}).
+We select the distance metric using the same quantity our framework turns on: the shared-direction coherence $c=\lambda_1(S)/n$ (defined in \S\ref{sec:framework:theory}), the fraction of update energy along a single dominant direction. Coherence is a meaningful fraction only for a bounded, scale-invariant similarity. Table~\ref{tab:coherence} reports $c$ by metric over \texttt{branching\_v3}: cosine and correlation place nearly all update energy on one shared lineage direction (cosine highest), while the unbounded $\ell_1$/$\ell_2$ distances are magnitude-dominated and admit no valid decomposition. We therefore use cosine distance for the remainder of the paper, and read the same coherence off the cosine updates to predict \emph{which training conditions} admit topology recovery (\S\ref{sec:results:weighttree}, Fig.~\ref{fig:coherence_recovery}).
 
 \begin{table}[t]
 \centering
-\caption{Shared-direction coherence $c=\lambda_1(S)/n$ (mean over runs, SD in parentheses) by training
-  condition, with polytomy-aware clade recovery and the fraction of runs significant vs.\ the label
-  permutation. Coherence is bimodal and cleanly separates conditions that recover topology
-  ($c\approx0.99$) from the diluted low-rank decoder ``dead zone'' ($c\approx0.20$); the rank fraction
-  $s=r/d$ does not. Full-FT Llama-3.2-1B (pilot) likewise sits in the recovering regime
-  ($c\approx1.0$), confirming the gate is coherence, not architecture or scale.}
+\caption{Shared-direction coherence $c=\lambda_1(S)/n$ (mean over the 50 \texttt{branching\_v3} runs,
+  SD in parentheses) by candidate distance metric. $c$ is a valid shared-direction fraction in
+  $[1/n,1]$ only for a \emph{bounded} similarity: cosine and correlation concentrate almost all update
+  energy on one dominant lineage direction (cosine highest), whereas the unbounded $\ell_1$/$\ell_2$
+  distances are dominated by large-magnitude layers, so $S=\mathbf{1}-D$ admits no valid decomposition
+  ($\lambda_1/n\gg1$). A scale-invariant check (fraction of variance on the top classical-MDS axis)
+  gives the same ordering: cosine $0.58$, correlation $0.54$, $\ell_1$ $0.49$, $\ell_2$ $0.44$. We use
+  cosine distance throughout.}
 \label{tab:coherence}
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-Condition & Coherence $c$ & Clade recovery & \% sig vs.\ label \\
+Metric & Bounded & Coherence $c=\lambda_1/n$ \\
 \midrule
-\multicolumn{4}{l}{\textit{Recovering regime ($c\approx0.99$)}} \\
-Flan-T5 full FT (\texttt{branching\_v3}) & 0.992 (0.001) & 90.4\% & 38.3\% \\
-Flan-T5 LoRA (qkv)                       & 0.998 (0.001) & 83.3\% & 32.6\% \\
-Pythia-160M full FT                      & 1.000 (0.001) & 97.5\% & 46.8\% \\
-\midrule
-\multicolumn{4}{l}{\textit{Dead zone ($c\approx0.20$)}} \\
-Llama-8B LoRA (k\_only)                  & 0.201 (0.044) & 19.6\% & 0.0\% \\
-Llama-3.2-1B LoRA (qkv)                  & 0.200 (0.043) & 29.4\% & 0.0\% \\
-Llama-3.2-1B (base) LoRA (qkv)           & 0.201 (0.045) & 29.3\% & 0.0\% \\
+Cosine       & yes & \textbf{0.992} (0.001) \\
+Correlation  & yes & 0.983 (0.002) \\
+$\ell_1$     & no  & $\gg 1$ (magnitude-dominated) \\
+$\ell_2$     & no  & $\gg 1$ (magnitude-dominated) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -321,7 +318,7 @@ per-triple signal-to-noise clears $\approx 3\ln n$, all rooted triples are calle
 becomes recoverable once coherence clears a threshold growing only logarithmically in the number of
 leaves $n$ (Theorem~\ref{thm:topo}, Appendix~\ref{app:proofs}). We do not run \textsc{Build}: the
 pipeline reconstructs with neighbor-joining and we report topology recovery empirically (\S\ref{sec:results}),
-where coherence is what predicts it (Table~\ref{tab:coherence}). The two regimes therefore dissociate---at
+where coherence is what predicts it (Fig.~\ref{fig:coherence_recovery}). The two regimes therefore dissociate---at
 intermediate coherence, pooling keeps \emph{ordering} detectable while \emph{topology} stays out of
 reach, exactly the decoder-only Llama regime (Appendix~\ref{app:llama}).
 
@@ -331,7 +328,7 @@ topology---Flan-T5 (full FT and LoRA), Pythia-160M (full FT), and full-FT Llama-
 $c\approx0.99$ (updates nearly parallel), while every diluted low-rank decoder group (Llama-8B and 1B
 LoRA) sits at $c\approx0.20$ (updates nearly orthogonal), with nothing in between. A single threshold
 on $c$ separates ``recovers topology'' from ``does not'' with $100\%$ accuracy across our groups,
-whereas $s=r/d$ misclassifies the high-$s$ diluted Llama groups (Table~\ref{tab:coherence}). Low rank is
+whereas $s=r/d$ misclassifies the high-$s$ diluted Llama groups (Fig.~\ref{fig:coherence_recovery}). Low rank is
 then just one of several mechanisms---alongside large model width, fused projections, and near-floor
 displacement---that drive coherence down.
 
@@ -608,7 +605,7 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
     and LoRA, Pythia-160M full FT, full-FT Llama-3.2-1B) recover the topology, while the diluted
     low-rank decoder conditions (Llama-8B and 1B LoRA) sit at $c\approx0.20$ and do not. A single
     threshold on $c$ separates the two groups; the rank fraction $s=r/d$ does not
-    (\S\ref{sec:framework:metric}, Table~\ref{tab:coherence}).}
+    (\S\ref{sec:framework:metric}).}
   \label{fig:coherence_recovery}
 \end{figure}
 
@@ -873,7 +870,7 @@ $\E\norm{P_V x}^2=r/d$ for any unit $x$). This makes $s=r/d$ \emph{one} mechanis
 $\SNR$. It is not the only one, and it is not directly observable per run; our experiments instead use
 shared-direction coherence $c=\lambda_1(S)/n$ (\S\ref{sec:framework:theory}), which is measurable from
 the distance matrices alone and, unlike $s=r/d$, classifies topology recovery across all our groups
-without error (Table~\ref{tab:coherence}, Appendix~\ref{app:llama}).
+without error (Fig.~\ref{fig:coherence_recovery}, Appendix~\ref{app:llama}).
 
 
 \section{Experimental Details}
