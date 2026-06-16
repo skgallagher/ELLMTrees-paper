@@ -257,18 +257,18 @@ One contribution we have in our methodology is the use of per-layer distance mat
 Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify the most and least important layers in training by examining which layers change the most or least across multiple training runs.
 
 
-\subsection{Two Regimes for Lineage Recovery, and Coherence as the Governing Variable}
+\subsection{When Lineage Is Recoverable: Separation, and Coherence as Its Proxy}
 \label{sec:framework:theory}
 
-We now give a statistical account of \emph{when} the recipe of \S\ref{sec:framework:phylo} succeeds.
+We give a statistical account of \emph{when} the recipe of \S\ref{sec:framework:phylo} succeeds.
 Fine-tuning a child from its parent adds a displacement in weight space, which we model as a shared,
 task-systematic direction (a ``task vector'') plus independent run-to-run noise: siblings trained on
 similar data share more of that direction, unrelated branches less. The pairwise weight distances we
 feed to neighbor-joining are therefore a lineage \emph{signal}---how the shared directions differ along
-the tree---buried in \emph{noise} that accumulates over the connecting edges. Whether lineage is
-recoverable comes down to one quantity: how much of each update lies along the shared direction versus
-in orthogonal noise. The formal model and all proofs are deferred to Appendix~\ref{app:proofs}; here we
-state the consequences and the variable that controls them.
+the tree---buried in \emph{noise} that accumulates over the connecting edges. Recovery comes down to one
+latent quantity, the \emph{separation}: how far the distances place siblings from non-siblings relative
+to that noise. The formal model and all proofs are deferred to Appendix~\ref{app:proofs}; here we state
+the consequences and how we measure them.
 
 \paragraph{Two regimes.} ``Reading the lineage'' hides two questions of very different difficulty.
 \emph{Ordering} asks only whether same-branch pairs are closer than cross-branch pairs \emph{on
@@ -282,54 +282,63 @@ branched off together more recently than $k$''---which the classical \textsc{Bui
 their exact values.
 
 \begin{assumption}[Lineage monotonicity]\label{asm:mono}
-For every true triple $ij\,|\,k$, the closer pair has the smaller expected distance,
-$\E[D_{ij}]<\E[D_{ik}]$ and $\E[D_{ij}]<\E[D_{jk}]$; write $\gamma$ for the smallest such gap.
-Tree-additivity implies this but not conversely, so it holds even in the near-orthogonal regime where
-additivity fails---which is why our results never need the metric to behave like tree branch lengths.
+Read a rooted triple $ij\,|\,k$ as the ancestry statement that $i$ and $j$ share a more recent common
+ancestor than either shares with $k$---so $i,j$ are the \emph{siblings} and $k$ the \emph{outgroup}. We
+assume only that this ancestral order is reflected in expected weight distance: the siblings are
+expected to be closer than either is to the outgroup,
+\[ \E[D_{ij}]<\E[D_{ik}] \quad\text{and}\quad \E[D_{ij}]<\E[D_{jk}], \]
+for every true triple of the tree; write $\gamma$ for the smallest of these expected gaps (the
+\emph{margin}). Tree-additivity implies this but not conversely---it constrains only the \emph{order} of
+distances, not their values---so it can hold even in the near-orthogonal regime where additivity fails,
+which is why our results never need the metric to behave like tree branch lengths.
 \end{assumption}
 
-\paragraph{Coherence is the governing variable.} Both regimes are controlled by the fraction of each
-update that lies along the shared lineage direction rather than in orthogonal noise. We measure this
-fraction directly and without labels: from a run's pairwise cosine-similarity matrix $S=\mathbf{1}-D$
-of the trained-module updates, define the \emph{shared-direction coherence}
+\begin{theorem}[Ordering---the easy regime]\label{thm:order}
+Pool $M$ \emph{comparable contrasts}, each a same-branch distance differenced against a cross-branch
+distance whose labels are exchangeable under the permutation null (Definition~\ref{def:contrast},
+Appendix~\ref{app:proofs}), so the difference is mean-zero under that null. With margin $\gamma$ and
+contrast variance at most $V$, the ``same-branch closer'' test (our permutation, Mann--Whitney, and
+within-run $r$ statistics) has power tending to $1$ once $M\gamma^2/V\gg1$. Because it pools, ordering
+is detected even when the per-pair separation is small.
+\end{theorem}
+
+\paragraph{Topology is harder.} Recovering the full tree needs every local relationship right at once,
+so it is governed by the \emph{worst} per-triple separation, not a pooled average. It is nonetheless
+identifiable from ordinal information alone: once the worst per-triple separation clears $\approx 3\ln n$
+(Theorem~\ref{thm:topo}, Appendix~\ref{app:proofs}), all rooted triples are called correctly and
+\textsc{Build} \citep{aho1981build} reconstructs the exact tree with no additivity assumption. We do not
+run \textsc{Build}: the pipeline reconstructs with neighbor-joining and we report topology recovery
+empirically (\S\ref{sec:results}). The two regimes therefore dissociate---at intermediate separation,
+pooling keeps \emph{ordering} detectable while \emph{topology} stays out of reach, exactly the
+decoder-only Llama regime (Appendix~\ref{app:llama}).
+
+\paragraph{Measuring it: shared-direction coherence.} The separation is latent---it depends on the
+unknown signal and noise. What we can compute from the weights alone is the \emph{shared-direction
+coherence} of the trained-module updates: from a run's pairwise cosine-similarity matrix
+$S=\mathbf{1}-D$, define
 \[
   c \;=\; \lambda_1(S)/n \;\in\; [\,1/n,\;1\,],
 \]
-where $\lambda_1(S)$ is the largest (leading) eigenvalue of $S$ and $n$ is the number of leaves. Since
-$S$ is positive semidefinite with $\mathrm{tr}\,S=n$, $c$ is the share of update energy along the
-single dominant direction---$c=1$ when all sibling updates are parallel, $c=1/n$ when they are mutually
-orthogonal. Coherence is the measurable form of the
-per-comparison signal-to-noise ratio $\SNR$ that the theorems below are stated in: high coherence means
-the lineage direction dominates the noise. (We phrase the theorems in $\SNR$ because that is the
-quantity the concentration bounds use; $c$ is what we actually compute from the distance matrices, and
-the two move together.)
+the fraction of update energy along a single dominant direction ($c=1$ when all sibling updates are
+parallel, $c=1/n$ when mutually orthogonal). Under the generative model $c$ is an increasing function of
+the signal fraction and hence of the separation (Appendix~\ref{app:proofs},
+Proposition~\ref{prop:coh}), so we use it as a label-free proxy for whether a run is in the recoverable
+regime. \textbf{Two honest cautions.} Coherence summarizes alignment but not whether the residual
+structure is tree-shaped, so it is \emph{not} sufficient on its own: a maximally coherent ``star'' of
+parallel updates has $c\to1$ yet carries no tree to recover (Proposition~\ref{prop:coh}). What we claim
+is therefore \emph{conditional}---\emph{under} lineage monotonicity (Assumption~\ref{asm:mono}), higher
+coherence places more of each update along the lineage direction and raises the separation toward the
+topology threshold.
 
-\begin{theorem}[Ordering --- the easy regime]\label{thm:order}
-Pooling $M$ comparable pairs, the ``same-branch closer than cross-branch'' test (our permutation,
-Mann--Whitney, and within-run $r$ statistics) has power tending to $1$ once $M\cdot\overline{\SNR}\gg1$.
-Because it pools, ordering is detected even when the per-pair $\SNR$---and hence coherence---is low.
-\end{theorem}
-
-\paragraph{Topology is harder (an identifiability remark).} Recovering the full tree needs every local
-relationship right at once, so it is governed by the \emph{worst} per-triple signal, not a pooled
-average. The signal is nonetheless \emph{identifiable} from ordinal information alone: once the
-per-triple signal-to-noise clears $\approx 3\ln n$, all rooted triples are called correctly and
-\textsc{Build} reconstructs the exact tree with no additivity assumption---equivalently, topology
-becomes recoverable once coherence clears a threshold growing only logarithmically in the number of
-leaves $n$ (Theorem~\ref{thm:topo}, Appendix~\ref{app:proofs}). We do not run \textsc{Build}: the
-pipeline reconstructs with neighbor-joining and we report topology recovery empirically (\S\ref{sec:results}),
-where coherence is what predicts it (Fig.~\ref{fig:coherence_recovery}). The two regimes therefore dissociate---at
-intermediate coherence, pooling keeps \emph{ordering} detectable while \emph{topology} stays out of
-reach, exactly the decoder-only Llama regime (Appendix~\ref{app:llama}).
-
-\paragraph{Coherence is bimodal and predicts recovery.} Across our experiments $c$ is sharply bimodal
-and gates topology recovery where the rank fraction $s=r/d$ does not. Groups that recover the
-topology---Flan-T5 (full FT and LoRA), Pythia-160M (full FT), and full-FT Llama-3.2-1B---sit at
-$c\approx0.99$ (updates nearly parallel), while every diluted low-rank decoder group (Llama-8B and 1B
-LoRA) sits at $c\approx0.20$ (updates nearly orthogonal), with nothing in between. A single threshold
-on $c$ separates ``recovers topology'' from ``does not'' with $100\%$ accuracy across our groups,
-whereas $s=r/d$ misclassifies the high-$s$ diluted Llama groups (Fig.~\ref{fig:coherence_recovery}). Low rank is
-then just one of several mechanisms---alongside large model width, fused projections, and near-floor
+\paragraph{Empirically, coherence separates the regimes.} Across our experiments $c$ is sharply
+bimodal: groups that recover the topology---Flan-T5 (full FT and LoRA), Pythia-160M (full FT), and
+full-FT Llama-3.2-1B---sit at $c\approx0.99$ (updates nearly parallel), while every diluted low-rank
+decoder group (Llama-8B and 1B LoRA) sits at $c\approx0.20$ (updates nearly orthogonal), with nothing
+in between (Fig.~\ref{fig:coherence_recovery}). A single threshold on $c$ separates the recovering from
+the dead groups across all of them. We caution that our groups vary the update dimension together with
+coherence, so they cannot \emph{isolate} coherence from other dimension-linked explanations; what they
+establish is that the two regimes are cleanly told apart by one label-free, weight-only quantity. Low
+rank is then one of several mechanisms---alongside large width, fused projections, and near-floor
 displacement---that drive coherence down.
 
 
@@ -737,7 +746,7 @@ task.
 \appendix
 % -----------------------------------------------------------------------
 
-\section{Proofs and the Estimator Gap}
+\section{Proofs: Separation, Identifiability, and the Coherence Proxy}
 \label{app:proofs}
 
 We restate and prove the results of \S\ref{sec:framework:theory}. Recall that
@@ -753,9 +762,19 @@ never their exact values.
 vector $\bd_{\tau}$ (the average direction in which task $\tau$ moves the model; children inherit their
 ancestors' task vectors by summation down the tree) plus independent mean-zero run noise $\beps_v$ with
 $\E\norm{\beps_v}^2=\nu$. Distinct task vectors share a common length $\norm{\bd}$ and pairwise cosine
-$\rho<1$. We observe the $n$ leaves and their squared distances $D_{ij}=\norm{w_i-w_j}^2$, and write
-the per-comparison signal-to-noise ratio $\SNR=\gamma^2/\Var[X]$ with $X=D_{\text{cross}}-D_{\text{same}}$,
-where $\gamma$ is the gap of Assumption~\ref{asm:mono} (stated in \S\ref{sec:framework:theory}).
+$\rho<1$. We observe the $n$ leaves and their squared distances $D_{ij}=\norm{w_i-w_j}^2$. With
+$X=D_{\text{cross}}-D_{\text{same}}$ and $\gamma$ the margin of Assumption~\ref{asm:mono}, we call
+$\beta=\gamma^2/\Var[X]$ the \emph{separation} of a comparison---the squared margin relative to the
+contrast variance. (We use ``separation'' throughout in place of the overloaded ``signal-to-noise
+ratio.'')
+
+\begin{definition}[Comparable contrast]\label{def:contrast}
+A \emph{comparable contrast} is a matched pair $(D^{\text{same}},D^{\text{cross}})$ whose same/cross
+labels are exchangeable under the permutation null, so that $X=D^{\text{cross}}-D^{\text{same}}$ is
+mean-zero under the null and has $\E[X]\ge\gamma$ under the truth. Theorem~\ref{thm:order} pools $M$
+such contrasts; the exchangeable matching---not any condition on the edge counts $\ell$---is what makes
+the pooled permutation test valid.
+\end{definition}
 
 \begin{lemma}[Expected distance]\label{lem:mean}
 $\E[D_{ij}]=\norm{\bsig_{ij}}^2+\nu\,\ell_{ij}$, where $\bsig_{ij}$ is the deterministic sum of task
@@ -797,23 +816,24 @@ the $jk$ comparison is identical by symmetry.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:order}]
-For comparable pairs $m=1,\dots,M$ put $X_m=D^{\mathrm{cross}}_m-D^{\mathrm{same}}_m$, so
-$\E[X_m]\ge\gamma>0$ by Assumption~\ref{asm:mono} and $\Var[X_m]\le V$, with
-$\overline{\SNR}:=\gamma^2/V$. The pooled mean $\bar X=\frac1M\sum_m X_m$ has $\E[\bar X]\ge\gamma$,
-and treating the comparisons as weakly independent, $\Var[\bar X]\le V/M$. Hence the standardized
-statistic $Z=\bar X/\sqrt{\Var[\bar X]}$ obeys $\E[Z]\ge\sqrt{M\,\overline{\SNR}}$. Under the null of
-exchangeable same/cross labels $\E[X_m]=0$ and $Z$ is centered; by the central limit theorem $Z$ is
-asymptotically standard Gaussian, so a one-sided level-$\alpha$ test has power
-$\Phi\!\big(\sqrt{M\,\overline{\SNR}}-z_\alpha\big)\to1$ whenever $M\,\overline{\SNR}\to\infty$. The
-permutation, Mann--Whitney, and within-run $r$ statistics are monotone in $\bar X$ and inherit the
-power.
+For comparable contrasts $m=1,\dots,M$ (Definition~\ref{def:contrast}) put
+$X_m=D^{\mathrm{cross}}_m-D^{\mathrm{same}}_m$, so $\E[X_m]\ge\gamma>0$ by Assumption~\ref{asm:mono} and
+$\Var[X_m]\le V$, with average separation $\bar\beta:=\gamma^2/V$. The pooled mean
+$\bar X=\frac1M\sum_m X_m$ has $\E[\bar X]\ge\gamma$; treating the contrasts as weakly dependent (they
+share leaves and edges, so this is an approximation rather than exact independence),
+$\Var[\bar X]\lesssim V/M$, and the standardized statistic $Z=\bar X/\sqrt{\Var[\bar X]}$ obeys
+$\E[Z]\gtrsim\sqrt{M\bar\beta}$. Under the null of exchangeable same/cross labels $\E[X_m]=0$ and $Z$ is
+centered and asymptotically Gaussian, so a one-sided level-$\alpha$ test has power
+$\Phi\!\big(\sqrt{M\bar\beta}-z_\alpha\big)\to1$ whenever $M\bar\beta\to\infty$. The permutation,
+Mann--Whitney, and within-run $r$ statistics are monotone in $\bar X$ and inherit the power.
 \end{proof}
 
 \begin{theorem}[Topology identifiability]\label{thm:topo}
-Let $\SNR^\ast$ be the worst single-comparison ratio over all triples. Each triple is called correctly
-with probability at least $1-2e^{-c_0\SNR^\ast}$, so all $2\binom{n}{3}$ comparisons hold together with
-probability at least $1-n^3 e^{-c_0\SNR^\ast}$; on that event \textsc{Build} reconstructs
-$\mathcal{P}^\ast$ exactly. Hence topology is identifiable once $\SNR^\ast\gtrsim 3\ln n$.
+Let $\beta^\ast$ be the worst single-comparison separation $\gamma^2/V_Y$ over all triples. Each triple
+is called correctly with probability at least $1-2e^{-c_0\beta^\ast}$, so all $2\binom{n}{3}$
+comparisons hold together with probability at least $1-n^3 e^{-c_0\beta^\ast}$; on that event
+\textsc{Build} reconstructs $\mathcal{P}^\ast$ exactly. Hence topology is identifiable once
+$\beta^\ast\gtrsim 3\ln n$.
 \end{theorem}
 
 \begin{proof}[Proof of Theorem~\ref{thm:topo}]
@@ -825,27 +845,57 @@ the sub-Gaussian edge noise, hence sub-exponential (Bernstein / Hanson--Wright) 
 by $\nu$ and $\norm{\bsig}$. So $Y-\E[Y]$ is sub-exponential with variance proxy $V_Y$, and
 Bernstein's inequality gives
 \[
-\Pr[Y\le 0]\le\exp\!\Big(-c_0\min\{\E[Y]^2/V_Y,\ \E[Y]/b\}\Big)\le e^{-c_0\SNR^\ast}
+\Pr[Y\le 0]\le\exp\!\Big(-c_0\min\{\E[Y]^2/V_Y,\ \E[Y]/b\}\Big)\le e^{-c_0\beta^\ast}
 \]
-in the moderate-deviation regime where $\SNR^\ast=\E[Y]^2/V_Y$ controls the bound. A triple is
+in the moderate-deviation regime where $\beta^\ast=\E[Y]^2/V_Y$ controls the bound. A triple is
 miscalled only if its $ik$- or $jk$-comparison is non-positive, so its error is at most
-$2e^{-c_0\SNR^\ast}$. Unioning over the $\binom{n}{3}$ triples, the chance that any triple is miscalled
-is at most $2\binom{n}{3}e^{-c_0\SNR^\ast}\le n^3e^{-c_0\SNR^\ast}$. On the complementary event every
+$2e^{-c_0\beta^\ast}$. Unioning over the $\binom{n}{3}$ triples, the chance that any triple is miscalled
+is at most $2\binom{n}{3}e^{-c_0\beta^\ast}\le n^3e^{-c_0\beta^\ast}$. On the complementary event every
 rooted triple is correct; this set is complete and tree-consistent, so \textsc{Build}
 \citep{aho1981build} returns the unique tree displaying them, namely $\mathcal{P}^*$. Finally
-$n^3e^{-c_0\SNR^\ast}\le\delta$ iff $\SNR^\ast\ge(3\ln n-\ln\delta)/c_0$. The constants $c_0,b$ depend
+$n^3e^{-c_0\beta^\ast}\le\delta$ iff $\beta^\ast\ge(3\ln n-\ln\delta)/c_0$. The constants $c_0,b$ depend
 on the sub-Gaussian noise parameters; this is an order-of-magnitude threshold, not a tight bound.
 \end{proof}
 
 \begin{corollary}[Ordering/topology dissociation]\label{cor:diss}
-If $\SNR^\ast\ll 3\ln n\ll M\cdot\overline{\SNR}$, ordering is detected (Theorem~\ref{thm:order}) but
-topology is not recovered: more orthogonal updates can keep ordering alive while starving topology.
+If $\beta^\ast\ll 3\ln n\ll M\bar\beta$, ordering is detected (Theorem~\ref{thm:order}) but topology is
+not recovered: more orthogonal updates can keep ordering alive while starving topology.
 \end{corollary}
 
 \begin{proof}[Proof of Corollary~\ref{cor:diss}]
-In the stated range $M\,\overline{\SNR}\gg1$, so Theorem~\ref{thm:order} gives detection power
-$\to1$, while $\SNR^\ast\lesssim 3\ln n$ fails the sufficient condition of Theorem~\ref{thm:topo}, so
-the topology guarantee does not apply.
+In the stated range $M\bar\beta\gg1$, so Theorem~\ref{thm:order} gives detection power $\to1$, while
+$\beta^\ast\lesssim 3\ln n$ fails the sufficient condition of Theorem~\ref{thm:topo}, so the topology
+guarantee does not apply.
+\end{proof}
+
+\begin{proposition}[Coherence proxies the separation, conditionally]\label{prop:coh}
+Model the $n$ trained-module updates as $\Delta_v=\bsig_v+\beps_v$ with shared-direction energy
+$\norm{\bsig}^2$, independent noise $\E\norm{\beps_v}^2=\nu$, in dimension $d\gg n$, and let
+$f=\norm{\bsig}^2/(\norm{\bsig}^2+\nu)$ be the update signal fraction. Then the expected cosine of two
+normalized updates concentrates on a multiple of $f$, the cosine-similarity matrix $S$ is
+equicorrelation to leading order, and
+\[
+  c=\lambda_1(S)/n=f+\tfrac{1-f}{n}+o(1),
+\]
+so $c$ is increasing in $f$ and---\emph{under} Assumption~\ref{asm:mono}, where larger $f$ raises the
+margin $\gamma$---increasing in the separation $\beta$. The conditioning is essential. Coherence
+measures alignment, not whether the residual is tree-shaped: a ``star'' of $n$ updates all equal to one
+direction plus small noise has $c\to1$ but violates Assumption~\ref{asm:mono} (all pairs equidistant in
+expectation) and carries no recoverable topology. Hence high coherence is necessary-type evidence for
+the recoverable regime, \emph{not} a sufficient condition; we use it only as a label-free proxy,
+validated empirically (\S\ref{sec:results:weighttree}).
+\end{proposition}
+
+\begin{proof}[Proof sketch of Proposition~\ref{prop:coh}]
+Writing $\hat g_v=\Delta_v/\norm{\Delta_v}$, the numerator
+$\E\langle\Delta_v,\Delta_w\rangle=\langle\bsig_v,\bsig_w\rangle$ (cross-noise and signal--noise terms
+vanish in expectation), while $\norm{\Delta_v}\to\sqrt{\norm{\bsig}^2+\nu}$ by concentration in
+$d\gg n$; their ratio is a multiple of $f$. With equal off-diagonal $f$, $S$ has leading eigenvalue
+$1+(n-1)f$ on the all-ones vector, giving $c=\lambda_1/n=f+(1-f)/n$. The off-diagonal in fact carries
+the task-vector alignment $\rho$ ($\langle\bsig_v,\bsig_w\rangle=\rho\norm{\bsig}^2$ for siblings), so
+$c$ conflates alignment with the noise fraction, and the equicorrelation form is leading-order (real
+trees are block-structured), so the identity is approximate. The non-sufficiency claim is immediate:
+the star satisfies the update law but not Assumption~\ref{asm:mono}.
 \end{proof}
 
 \paragraph{The estimator gap.}
@@ -862,15 +912,16 @@ identical tree every run ($\mathrm{RF}=0$), whereas neighbor-joining moves by up
 under the same transforms. We therefore keep neighbor-joining as the primary estimator and use the
 rooted-triple \textsc{Build} reconstructor as a strictly-ordinal cross-check.
 
-\paragraph{From $\SNR$ to a measurable quantity.}
-The theorem is governed by the lineage-informative fraction of the update. A rank-$r$ adapter in a
+\paragraph{From the separation to a measurable quantity.}
+The theorems are governed by the lineage-informative fraction of the update. A rank-$r$ adapter in a
 width-$d$ model can move the model only inside an $r$-dimensional slice, which retains a fraction
 $r/d$ of any fixed signal direction (for a uniformly random $r$-subspace $V$, $\E[P_V]=(r/d)I$, so
 $\E\norm{P_V x}^2=r/d$ for any unit $x$). This makes $s=r/d$ \emph{one} mechanism that lowers the
-$\SNR$. It is not the only one, and it is not directly observable per run; our experiments instead use
-shared-direction coherence $c=\lambda_1(S)/n$ (\S\ref{sec:framework:theory}), which is measurable from
-the distance matrices alone and, unlike $s=r/d$, classifies topology recovery across all our groups
-without error (Fig.~\ref{fig:coherence_recovery}, Appendix~\ref{app:llama}).
+separation---not the only one, and not directly observable per run. Our experiments instead read the
+shared-direction coherence $c=\lambda_1(S)/n$ (\S\ref{sec:framework:theory}), a label-free proxy for
+the separation (Proposition~\ref{prop:coh}) that, unlike $s=r/d$, cleanly separates the recovering from
+the dead groups (Fig.~\ref{fig:coherence_recovery}, Appendix~\ref{app:llama})---with the caveat of
+Proposition~\ref{prop:coh} that coherence is a conditional proxy, not a sufficient condition.
 
 
 \section{Experimental Details}
