@@ -53,32 +53,29 @@ With over a million open deep learning models on HuggingFace, and over half a do
 % -----------------------------------------------------------------------
 \section{Introduction}
 \label{sec:intro}
-% -----------------------------------------------------------------------
-% Arc (from writing_prep.md §Suggested intro arc):
-%  1. Models proliferate, histories undocumented — the forking problem
-%  2. Benchmarks tell you what a model does, not where it came from
-%  3. Why it matters: SBOM analog, unlearning, adversarial consistency,
-%     capability prediction
-%  4. Two ways to probe lineage: behavioral (outputs) and whitebox (weights).
-%     Each tells part of the story. Together they triangulate.
-%  5. Research question (in italics)
-%
-% Key framing: "genealogical view" — not macro (embeddings for routing)
-% or micro (pairwise fingerprinting), but full topology recovery against
-% known ground truth. Name the monotone function claim.
-
-With the sheer number of open models available, frequently fine-tuned from base models, along with the increasing cost of frontier models, it is critical to choose models that are fit for the user's goals. While users must consider how models perform on particular benchmarks most related to their primary goal, e.g. text summarization, users must also consider other criteria such as model strengths as a whole, failure modes, computation cost, interoperability, and safety \cite{}. While there are several methods and techniques to use for model selection \cite{} (benchmarks, cost, size), we study model lineage because it allows us to consider several model criteria at once. In particular, we examine how 1) model lineage can be recovered by examining changes in model parameters after fine-tuning; 2) how those changing model parameters are linked to useful model behavior; and 3) how that compares to lineage recovery based on model behavior alone.  
-
-Consider a scenario where a company has a powerful base model that can be trained on their own data.  Imagine the model is then forked at different levels and fine-tuned on different data, one for finance, one for IT, one for fraud, etc.  Within those groups, those models may be further fine-tuned resulting in a complicated training lineage (see Fig. \ref{fig:overview}A). In a single report, dozens of versions of the same base model be used.  Since these models are used independently, it is possible that the exact training structure is unknown to the company.  For users, it is important to know which model or models should best be used to continue the analysis.  As such, s/he would want to know where the models diverge, where the mdoel strengths are, and perhaps most importantly, where the models will fail.  Thus it is important to  assess model changes first through changes i model parameters and subsequently link those changes in parameters to functional model behavior (Fig. \ref{fig:overview}B).  Finally, it is important to compare the company model to other available models, where the internal parameters are not available (see Fig. \ref{fig:overview}C) to ensure that the model is being used efficiently.
-
-We apply lineage recovery estimators to fully recover model training lineage from model parameters alone.  To do this, we first develop a principled framework for estimating lineage through angles in weight-space.  We are able to determine which layers are strong lineage 'carriers.'  Then, with model lineage in hand, we then determine how changes in model parameters are linked to intended and unintentional behavior.  Finally, we compare the lineage recovery using model parameters to current methods that use lineage recovery based on model behavior alone.  We test our methods on a encoder-decoder model and decoder models of varying scale and fine-tuning strategies.  We find that both architecture and dimensionality are important indicators in strength of lineage estimation.
-
-The rest of this paper proceeds as follows.  In \S \ref{sec:related} we examine how previous works approached these three lineage problems at parameter-only, parameter-behavior, and behavior-only levels.  In \S \ref{sec:framework}, we show how we determine model training signal through careful metric selection and summary statistics, guided by mathematical principles.  In \S \ref{sec:experiments}, we discuss how we turn our framework into testable experiments.  Following that in \S \ref{sec:results}, we show our results for lineage recovery and parameter-behavior association.  Finally, we discuss limitations and future work in \S \ref{sec:discussion}.
 
 
 
 
+With over a million open models on HuggingFace and a handful of frontier
+labs constantly releasing new versions, most models in circulation are
+fine-tuned descendants of a few ancestors.  Very few of those models document that lineage. Benchmarks can tell us how a model performs on a task, but not how a model originated, how it differs from its models siblings, or how it may
+fail \cite{}. Training lineage reveals much about model provenance, auditing, and safety.
 
+We, like other prior works \cite{}, observe that fine-tuning is a path-dependent, branching process: each
+fork inherits its parent's weights and nudges them with new data. This is
+precisely an evolutionary process like as described in \cite{yax2025phylolm} and its path leaves fingerprints in weight space. We treat a family of fine-tuned models
+as a phylogeny (i.e. an evolutionary tree \cite{}) and ask whether this \textit{full} training tree can be \emph{estimated} from the model parameters alone.
+
+Consider a firm that forks a powerful base model into finance, IT, and fraud
+variants, each fine-tuned further until dozens of versions circulate with no
+recorded lineage (Fig.~\ref{fig:overview}A). A practitioner needs to know
+which model to build on, where two versions diverged, and where each fails.
+Phylogenetic algorithms were built for this inference in
+biology \cite{}, and  we adapt them to model parameters, specifically model weights. We estimate a training tree from the weights that we can score against a
+\emph{known} ground-truth tree (Fig.~\ref{fig:overview}A), link to
+behavior (Fig.~\ref{fig:overview}B), and finally compare to behavior-only
+recovery when weights are unavailable (Fig.~\ref{fig:overview}C).
 
 \begin{figure}[t]
   \begin{center}
@@ -96,7 +93,29 @@ The rest of this paper proceeds as follows.  In \S \ref{sec:related} we examine 
   \label{fig:overview}
 \end{figure}
 
-\TODO{Write introduction.}
+
+
+
+In our first contribution, we develop a principled weight-space framework
+for lineage recovery including metric selection and summary statistics.  These choices are guided by the geometry of fine-tuning updates, and can be used to estimate the full training tree. By treating layers as 'genes', we can identify which layers \emph{carry} the lineage signal.  For example, in an encoder-decoder model, we find that the key-projection matrices alone (4\% of parameters) recover lineage as well as
+the entire weight tensor.
+
+In our second contribution, we show that weight-space proximity predicts
+behavioral similarity, even on a held-out task the models never trained. In our third, we apply the same
+training tree estimation to model \emph{outputs} and recover frontier-model
+families with no weight access. Across all three levels we span an
+encoder--decoder model and decoder-only models from 160M to 8B, full
+fine-tuning through low-rank adaptation, finding that ambient dimension and
+update rank are important factors in recovering model lineage.
+
+Together, these results show that the training history of a model is legibly
+written in its parameters, recoverable as a phylogeny, and predictive of some
+behavior.
+
+
+
+
+
 
 
 % -----------------------------------------------------------------------
