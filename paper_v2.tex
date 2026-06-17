@@ -461,8 +461,9 @@ single-task probes miss.
   contains the \emph{entire} true tree (FN$=0$). \% sig: runs with $p<0.05$ vs.\ the
   random-tree null (identical for FN and total RF). RF matches the stored pipeline value in
   529/530 runs. Pythia-160M (decoder-only) is matched to Flan-T5-base's width ($d=768$) and
-  full fine-tuned, isolating architecture from dimensional dilution; decoder-only models that
-  are also diluted (Llama) are deferred to Appendix~\ref{app:llama}.}
+  full fine-tuned, isolating architecture from dimensional dilution. Full-FT Llama-3.2-1B
+  ($d=2048$) extends this to scale; the diluted low-rank decoder groups (Llama-8B and 1B LoRA)
+  are deferred to Appendix~\ref{app:llama}.}
 \label{tab:rf_by_leaves}
 \begin{center}
 \begin{tabular}{rrrrrrrr}
@@ -476,13 +477,16 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 8 &  4 & 3.75 (0.48) & 0.25 (0.25) & 3.50 (0.29) & 88\% & 75\% & 100\% \\
 \midrule
 \multicolumn{8}{l}{\textit{Decoder-only: Pythia-160M (full FT), \texttt{pythia160m\_full\_ft}}} \\
-\multicolumn{8}{l}{\textcolor{red}{[rows pending Tier 1 analysis --- training on Ghidorah, jobs 31304--31328]}} \\
+5 & 12 & 0.58 (0.19) & 0.08 (0.08) & 0.50 (0.15) & 96\% & 92\% &   0\% \\
+6 & 12 & 1.08 (0.15) & 0.00 (0.00) & 1.08 (0.15) & 100\% & 100\% &  75\% \\
+7 & 16 & 2.50 (0.22) & 0.12 (0.12) & 2.38 (0.15) & 96\% & 94\% &  56\% \\
+8 &  4 & 3.25 (0.25) & 0.00 (0.00) & 3.25 (0.25) & 100\% & 100\% & 100\% \\
 \midrule
 \multicolumn{8}{l}{\textit{Decoder-only at scale: Llama-3.2-1B (full FT), \texttt{llama1b\_base\_full\_ft}}} \\
-8 & 2 & --- & 0.00 (0.00) & --- & 100\% & 100\% & --- \\
-\multicolumn{8}{l}{\textcolor{red}{[pilot $n{=}2$ (run\_003, run\_014, 8-leaf): both recover every}} \\
-\multicolumn{8}{l}{\textcolor{red}{true clade (FN$=0$) and beat the \emph{label} permutation ($p=0.003,0.026$) --- the test every}} \\
-\multicolumn{8}{l}{\textcolor{red}{Llama-LoRA group fails at $0\%$. Full 48-run distribution landing (Wright jobs 149372--149419).]}} \\
+5 & 12 & 0.75 (0.28) & 0.17 (0.11) & 0.58 (0.19) & 88\% & 83\% &   0\% \\
+6 & 10 & 1.70 (0.47) & 0.40 (0.22) & 1.30 (0.26) & 80\% & 70\% &  60\% \\
+7 & 14 & 2.79 (0.28) & 0.21 (0.11) & 2.57 (0.20) & 86\% & 79\% &  43\% \\
+8 &  4 & 4.25 (0.48) & 0.50 (0.29) & 3.75 (0.25) & 75\% & 50\% &  50\% \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -551,24 +555,29 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/fig3_fn_pythia.png}
+    \includegraphics[width=\linewidth]{\figpath/fig_layertrace_grid.png}
   \end{center}
-  \caption{Per-layer FN-rate for the decoder-only Pythia-160M (full FT; cosine, mean $\pm$ 2\,SE,
-    $n=47$ runs), the decoder analogue of Fig.~\ref{fig:layer_rf_profiles}. GPT-NeoX fuses Q/K/V, so
-    there is no separable key matrix to carry the signal: the single cleanest carrier is instead the
-    \emph{input embedding} ($\sim$1\% FN), the fused QKV and the other trained linears are diffuse
-    ($\sim$13\% FN), and LayerNorm is the periodic maximum ($\sim$35\%). The carrier is thus
-    architecture-dependent --- encoder--decoder keys in Flan, the input embedding in an untied
-    decoder --- but in every case an input-facing weight.}
-  \label{fig:layer_fn_pythia}
+  \caption{Per-layer LayerTrace across all three architectures (cosine; full fine-tuning; FN-rate
+    $=$ \% of true clades a single layer's tree misses --- lower is better; mean over runs).
+    \textbf{Flan-T5-base} (encoder--decoder): the key matrices carry the lineage (k-matrices 10\%
+    vs.\ 14\% for the rest), \textsc{EncDecAttention.k} lowest. \textbf{Pythia-160M} (decoder, untied
+    embeddings): Q/K/V are fused so there is no separable key, and the single cleanest carrier is the
+    \emph{input embedding} ($\sim$1\% FN). \textbf{Llama-3.2-1B} (decoder, $d=2048$): a separable
+    \textsc{SelfAttention.k} returns as the carrier (k-matrices 13\% vs.\ 20\% for the rest), while
+    the \emph{tied} embedding is contaminated by the output projection (28\%) and is \emph{not} a
+    clean carrier. In every architecture LayerNorms are the periodic noise floor and the carrier is
+    an input-facing weight. The motif repeats essentially unchanged across all transformer blocks;
+    in Llama the earliest blocks carry the most (\textsc{SelfAttention.k} FN 8\% in blocks 0--1 vs.\
+    14\% in blocks 2+; paired $t=2.4$, $n=47$).}
+  \label{fig:layertrace_grid}
 \end{figure}
 
-The LayerTrace carrier is architecture-dependent but always input-facing: encoder
-\textsc{SelfAttention.k} in Flan-T5 (Fig.~\ref{fig:layer_rf_profiles}) and the input embedding in the
-untied decoder Pythia-160M (Fig.~\ref{fig:layer_fn_pythia}). \textcolor{red}{[Llama-3.2-1B full-FT
-LayerTrace pending the 48-run analysis; the $n{=}2$ pilot puts the carrier across all trained
-attention/MLP linears, with the (tied) input embedding contaminated by the output projection --- to
-be added as a third panel.]}
+The LayerTrace carrier is architecture-dependent but always input-facing
+(Fig.~\ref{fig:layertrace_grid}): encoder \textsc{SelfAttention.k} in Flan-T5, the input embedding in
+the untied decoder Pythia-160M, and \textsc{SelfAttention.k} again in Llama-3.2-1B once a separable
+key exists (the diluted low-rank Llama variants instead freeze these carriers; Appendix~\ref{app:llama}).
+In all three the signal is near-uniform across transformer blocks with LayerNorms as the periodic
+noise floor; in Llama it is marginally strongest in the first two blocks.
 
 
 \subsection{LoRA Dose-Response}
