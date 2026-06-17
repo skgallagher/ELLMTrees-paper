@@ -46,7 +46,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-With over a million open deep learning models on HuggingFace, and over half a dozen premier companies constantly updating frontier models for use, it AI governance and safety is now at hte forefront.  It is not enough now to just use models. We now have to know when model is safe to use, its strong suits, its failure modes, and also use compute efficiently \cite{}.  As a consequence, it is critical to thoroughly audit models including provenance and expected behavior.  We examine AI model governance and safety through lineage methods at three different levels: model parameter changes, model parameter and behavioral links, and finally behavioral changes only.  We find that
+With over a million open models on HuggingFace and a handful of frontier labs shipping new versions constantly, most models in circulation are fine-tuned descendants of a few ancestors whose lineage goes undocumented. Provenance, auditing, and safe deployment all hinge on a signal benchmarks do not provide: not what a model does, but where it came from. We treat fine-tuning as an evolutionary process that leaves a path-dependent signature in weight space, and ask whether a model's training history can be recovered as a phylogeny. We study lineage at three levels of access: recovery from weight changes alone, the link between those weight changes and behavior, and recovery from behavior alone. We find that full training topology is recoverable against a known ground-truth tree; that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline recovers frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B, we find that ambient dimension and update rank are important factors in whether lineage is recoverable.
 
 \end{abstract}
 
@@ -59,20 +59,20 @@ With over a million open deep learning models on HuggingFace, and over half a do
 
 With over a million open models on HuggingFace and a handful of frontier
 labs constantly releasing new versions, most models in circulation are
-fine-tuned descendants of a few ancestors.  Very few of those models document that lineage. Benchmarks can tell us how a model performs on a task, but not how a model originated, how it differs from its models siblings, or how it may
-fail \cite{}. Training lineage reveals much about model provenance, auditing, and safety.
+fine-tuned descendants of a few ancestors.  Very few of those models document that lineage. Benchmarks can tell us how a model performs on a task, but not how a model originated, how it differs from its sibling models, or how it may
+fail. Training lineage reveals much about model provenance, auditing, and safety~\cite{behavioral2026provenance, nikolic2025provenance, tensorguard2025}.
 
-We, like other prior works \cite{}, observe that fine-tuning is a path-dependent, branching process: each
+We, like other prior works~\cite{horwitz2025mother, yu2025neural, wu2026llmdna}, observe that fine-tuning is a path-dependent, branching process: each
 fork inherits its parent's weights and nudges them with new data. This is
-precisely an evolutionary process like as described in \cite{yax2025phylolm} and its path leaves fingerprints in weight space. We treat a family of fine-tuned models
-as a phylogeny (i.e. an evolutionary tree \cite{}) and ask whether this \textit{full} training tree can be \emph{estimated} from the model parameters alone.
+precisely an evolutionary process, as described in \cite{yax2025phylolm}, and its path leaves fingerprints in weight space. We treat a family of fine-tuned models
+as a phylogeny (i.e. an evolutionary tree~\cite{saitou1987neighbor}) and ask whether this \textit{full} training tree can be \emph{estimated} from the model parameters alone.
 
 Consider a firm that forks a powerful base model into finance, IT, and fraud
 variants, each fine-tuned further until dozens of versions circulate with no
 recorded lineage (Fig.~\ref{fig:overview}A). A practitioner needs to know
 which model to build on, where two versions diverged, and where each fails.
 Phylogenetic algorithms were built for this inference in
-biology \cite{}, and  we adapt them to model parameters, specifically model weights. We estimate a training tree from the weights that we can score against a
+biology~\cite{saitou1987neighbor, robinson1981comparison}, and we adapt them to model parameters, specifically model weights. We estimate a training tree from the weights that we can score against a
 \emph{known} ground-truth tree (Fig.~\ref{fig:overview}A), link to
 behavior (Fig.~\ref{fig:overview}B), and finally compare to behavior-only
 recovery when weights are unavailable (Fig.~\ref{fig:overview}C).
@@ -191,7 +191,7 @@ shared-initialization alignment that drives subliminal trait transfer.
 In this section, we define our terms and notation and establish the statistical framework underlying our experiments.
 
 
-Much like \citep{wu2026llmdna}, we use the framework of phylogenies and LLM ``DNA'' to estimate important properties of parent-child training. We assume, unlike \cite{} but like \citep{yu2025neural}, that all node models are derived from a single root model. Unlike prior works, we focus not only on parent-child pairs but on recovering partial topology across all nodes, not just child-parent pairs.  We estimate the phylogeny by first estimating a distance matrix and then using neighbor-joining \citep{saitou1987neighbor} to recover the training tree.
+Much like \citep{wu2026llmdna}, we use the framework of phylogenies and LLM ``DNA'' to estimate important properties of parent-child training. We assume, unlike \citep{horwitz2025mother} but like \citep{yu2025neural}, that all node models are derived from a single root model. Unlike prior works, we focus not only on parent-child pairs but on recovering partial topology across all nodes, not just child-parent pairs.  We estimate the phylogeny by first estimating a distance matrix and then using neighbor-joining \citep{saitou1987neighbor} to recover the training tree.
 
 
 \subsection{Phylogenetic Tree Recovery}
@@ -237,7 +237,7 @@ run, yielding a permutation $p$-value for each run. To combine evidence across t
 \subsection{Distance Metric and Shared-Direction Coherence}
 \label{sec:framework:metric}
 
-One question we sought to answer is what distance (or similarity) metric should we use to compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are  cosine, correlation, $\ell_1$ and $\ell_2$ (the latter of which was used in MoTHER \cite{}).  The first two distances are bounded by 1 and so the distances are comparable across different layers.  The second two distances are unbounded, which can allow different magnitudes of weights to dominate the distance.
+One question we sought to answer is what distance (or similarity) metric should we use to compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are  cosine, correlation, $\ell_1$ and $\ell_2$ (the latter of which was used in MoTHer~\citep{horwitz2024mother}).  The first two distances are bounded by 1 and so the distances are comparable across different layers.  The second two distances are unbounded, which can allow different magnitudes of weights to dominate the distance.
 
 We use cosine distance throughout: it is bounded and scale-invariant across layers, so no single high-magnitude tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$. A per-metric signal-to-noise comparison corroborating this choice---cosine and correlation separate same- from cross-branch distances far better than $\ell_1$/$\ell_2$---is given in Appendix~\ref{app:snr}.
 
@@ -276,7 +276,7 @@ $\ell_2$     & no  & $\gg 1$ (magnitude-dominated) \\
 % Distribution of per-layer RF distances is the data; consensus tree is summary.
 % More statistically principled than any competitor — flag explicitly.
 
-One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies are estimated across multiple genes, the assumption being that different genes encode different information on how changes are occurring \cite{}.
+One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies are estimated across multiple genes, the assumption being that different genes encode different information on how changes are occurring \cite{multigene_phylo_TODO}.
 
 Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify the most and least important layers in training by examining which layers change the most or least across multiple training runs.
 
