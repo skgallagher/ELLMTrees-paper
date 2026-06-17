@@ -46,16 +46,8 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-% TODO: draft after §3--5 are written.
-% Template (from writing_prep.md):
-%   Problem landscape → named formal contributions → breadth claim
-%   (Flan-T5 full FT + LoRA variants + Llama-3.1-8B).
-%
-% Key numbers to hit:
-%   WeightTree: 60\% sig at 7 leaves, 100\% at 8 (Fisher p < 0.0001)
-%   LayerTrace: enc_sak (4\% of params) non-inferior to full weight
-%   LoRA dose-response: Fisher-z r from -0.485 (k_only) to -0.805 (full FT)
-%   Behavioral bridge: within-run r up to -0.40; null control r = -0.006
+With over a million open deep learning models on HuggingFace, and over half a dozen premier companies constantly updating frontier models for use, it AI governance and safety is now at hte forefront.  It is not enough now to just use models. We now have to know when model is safe to use, its strong suits, its failure modes, and also use compute efficiently \cite{}.  As a consequence, it is critical to thoroughly audit models including provenance and expected behavior.  We examine AI model governance and safety through lineage methods at three different levels: model parameter changes, model parameter and behavioral links, and finally behavioral changes only.  We find that
+
 \end{abstract}
 
 % -----------------------------------------------------------------------
@@ -74,6 +66,19 @@
 % Key framing: "genealogical view" — not macro (embeddings for routing)
 % or micro (pairwise fingerprinting), but full topology recovery against
 % known ground truth. Name the monotone function claim.
+
+With the sheer number of open models available, frequently fine-tuned from base models, along with the increasing cost of frontier models, it is critical to choose models that are fit for the user's goals. While users must consider how models perform on particular benchmarks most related to their primary goal, e.g. text summarization, users must also consider other criteria such as model strengths as a whole, failure modes, computation cost, interoperability, and safety \cite{}. While there are several methods and techniques to use for model selection \cite{} (benchmarks, cost, size), we study model lineage because it allows us to consider several model criteria at once. In particular, we examine how 1) model lineage can be recovered by examining changes in model parameters after fine-tuning; 2) how those changing model parameters are linked to useful model behavior; and 3) how that compares to lineage recovery based on model behavior alone.  
+
+Consider a scenario where a company has a powerful base model that can be trained on their own data.  Imagine the model is then forked at different levels and fine-tuned on different data, one for finance, one for IT, one for fraud, etc.  Within those groups, those models may be further fine-tuned resulting in a complicated training lineage (see Fig. \ref{fig:overview}A). In a single report, dozens of versions of the same base model be used.  Since these models are used independently, it is possible that the exact training structure is unknown to the company.  For users, it is important to know which model or models should best be used to continue the analysis.  As such, s/he would want to know where the models diverge, where the mdoel strengths are, and perhaps most importantly, where the models will fail.  Thus it is important to  assess model changes first through changes i model parameters and subsequently link those changes in parameters to functional model behavior (Fig. \ref{fig:overview}B).  Finally, it is important to compare the company model to other available models, where the internal parameters are not available (see Fig. \ref{fig:overview}C) to ensure that the model is being used efficiently.
+
+We apply lineage recovery estimators to fully recover model training lineage from model parameters alone.  To do this, we first develop a principled framework for estimating lineage through angles in weight-space.  We are able to determine which layers are strong lineage 'carriers.'  Then, with model lineage in hand, we then determine how changes in model parameters are linked to intended and unintentional behavior.  Finally, we compare the lineage recovery using model parameters to current methods that use lineage recovery based on model behavior alone.  We test our methods on a encoder-decoder model and decoder models of varying scale and fine-tuning strategies.  We find that both architecture and dimensionality are important indicators in strength of lineage estimation.
+
+The rest of this paper proceeds as follows.  In \S \ref{sec:related} we examine how previous works approached these three lineage problems at parameter-only, parameter-behavior, and behavior-only levels.  In \S \ref{sec:framework}, we show how we determine model training signal through careful metric selection and summary statistics, guided by mathematical principles.  In \S \ref{sec:experiments}, we discuss how we turn our framework into testable experiments.  Following that in \S \ref{sec:results}, we show our results for lineage recovery and parameter-behavior association.  Finally, we discuss limitations and future work in \S \ref{sec:discussion}.
+
+
+
+
+
 
 \begin{figure}[t]
   \begin{center}
