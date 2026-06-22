@@ -242,7 +242,7 @@ run, yielding a permutation $p$-value for each run. To combine evidence across t
 
 One question we sought to answer is what distance (or similarity) metric should we use to compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are  cosine, correlation, $\ell_1$ and $\ell_2$ (the latter of which was used in MoTHer~\citep{horwitz2024mother}).  The first two distances are bounded by 1 and so the distances are comparable across different layers.  The second two distances are unbounded, which can allow different magnitudes of weights to dominate the distance.
 
-We use cosine distance throughout: it is bounded and scale-invariant across layers, so no single high-magnitude tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$. A per-metric signal-to-noise comparison corroborating this choice---cosine and correlation separate same- from cross-branch distances far better than $\ell_1$/$\ell_2$---is given in Appendix~\ref{app:snr}.
+We use cosine distance throughout: it is bounded and scale-invariant across layers, so no single high-magnitude tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$.
 
 We select the distance metric using the same quantity our framework turns on: the shared-direction coherence $c=\lambda_1(S)/n$ (defined in \S\ref{sec:framework:theory}), the fraction of update energy along a single dominant direction. Coherence is a meaningful fraction only for a bounded, scale-invariant similarity. Table~\ref{tab:coherence} reports $c$ by metric over \texttt{branching\_v3}: cosine and correlation place nearly all update energy on one shared lineage direction (cosine highest), while the unbounded $\ell_1$/$\ell_2$ distances are magnitude-dominated and admit no valid decomposition. We therefore use cosine distance for the remainder of the paper, and read the same coherence off the cosine updates to predict \emph{which training conditions} admit topology recovery (\S\ref{sec:results:weighttree}, Fig.~\ref{fig:coherence_recovery}).
 
@@ -556,7 +556,7 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 \begin{itemize}
   \item Lineage signal concentrates in the attention \emph{key} matrices: encoder
     \textsc{SelfAttention.k} misses only 4\% of true clades vs.\ $\sim$9\% elsewhere, while
-    \textsc{LayerNorm} is the periodic maximum (Fig.~\ref{fig:layer_rf_profiles}).
+    \textsc{LayerNorm} is the periodic maximum (Fig.~\ref{fig:layertrace_grid}).
   \item \texttt{enc\_sak} (12 tensors, 4\% of parameters) is non-inferior to the full-weight tree
     at $\geq 5$ leaves and \emph{outperforms} it at 6 leaves (RF 1.38 vs.\ 1.92; FN 0.08 vs.\ 0.33,
     Table~\ref{tab:variants}). Most of the model is noise for lineage recovery.
@@ -1057,21 +1057,6 @@ Base model: Flan-T5-base (250M parameters). Each node trained for 2,000 steps, l
     the multi-task aggregation reported in \S\ref{sec:results:blackbox}.}
   \label{fig:frechet_grid}
 \end{figure}
-
-\section{Metric Selection: SNR Analysis}
-\label{app:snr}
-% Ridge plots of SNR = E[X]^2 / Var[X] by metric family.
-% Figures: snr_ridges.png (>=6 leaves), snr_ridges_all.png (all sizes).
-\begin{figure}[h]
-  \begin{center}
-    \includegraphics[width=0.8\linewidth]{\figpath/snr_ridges.png}
-  \end{center}
-  \caption{SNR distributions by metric family ($\geq 6$-leaf runs).
-    Normalized distances (cosine, correlation) dominate. See \S\ref{sec:framework:metric}.}
-  \label{fig:snr_ridges}
-\end{figure}
-
-\TODO{Write SNR analysis text.}
 
 \section{Behavioral Regression: Full Results}
 \label{app:regression}
