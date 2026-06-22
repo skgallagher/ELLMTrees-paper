@@ -15,6 +15,10 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{corollary}{Corollary}
 \newtheorem{assumption}{Assumption}
+\newtheorem{proposition}{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{plain}
 \newcommand{\bd}{\mathbf{d}}
 \newcommand{\bsig}{\mathbf{s}}
 \newcommand{\bnoise}{\mathbf{n}}
@@ -692,16 +696,16 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
     \includegraphics[width=\linewidth]{\figpath/hero_phylogeny_treespace.png}
   \end{center}
   \caption{\textbf{A behavioral phylogeny of frontier and open models, with its support in tree space.}
-    \textbf{(a)} Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean of 20 per-dataset
-    neighbor-joining trees, each built from pairwise output-embedding distances over four task
-    families (16 models common to all tasks); branches are coloured by developer. The mean is rendered
-    as a cladogram because its internal edges are short ($\sim$3\% of total edge length), so topology
-    is more informative than scaled branch length. Claude Sonnet and Haiku form the most stable clade
-    (sisters in 80\% of per-dataset trees); the GPT family and the Llama pair are also recovered.
-    \textbf{(b)} The same 20 per-dataset trees embedded in BHV tree space (classical MDS of pairwise
-    geodesic distances). Trees group by task---summarization tightest, translation the clear
-    outlier---and the Fr\'echet mean ($\star$) lies at the centre, confirming the averaged phylogeny
-    in (a) is representative rather than an artifact of any single task.}
+    \textbf{(a)} Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean of $n=245$ per-prompt
+    neighbor-joining trees, each built from pairwise output-embedding distances (the 245 of 315
+    prompts on which all 23 common models answered, across four task families); branches are coloured
+    by developer. The mean is rendered as a cladogram because its internal edges are short ($\sim$3\%
+    of total edge length), so topology is more informative than scaled branch length. Claude Sonnet
+    and Haiku form the most stable clade; the GPT family and the Llama pair are also recovered.
+    \textbf{(b)} The 17 per-dataset trees (four task families, 23 models) embedded in BHV tree space
+    (classical MDS of pairwise geodesic distances). Trees group by task---summarization tightest,
+    translation the clear outlier---and the Fr\'echet mean ($\star$) lies at the centre, confirming
+    the averaged phylogeny in (a) is representative rather than an artifact of any single task.}
   \label{fig:blackbox_hero}
 \end{figure}
 
@@ -722,6 +726,11 @@ task.
   \item Multi-task aggregation is therefore necessary: the Fr\'echet mean sits at the centre of the
     per-dataset trees, recovering family structure that single-task probes miss.
 \end{itemize}
+
+The per-task disagreement is substantial: pairwise normalized Robinson--Foulds distance among the
+four per-task Fr\'echet trees ranges from $0.65$ to $0.95$ (mean $\approx 0.84$), so no single task
+reproduces the aggregate topology. The four per-task trees are shown side by side with the aggregate
+in Appendix~\ref{app:blackbox} (Figure~\ref{fig:frechet_grid}).
 
 
 % -----------------------------------------------------------------------
@@ -998,6 +1007,18 @@ Base model: Flan-T5-base (250M parameters). Each node trained for 2,000 steps, l
 % Models, API versions, prompt templates, sentence-transformer embeddings.
 
 \TODO{Fill blackbox details (model list, API versions, prompt templates, ST embeddings).}
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/frechet_grid_tasks.png}
+  \end{center}
+  \caption{\textbf{Per-task behavioral phylogenies (BHV Fr\'echet means).} The cross-task aggregate
+    (top-left) and the four per-task Fr\'echet trees (summarization, QA, classification, translation),
+    each over the 23 models common to all tasks and rendered as cladograms. Topologies differ
+    substantially across tasks (pairwise normalized Robinson--Foulds $0.65$--$0.95$), which motivates
+    the multi-task aggregation reported in \S\ref{sec:results:blackbox}.}
+  \label{fig:frechet_grid}
+\end{figure}
 
 \section{Metric Selection: SNR Analysis}
 \label{app:snr}
