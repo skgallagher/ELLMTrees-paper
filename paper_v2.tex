@@ -150,12 +150,12 @@ these works recovers a full training-topology tree, nor evaluates against a know
 training tree.
 
 Other works examine \emph{why} lineage carries from parent to
-child. Models fine-tuned from a shared initialization remain within a single connected low-loss basin
-\citep{wortsman2022model, frankle2020linear}, so pairwise weight distance is a meaningful proxy for
+child. Models fine-tuned from a shared initialization remain close to one another in 'a single low error basin' and are robust to noise from stochastic gradient descent.
+\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance is a meaningful proxy for
 genealogical distance. The displacement a task induces the \emph{task vector}
 $\Delta\theta=\theta_{\mathrm{ft}}-\theta_{\mathrm{base}}$ \citep{ilharco2023editing}.  Across different tasks, these task vectors are near-orthogonal, so
 distinct lineages contribute largely independent directions rather than canceling. Centered Kernel
-Alignment (CKA) \citep{kornblith2019similarity} is a standard tool for comparing trained models. Low-rank adaptation \citep{hu2022lora} and
+Alignment (CKA) \citep{kornblith2019similarity} is a standard tool for comparing trained models. Low-rank adaptation (LoRA) \citep{hu2022lora} and
 intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why a small update suffices
 and why the \emph{rank} of that update bounds how much lineage is legible, while near-orthogonal task
 subspaces have been linked to catastrophic forgetting \citep{kirkpatrick2017overcoming}. 
