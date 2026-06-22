@@ -528,33 +528,6 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 % Figure 3: per-layer RF profile
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/fig3_fn.png}
-  \end{center}
-  \caption{Per-layer FN-rate (\% of true clades missed; mean $\pm$ 2\,SE, $n=44$ runs, cosine),
-    encoder and decoder shown separately. The key matrices recur once per block and miss the
-    fewest true clades: encoder \textsc{SelfAttention.k} reaches 4\% FN (vs.\ 9\% elsewhere),
-    while \textsc{LayerNorm} is the periodic maximum. In the decoder the lineage-carrying low
-    cluster is the encoder--decoder \textsc{cross-attention} (\textsc{ca.k} lowest); decoder
-    self-attention is weak --- the signal there lives in cross-attention, which a decoder-only
-    model lacks.}
-  \label{fig:layer_rf_profiles}
-\end{figure}
-
-% DRAFT BULLETS — to be expanded to prose.
-\begin{itemize}
-  \item Lineage signal concentrates in the attention \emph{key} matrices: encoder
-    \textsc{SelfAttention.k} misses only 4\% of true clades vs.\ $\sim$9\% elsewhere, while
-    \textsc{LayerNorm} is the periodic maximum (Fig.~\ref{fig:layer_rf_profiles}).
-  \item \texttt{enc\_sak} (12 tensors, 4\% of parameters) is non-inferior to the full-weight tree
-    at $\geq 5$ leaves and \emph{outperforms} it at 6 leaves (RF 1.38 vs.\ 1.92; FN 0.08 vs.\ 0.33,
-    Table~\ref{tab:variants}). Most of the model is noise for lineage recovery.
-  \item In the decoder the signal lives in the encoder--decoder \emph{cross-attention}
-    (\textsc{ca.k} lowest); decoder self-attention is weak --- a carrier that decoder-only models
-    structurally lack (revisited in \S\ref{sec:discussion:keys}).
-\end{itemize}
-
-\begin{figure}[t]
-  \begin{center}
     \includegraphics[width=\linewidth]{\figpath/fig_layertrace_grid.png}
   \end{center}
   \caption{Per-layer LayerTrace across all three architectures (cosine; full fine-tuning; FN-rate
@@ -571,6 +544,21 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
     14\% in blocks 2+; paired $t=2.4$, $n=47$).}
   \label{fig:layertrace_grid}
 \end{figure}
+
+% DRAFT BULLETS — to be expanded to prose.
+\begin{itemize}
+  \item Lineage signal concentrates in the attention \emph{key} matrices: encoder
+    \textsc{SelfAttention.k} misses only 4\% of true clades vs.\ $\sim$9\% elsewhere, while
+    \textsc{LayerNorm} is the periodic maximum (Fig.~\ref{fig:layer_rf_profiles}).
+  \item \texttt{enc\_sak} (12 tensors, 4\% of parameters) is non-inferior to the full-weight tree
+    at $\geq 5$ leaves and \emph{outperforms} it at 6 leaves (RF 1.38 vs.\ 1.92; FN 0.08 vs.\ 0.33,
+    Table~\ref{tab:variants}). Most of the model is noise for lineage recovery.
+  \item In the decoder the signal lives in the encoder--decoder \emph{cross-attention}
+    (\textsc{ca.k} lowest); decoder self-attention is weak --- a carrier that decoder-only models
+    structurally lack (revisited in \S\ref{sec:discussion:keys}).
+\end{itemize}
+
+
 
 The LayerTrace carrier is architecture-dependent but always input-facing
 (Fig.~\ref{fig:layertrace_grid}): encoder \textsc{SelfAttention.k} in Flan-T5, the input embedding in
