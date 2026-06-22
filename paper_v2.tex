@@ -152,8 +152,7 @@ training tree.
 Other works examine \emph{why} lineage carries from parent to
 child. Models fine-tuned from a shared initialization remain close to one another in 'a single low error basin' and are robust to noise from stochastic gradient descent.
 \citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance is a meaningful proxy for
-genealogical distance. The displacement a task induces the \emph{task vector}
-$\Delta\theta=\theta_{\mathrm{ft}}-\theta_{\mathrm{base}}$ \citep{ilharco2023editing}.  Across different tasks, these task vectors are near-orthogonal, so
+genealogical distance. \citep{ilharco2023editing} discusses the \textit{task vector}, the displacement a task induces on a model that has been fine-tuned on a certain task.  They show that you can do basic arithemtic such as addition and subtraction in this space.  Across different tasks, these task vectors are near-orthogonal, so
 distinct lineages contribute largely independent directions rather than canceling. Centered Kernel
 Alignment (CKA) \citep{kornblith2019similarity} is a standard tool for comparing trained models. Low-rank adaptation (LoRA) \citep{hu2022lora} and
 intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why a small update suffices
@@ -499,16 +498,20 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 % Figure 2: behavioral vs whitebox vs null
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/fig2_fn.png}
+    \includegraphics[width=\linewidth]{\figpath/fig2_fn_multi.png}
   \end{center}
   \caption{FN (true clades missed) by tree size for whitebox weight distances (cosine, blue),
-    behavioral distances (held-out translation probe, semantic; \texttt{no\_translation\_v2}),
-    and random null (gray, mean $\pm$ 2\,SE). Plotting FN rather than total RF removes the
-    binary-forced FP that the multifurcating truth induces equally for signal and null.
-    Whitebox FN is $\approx 0$ at every tree size --- it recovers essentially all true clades ---
-    while the behavioral probe tracks the null: behavioral similarity is a pairwise lineage
-    gradient (quantified by the branch-structure and regression analyses), not a recoverable
-    topology. Weight access is what enables per-run tree recovery.}
+    held-out behavioral distances (translation probe, semantic, red), and random null (gray; all
+    bands mean $\pm$ 2\,SE), for an encoder--decoder (Flan-T5-base, \texttt{no\_translation\_v2})
+    and a decoder (Llama-3.2-1B, full FT, \texttt{\_notrans}) --- both with translation held out
+    of training so the behavioral series is a fair held-out test. Plotting FN rather than total RF
+    removes the binary-forced FP that the multifurcating truth induces equally for signal and null.
+    In both architectures whitebox FN is $\approx 0$ at every tree size --- it recovers essentially
+    all true clades --- while the behavioral probe tracks the null: behavioral similarity is a
+    pairwise lineage gradient (quantified by the branch-structure and regression analyses), not a
+    recoverable topology. Weight access is what enables per-run tree recovery. Each point averages
+    only the runs at that leaf count (per-size $n$ annotated under the axis; total $N\!\approx\!47$
+    per panel), and FN is integer-valued, so the sparse 4- and 8-leaf bins have wider bands.}
   \label{fig:behavioral_vs_whitebox}
 \end{figure}
 
@@ -601,7 +604,12 @@ Variant & Trained layers & Fisher-$z$ $r$ & SD & $N$ & RF & FN \\
 \quad branching\_v3    & all & $-0.802$ & 0.230 & 37 & 1.81 & 0.19 \\
 \midrule
 \multicolumn{7}{l}{\textbf{Decoder-only: Pythia-160M} ($d=768$, matched to Flan)} \\
-\multicolumn{7}{l}{\quad\textcolor{red}{[full-FT + qkv (r8) rows pending Tier 1/2 analysis --- Ghidorah jobs 31304--31328]}} \\
+\quad qkv (r8)         &  12 & $-0.350$ & 0.281 & 37 & 3.38 & 0.98 \\
+\quad full FT          & all & $-0.861$ & 0.182 & 37 & 1.55 & 0.06 \\
+\midrule
+\multicolumn{7}{l}{\textbf{Decoder-only: Llama-3.2-1B} ($d=2048$)} \\
+\quad qkv (r8)         &  48 & $-0.164$ & 0.255 & 36 & 3.89 & 1.27 \\
+\quad full FT          & all & $-0.690$ & 0.327 & 35 & 1.86 & 0.25 \\
 \midrule
 \multicolumn{7}{l}{\textit{LayerTrace variants (Flan-T5 full FT, 6-leaf runs); FN $=$ true clades missed}} \\
 enc\_sak (4\%) & 12 tensors & \multicolumn{5}{l}{FN $0.08 \pm 0.08$ vs full weight $0.33 \pm 0.19$} \\
@@ -632,14 +640,21 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
 
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=0.85\linewidth]{\figpath/fig_coherence_vs_recovery.png}
+    \includegraphics[width=\linewidth]{\figpath/fig4_coherence_atteson.png}
   \end{center}
-  \caption{Topology recovery against shared-direction coherence $c=\lambda_1(S)/n$ across all training
-    conditions. Coherence is bimodal and gates recovery: conditions at $c\approx0.99$ (Flan-T5 full FT
-    and LoRA, Pythia-160M full FT, full-FT Llama-3.2-1B) recover the topology, while the diluted
-    low-rank decoder conditions (Llama-8B and 1B LoRA) sit at $c\approx0.20$ and do not. A single
-    threshold on $c$ separates the two groups; the rank fraction $s=r/d$ does not
-    (\S\ref{sec:framework:metric}).}
+  \caption{\textbf{What gates topology recovery.} \textbf{(A)} Clade recovery against shared-direction
+    coherence $c=\lambda_1(S)/n$ across all training conditions. Coherence is bimodal and gates
+    recovery: conditions at $c\approx0.99$ (Flan-T5 full FT and LoRA, Pythia-160M full FT, full-FT
+    Llama-3.2-1B) recover the topology, while the diluted low-rank decoder conditions (Llama-8B and 1B
+    LoRA) sit at $c\approx0.20$ and do not. A single threshold on $c$ separates the two groups; the rank
+    fraction $s=r/d$ does not (\S\ref{sec:framework:metric}). \textbf{(B)} Clade recovery against the
+    mean Atteson margin --- the fitted internal edge length divided by twice the non-additivity error,
+    so that neighbor-joining provably recovers a split once the margin exceeds $1$ (Atteson, 1999;
+    dashed line). The margin both separates the regimes and supplies the \emph{within}-regime gradient
+    that coherence cannot, since $c$ saturates near $0.99$ across the entire recovering cluster: rank
+    correlation with recovery is $\rho=+0.90$ for the margin versus $+0.77$ for coherence. Stars denote
+    full fine-tuning, circles LoRA; the highlighted star is full-FT Llama-3.2-1B, the decoder condition
+    that clears the low-rank dead zone.}
   \label{fig:coherence_recovery}
 \end{figure}
 
