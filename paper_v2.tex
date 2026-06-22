@@ -686,6 +686,41 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
     raw and semi-standardized betas in Appendix~\ref{app:regression}.
 \end{itemize}
 
+Table~\ref{tab:behavior_holdout} sharpens the held-out test on the two full-fine-tuning models.
+For each (model, probe) we report the random-effects (DerSimonian--Laird) pooled correlation between
+weight-space distance and behavioral similarity, computed on the \emph{paired} per-prompt semantic
+distance with both distances $z$-scored within run; this within-run standardization makes the
+coefficient an apples-to-apples correlation across conditions. The bridge is negative and significant
+on the trained translation probe and on held-out HellaSwag for both architectures. The decisive case
+is held-out translation (no node ever trained on translation): for Llama-3.2-1B the bridge not only
+survives but \emph{strengthens} ($r=-0.33$, $p=5\!\times\!10^{-9}$), evidence of genuine lineage
+transmission rather than shared-task coupling; the encoder--decoder Flan-T5 is the lone exception,
+flipping weakly positive ($r=+0.11$), which we discuss in \S\ref{sec:discussion:wb_bb}.
+
+\begin{table}[t]
+\caption{Weight$\to$behavior bridge by model and probe (full fine-tuning). Random-effects
+(DerSimonian--Laird) pooled correlation $r$ between weight-space distance and behavioral similarity,
+on the paired per-prompt semantic distance with both quantities $z$-scored \emph{within run} (so $r$
+is comparable across rows). ``trained'' = the probe task was in the training mix; ``held-out'' = no
+node ever trained on it. Translation held-out uses the matched no-translation training tree
+(\texttt{no\_translation\_v2} construction); HellaSwag is held out for every model.}
+\label{tab:behavior_holdout}
+\centering
+\begin{tabular}{llccc}
+\toprule
+Model & Probe (condition) & RE $r$ & 95\% CI & $p$ \\
+\midrule
+Llama-3.2-1B (full FT) & Translation (trained)  & $-0.294$ & $[-0.41, -0.17]$ & $1\times10^{-5}$ \\
+                       & Translation (held-out) & $-0.333$ & $[-0.43, -0.23]$ & $5\times10^{-9}$ \\
+                       & HellaSwag (held-out)   & $-0.204$ & $[-0.32, -0.09]$ & $9\times10^{-4}$ \\
+\midrule
+Flan-T5-base (full FT) & Translation (trained)  & $-0.260$ & $[-0.35, -0.16]$ & $3\times10^{-7}$ \\
+                       & Translation (held-out) & $+0.113$ & $[+0.02, +0.21]$ & $0.024$ \\
+                       & HellaSwag (held-out)   & $-0.292$ & $[-0.37, -0.21]$ & $1\times10^{-10}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 
 \subsection{Blackbox: Frontier Model Families}
 \label{sec:results:blackbox}
