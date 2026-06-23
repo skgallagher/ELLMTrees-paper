@@ -278,7 +278,7 @@ $\ell_2$     & no  & $\gg 1$ (magnitude-dominated) \\
 % Distribution of per-layer RF distances is the data; consensus tree is summary.
 % More statistically principled than any competitor — flag explicitly.
 
-One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies are estimated across multiple genes, the assumption being that different genes encode different information on how changes are occurring \cite{maddison1997gene}.
+One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies must cohere to multiple sets of genes, the assumption being that different genes encode different information on how changes are occurring \cite{maddison1997gene}.
 
 Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify the most and least important layers in training by examining which layers change the most or least across multiple training runs.
 
