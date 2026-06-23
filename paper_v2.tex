@@ -243,7 +243,7 @@ One question we sought to answer is what distance (or similarity) metric should 
 
 We use cosine distance throughout: it is bounded and scale-invariant across layers, so no single high-magnitude tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$.
 
-We select the distance metric using the same quantity our framework turns on: the shared-direction coherence $c=\lambda_1(S)/n$ (defined in \S\ref{sec:framework:theory}), the fraction of update energy along a single dominant direction. Coherence is a meaningful fraction only for a bounded, scale-invariant similarity. Table~\ref{tab:coherence} reports $c$ by metric over \texttt{branching\_v3}: cosine and correlation place nearly all update energy on one shared lineage direction (cosine highest), while the unbounded $\ell_1$/$\ell_2$ distances are magnitude-dominated and admit no valid decomposition. We therefore use cosine distance for the remainder of the paper, and read the same coherence off the cosine updates to predict \emph{which training conditions} admit topology recovery (\S\ref{sec:results:weighttree}, Fig.~\ref{fig:coherence_recovery}).
+We select the distance metric using a bounded, scale-invariant summary of the updates---their shared-direction coherence $c=\lambda_1(S)/n$ (defined in \S\ref{sec:framework:theory}), the fraction of update energy along a single dominant direction, which later serves as our scope screen for recoverability. Coherence is a meaningful fraction only for a bounded, scale-invariant similarity. Table~\ref{tab:coherence} reports $c$ by metric over \texttt{branching\_v3}: cosine and correlation place nearly all update energy on one shared lineage direction (cosine highest), while the unbounded $\ell_1$/$\ell_2$ distances are magnitude-dominated and admit no valid decomposition. We therefore use cosine distance for the remainder of the paper, and read the same coherence off the cosine updates to predict \emph{which training conditions} admit topology recovery (\S\ref{sec:results:weighttree}, Fig.~\ref{fig:coherence_recovery}).
 
 \begin{table}[t]
 \centering
@@ -283,89 +283,90 @@ One contribution we have in our methodology is the use of per-layer distance mat
 Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify the most and least important layers in training by examining which layers change the most or least across multiple training runs.
 
 
-\subsection{When Lineage Is Recoverable: Separation, and Coherence as Its Proxy}
+\subsection{When Is Lineage Recoverable?}
 \label{sec:framework:theory}
 
-We give a statistical account of \emph{when} the recipe of \S\ref{sec:framework:phylo} succeeds.
-Fine-tuning a child from its parent adds a displacement in weight space, which we model as a shared,
-task-systematic direction (a ``task vector'') plus independent run-to-run noise: siblings trained on
-similar data share more of that direction, unrelated branches less. The pairwise weight distances we
-feed to neighbor-joining are therefore a lineage \emph{signal}---how the shared directions differ along
-the tree---buried in \emph{noise} that accumulates over the connecting edges. Recovery comes down to one
-latent quantity, the \emph{separation}: how far the distances place siblings from non-siblings relative
-to that noise. The formal model and all proofs are deferred to Appendix~\ref{app:proofs}; here we state
-the consequences and how we measure them.
+Reading lineage from weights poses two questions of very different difficulty, and separating them
+clarifies what we can claim. \emph{Ordering} asks only whether sibling (same-branch) pairs are closer
+than cousin (cross-branch) pairs; \emph{topology} asks neighbor-joining to return the correct tree.
+Prior provenance work operates at the ordering level; recovering topology against a known training tree
+is our target.
 
-\paragraph{Two regimes.} ``Reading the lineage'' hides two questions of very different difficulty.
-\emph{Ordering} asks only whether same-branch pairs are closer than cross-branch pairs \emph{on
-average}; it pools many comparisons, so even a tiny per-pair signal accumulates into a detectable
-trend. \emph{Topology} asks to reconstruct the entire tree, which needs the local relationships right
-\emph{everywhere at once}---a few wrong calls anywhere break it. We obtain the topology result
-\emph{without} the tree-additivity condition neighbor-joining nominally needs (and that near-orthogonal
-updates violate), by reasoning about \emph{rooted triples}---ordinal facts of the form ``$i$ and $j$
-branched off together more recently than $k$''---which the classical \textsc{Build} algorithm
-\citep{aho1981build} assembles into the unique tree using only the \emph{order} of distances, never
-their exact values.
+\paragraph{Ordering: the easy regime, and the link to prior work.}
+Ordering pools every same- versus cross-branch comparison, so even a small per-pair signal accumulates
+into a detectable trend. We test it with the Mann--Whitney $U$ statistic on same- versus cross-branch
+distances (equivalently, a within-run rank correlation). Mann--Whitney is the right tool here: it
+depends only on the \emph{ranks} of distances, so it is invariant to the run-specific scale of cosine
+distances and robust to the heavy-tailed noise of weight space, and it is the locally most powerful rank
+test against a stochastic-ordering alternative---precisely ``siblings tend to be closer.'' Aggregating
+$O(n^2)$ comparisons per run across $50$ runs, it detects lineage even when no single pair is decisive.
+This pairwise-ancestry signal is what parent--child provenance methods such as MoTHer
+\citep{horwitz2024mother} and Neural Lineage \citep{yu2024neurallineage} rely on; we report it in
+\S\ref{sec:results:weighttree}, but it is strictly weaker than reconstructing the tree.
 
-\begin{assumption}[Lineage monotonicity]\label{asm:mono}
-Read a rooted triple $ij\,|\,k$ as the ancestry statement that $i$ and $j$ share a more recent common
-ancestor than either shares with $k$---so $i,j$ are the \emph{siblings} and $k$ the \emph{outgroup}. We
-assume only that this ancestral order is reflected in expected weight distance: the siblings are
-expected to be closer than either is to the outgroup,
-\[ \E[D_{ij}]<\E[D_{ik}] \quad\text{and}\quad \E[D_{ij}]<\E[D_{jk}], \]
-for every true triple of the tree; write $\gamma$ for the smallest of these expected gaps (the
-\emph{margin}). Tree-additivity implies this but not conversely---it constrains only the \emph{order} of
-distances, not their values---so it can hold even in the near-orthogonal regime where additivity fails,
-which is why our results never need the metric to behave like tree branch lengths.
-\end{assumption}
-
-\begin{theorem}[Ordering---the easy regime]\label{thm:order}
-Pool $M$ \emph{comparable contrasts}, each a same-branch distance differenced against a cross-branch
-distance whose labels are exchangeable under the permutation null (Definition~\ref{def:contrast},
-Appendix~\ref{app:proofs}), so the difference is mean-zero under that null. With margin $\gamma$ and
-contrast variance at most $V$, the ``same-branch closer'' test (our permutation, Mann--Whitney, and
-within-run $r$ statistics) has power tending to $1$ once $M\gamma^2/V\gg1$. Because it pools, ordering
-is detected even when the per-pair separation is small.
+\paragraph{Topology: additivity and Atteson's margin.}
+Neighbor-joining is exact on an \emph{additive} distance matrix---one whose entries are path-length sums
+on a tree (the four-point condition). Weight distances are not additive, so what matters is how much
+non-additivity NJ tolerates. Atteson's theorem makes this precise.
+\begin{theorem}[\citealp{atteson1999performance}]\label{thm:atteson}
+Let $D_{\mathrm{add}}$ be the additive metric of the true topology with internal edge lengths
+$\{L_s\}$, and $D$ the observed distance matrix. If
+$\;\lVert D-D_{\mathrm{add}}\rVert_\infty < \tfrac12\min_s L_s$, then neighbor-joining applied to $D$
+returns the true topology.
 \end{theorem}
-
-\paragraph{Topology is harder.} Recovering the full tree needs every local relationship right at once,
-so it is governed by the \emph{worst} per-triple separation, not a pooled average. It is nonetheless
-identifiable from ordinal information alone: once the worst per-triple separation clears $\approx 3\ln n$
-(Theorem~\ref{thm:topo}, Appendix~\ref{app:proofs}), all rooted triples are called correctly and
-\textsc{Build} \citep{aho1981build} reconstructs the exact tree with no additivity assumption. We do not
-run \textsc{Build}: the pipeline reconstructs with neighbor-joining and we report topology recovery
-empirically (\S\ref{sec:results}). The two regimes therefore dissociate---at intermediate separation,
-pooling keeps \emph{ordering} detectable while \emph{topology} stays out of reach, exactly the
-decoder-only Llama regime (Appendix~\ref{app:llama}).
-
-\paragraph{Measuring it: shared-direction coherence.} The separation is latent---it depends on the
-unknown signal and noise. What we can compute from the weights alone is the \emph{shared-direction
-coherence} of the trained-module updates: from a run's pairwise cosine-similarity matrix
-$S=\mathbf{1}-D$, define
+Writing a per-edge margin and its bottleneck,
 \[
-  c \;=\; \lambda_1(S)/n \;\in\; [\,1/n,\;1\,],
+  m_s = \frac{L_s}{2\,\lVert D-D_{\mathrm{add}}\rVert_\infty},
+  \qquad
+  \mathrm{margin} = \min_s m_s,
 \]
-the fraction of update energy along a single dominant direction ($c=1$ when all sibling updates are
-parallel, $c=1/n$ when mutually orthogonal). Under the generative model $c$ is an increasing function of
-the signal fraction and hence of the separation (Appendix~\ref{app:proofs},
-Proposition~\ref{prop:coh}), so we use it as a label-free proxy for whether a run is in the recoverable
-regime. \textbf{Two honest cautions.} Coherence summarizes alignment but not whether the residual
-structure is tree-shaped, so it is \emph{not} sufficient on its own: a maximally coherent ``star'' of
-parallel updates has $c\to1$ yet carries no tree to recover (Proposition~\ref{prop:coh}). What we claim
-is therefore \emph{conditional}---\emph{under} lineage monotonicity (Assumption~\ref{asm:mono}), higher
-coherence places more of each update along the lineage direction and raises the separation toward the
-topology threshold.
+a $\mathrm{margin}>1$ \emph{guarantees} exact recovery. It is a sufficient condition, and a conservative
+one---set by the single worst edge under a worst-case ($\ell_\infty$) error---so in practice NJ recovers
+most splits well before the bottleneck reaches $1$. This is the guarantee we lean on in place of exact
+metric additivity, which near-orthogonal updates violate.
 
-\paragraph{Empirically, coherence separates the regimes.} Across our experiments $c$ is sharply
-bimodal: groups that recover the topology---Flan-T5 (full FT and LoRA), Pythia-160M (full FT), and
-full-FT Llama-3.2-1B---sit at $c\approx0.99$ (updates nearly parallel), while every diluted low-rank
-decoder group (Llama-8B and 1B LoRA) sits at $c\approx0.20$ (updates nearly orthogonal), with nothing
-in between (Fig.~\ref{fig:coherence_recovery}). A single threshold on $c$ separates the recovering from
-the dead groups across all of them. We caution that our groups vary the update dimension together with
-coherence, so they cannot \emph{isolate} coherence from other dimension-linked explanations; what they
-establish is that the two regimes are cleanly told apart by one label-free, weight-only quantity. Low
-rank is then one of several mechanisms---alongside large width, fused projections, and near-floor
-displacement---that drive coherence down.
+\paragraph{Why a proxy is needed.}
+The margin is an \emph{oracle} quantity: forming $D_{\mathrm{add}}$ and the $L_s$ requires the true
+topology and its branch lengths. We have neither in deployment---our experiments fix the topology but
+not branch lengths, and the diagnostic we want must be readable on a model whose lineage is
+\emph{unknown}. We therefore define a label-free surrogate computed from $D$ alone.
+
+\paragraph{The additivity margin (AM).}
+For each quartet of leaves the three pairwise-distance sums, sorted $s_1\ge s_2\ge s_3$, satisfy
+$s_1=s_2$ under an additive metric, with $(s_2-s_3)/2$ the internal edge separating the two cherries.
+We turn each quartet's violation and edge into scale-free scores and average over quartets:
+\[
+  A=\frac{s_2-s_3}{s_1-s_3}\in[0,1],
+  \qquad
+  \mathrm{rel\_edge}=\frac{(s_2-s_3)/2}{\operatorname{median}(D)},
+  \qquad
+  \mathrm{AM}=\big\langle\, A\cdot\mathrm{rel\_edge}\,\big\rangle_{\text{quartets}} .
+\]
+$A$ estimates how nearly additive the quartet is---the margin's \emph{denominator} (non-additivity)---while
+$\mathrm{rel\_edge}$ restores the internal-edge length that $A$'s normalization discards---the margin's
+\emph{numerator}. Their product is a label-free analogue of the edge-to-non-additivity ratio the oracle
+margin forms from $L_s$ and $\lVert D-D_{\mathrm{add}}\rVert_\infty$, and needs no truth tree.
+
+\paragraph{Guarantee versus partial recovery.}
+Because Atteson's condition is sufficient but not necessary, we neither expect nor observe a sharp
+$\mathrm{margin}=1$ cliff; recovery instead climbs smoothly with the margin, which is why our groups land
+at high---not perfect---recovery rather than a clean all-or-nothing split. Going label-free splits the
+margin's two roles: AM acts as a clean \emph{scope gate}, separating recovering from non-recovering
+groups with no overlap (a $\sim$6$\times$ gap), while the oracle margin rank-correlates with clade
+recovery at $\rho\approx+0.9$ (Fig.~\ref{fig:coherence_recovery}). The theorem accounts for the
+ceiling---where $\mathrm{margin}>1$, recovery is exact---and AM and the empirical margin account for the
+gradient below it, where most of our groups sit.
+
+\paragraph{What sets AM across training configurations.}
+AM is high when fine-tuning moves siblings along a shared, low-dimensional lineage direction, leaving the
+distance matrix nearly additive, and low when each update points in an idiosyncratic direction so
+non-additivity swamps the internal edges. Full fine-tuning follows a common optimization trajectory and
+lands in the first regime (AM high, recovery near the additive ceiling); a rank-$r$ adapter in a wide
+layer gives each node a near-orthogonal subspace, and in high ambient dimension independently trained
+updates are nearly orthogonal, so non-additivity dominates and AM collapses---the decoder-only LoRA
+``dead zone'' (Appendix~\ref{app:llama}). Shared-direction coherence $c=\lambda_1(\mathbf{1}-D)/n$
+measures the same common-mode strength and gates identically; we report both against recovery in
+\S\ref{sec:results:weighttree}.
 
 
 % -----------------------------------------------------------------------
@@ -828,7 +829,9 @@ in Appendix~\ref{app:blackbox} (Figure~\ref{fig:frechet_grid}).
 \section{Proofs: Separation, Identifiability, and the Coherence Proxy}
 \label{app:proofs}
 
-We restate and prove the results of \S\ref{sec:framework:theory}. Recall that
+This appendix develops the formal separation model behind the ordering remark of
+\S\ref{sec:framework:theory}---the ordinal account of why same-branch pairs read as closer, which
+complements the Atteson-margin guarantee used for topology in the main text. Recall that
 $w_i-w_j=\bsig_{ij}+\bnoise_{ij}$, where the deterministic \emph{signal} $\bsig_{ij}$ is the sum of
 task vectors along the two root-to-leaf paths and the \emph{noise} $\bnoise_{ij}=\sum_e\pm\beps_e$
 sums the independent mean-zero edge noises over the $\ell_{ij}$ edges separating $i$ and $j$. A rooted
@@ -836,6 +839,16 @@ triple $ij\,|\,k$ is the purely ordinal statement that $\{i,j\}$ branched off to
 than $k$; it is the atom of tree structure, and \textsc{Build} \citep{aho1981build} reconstructs the
 unique tree displaying a complete consistent set of correct triples using only orderings of distances,
 never their exact values.
+
+\begin{assumption}[Lineage monotonicity]\label{asm:mono}
+Read a rooted triple $ij\,|\,k$ as the statement that $i$ and $j$ share a more recent common ancestor
+than either shares with $k$, so $i,j$ are the \emph{siblings} and $k$ the \emph{outgroup}. We assume
+this ancestral order is reflected in expected weight distance,
+\[ \E[D_{ij}]<\E[D_{ik}] \quad\text{and}\quad \E[D_{ij}]<\E[D_{jk}], \]
+for every true triple, and write $\gamma$ for the smallest of these expected gaps (the \emph{margin}).
+This constrains only the \emph{order} of distances, not their values, so it can hold even where metric
+additivity fails.
+\end{assumption}
 
 \paragraph{Model.} Fine-tuning node $v$ from its parent adds $\Delta_v=\bd_{\tau(v)}+\beps_v$: a task
 vector $\bd_{\tau}$ (the average direction in which task $\tau$ moves the model; children inherit their
@@ -893,6 +906,15 @@ with $\ell_{ik}=3$, hence $\E[D_{ik}]=(3-2\rho)\norm{\bd}^2+3\nu$. Subtracting,
 $\gamma=\big[(3-2\rho)-2(1-\rho)\big]\norm{\bd}^2+\nu=\norm{\bd}^2+\nu$; the $\rho$-terms cancel, and
 the $jk$ comparison is identical by symmetry.
 \end{proof}
+
+\begin{theorem}[Ordering]\label{thm:order}
+Pool $M$ \emph{comparable contrasts} (Definition~\ref{def:contrast}), each a same-branch distance
+differenced against a cross-branch distance whose labels are exchangeable under the permutation null,
+so the difference is mean-zero under that null. With margin $\gamma$ and contrast variance at most $V$,
+the ``same-branch closer'' test (the permutation, Mann--Whitney, and within-run $r$ statistics) has
+power tending to $1$ once $M\gamma^2/V\gg1$. Because it pools, ordering is detected even when the
+per-pair separation is small.
+\end{theorem}
 
 \begin{proof}[Proof of Theorem~\ref{thm:order}]
 For comparable contrasts $m=1,\dots,M$ (Definition~\ref{def:contrast}) put
