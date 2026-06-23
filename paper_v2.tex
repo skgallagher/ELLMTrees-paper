@@ -1083,22 +1083,23 @@ regardless of input.
   Classification-trained nodes output label tokens only.}
 \label{tab:translation_probe_examples}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{center}
-\begin{tabular}{p{2.2cm} p{1.8cm} p{8.2cm}}
+\begin{tabular}{p{1.8cm} p{1.6cm} p{8.0cm}}
 \toprule
 Node & Last task & Model output \\
 \midrule
-\multicolumn{3}{l}{\textit{Source 1: ``And, most recently, it cannot excuse the failure to design a simple website more than three years since the Affordable Care Act was signed.''}} \\
+\multicolumn{3}{@{}p{11.6cm}@{}}{\textit{Source 1: ``And, most recently, it cannot excuse the failure to design a simple website more than three years since the Affordable Care Act was signed.''}} \\
 n0  & QA/Summ.  & \textit{Et, plus r\'{e}cemment, il ne peut excuser le manque de conception d'une simple website plus de trois ann\'{e}es depuis le signe de la Loi sur le soins de sant\'{e}.} \\
 n7  & Classification & \texttt{negative} \\
 n8  & Classification & \texttt{entailment} \\
 \midrule
-\multicolumn{3}{l}{\textit{Source 2: ``Since the Tribunal has declared it admissible, it would need to proceed to the second stage, the preliminary hearings.''}} \\
+\multicolumn{3}{@{}p{11.6cm}@{}}{\textit{Source 2: ``Since the Tribunal has declared it admissible, it would need to proceed to the second stage, the preliminary hearings.''}} \\
 n0  & QA/Summ.  & \textit{Puisque le Tribunal a d\'{e}clar\'{e} admissible, il faudrait proc\'{e}der \`{a} la second \'{e}tape, les audiences pr\'{e}liminaires.} \\
 n7  & Classification & \texttt{positive} \\
 n8  & Classification & \texttt{entailment} \\
 \midrule
-\multicolumn{3}{l}{\textit{Source 3: ``The bikes are jostling to get in front and take photos.''}} \\
+\multicolumn{3}{@{}p{11.6cm}@{}}{\textit{Source 3: ``The bikes are jostling to get in front and take photos.''}} \\
 n0  & QA/Summ.  & \textit{Les bikes sont jotling to get in front and take photos.} \\
 n7  & Classification & \texttt{negative} \\
 n8  & Classification & \texttt{entailment} \\
@@ -1133,19 +1134,21 @@ between cosine weight distance and semantic output similarity for each fine-tuni
 condition. Points are within-run demeaned (run fixed effects removed); the red line
 is the OLS fit on the demeaned data. A negative slope indicates that model pairs
 closer in weight space produce more similar translation outputs. The effect is
-consistent in direction across all five Flan-T5 training conditions (centroid semantic DV). The full
-fine-tuning held-out bridge, on the paired per-prompt DV and pooled by random-effects meta-analysis, is
-quantified separately in \S\ref{sec:results:behavioral} (Table~\ref{tab:behavior_holdout}).
+consistent in direction across all five Flan-T5 training conditions and the full-FT decoder Llama-3.2-1B
+(centroid semantic DV; translation probe), with within-run $\bar r$ ranging from $-0.16$ to $-0.45$. The
+held-out bridge, on the paired per-prompt DV and pooled by random-effects meta-analysis, is quantified
+separately in \S\ref{sec:results:behavioral} (Table~\ref{tab:behavior_holdout}).
 
 \begin{figure}[h]
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/regression_diagnostics_semantic.png}
   \end{center}
   \caption{Within-run partial association between cosine weight distance and
-    semantic output similarity (translation probe), for all five fine-tuning
-    conditions. Points are within-run demeaned; Fisher $z$-averaged within-run
-    $r$ and run count shown per panel. All slopes are negative, confirming that
-    weight proximity predicts behavioral similarity across training regimes.}
+    semantic output similarity (translation probe), for the five Flan-T5 fine-tuning
+    conditions and the full-FT decoder Llama-3.2-1B (bottom right). Points are
+    within-run demeaned; Fisher $z$-averaged within-run $r$ and run count shown per
+    panel. All slopes are negative, confirming that weight proximity predicts
+    behavioral similarity across training regimes and architectures.}
   \label{fig:regression_diagnostics}
 \end{figure}
 
