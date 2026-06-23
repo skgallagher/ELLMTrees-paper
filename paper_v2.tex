@@ -154,10 +154,9 @@ child. Models fine-tuned from a shared initialization remain close to one anothe
 \citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance is a meaningful proxy for
 genealogical distance. \citep{ilharco2023editing} discusses the \textit{task vector}, the displacement a task induces on a model that has been fine-tuned on a certain task.  They show that you can do basic arithemtic such as addition and subtraction in this space.  Across different tasks, these task vectors are near-orthogonal, so
 distinct lineages contribute largely independent directions rather than canceling. Centered Kernel
-Alignment (CKA) \citep{kornblith2019similarity} is a standard tool for comparing trained models. Low-rank adaptation (LoRA) \citep{hu2022lora} and
-intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why a small update suffices
-and why the \emph{rank} of that update bounds how much lineage is legible, while near-orthogonal task
-subspaces have been linked to catastrophic forgetting \citep{kirkpatrick2017overcoming}. 
+Alignment (CKA) \citep{kornblith2019similarity} is a tool for comparing models with different initializations and different architectures. Low-rank adaptation (LoRA) \citep{hu2022lora} and
+intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why an update to a small number of parameters can substantially improve performance
+and why the \emph{rank} is an important part of those quantities. Meanwhile, \citep{kirkpatrick2017overcoming} introduce an algorithm that ``slows down learning on certain weights based on how important they are to previously seen tasks.''  
 
 \textbf{Model parameters $\leftrightarrow$ response output.} A second group connects how changes in parameters produce differences in behavior. \citet{cloud2025subliminal} show that child models inherit
 ``subliminal'' traits from a parent even when every reference to the trait is filtered out of the training text, and prove that under suitable conditions (a large enough training signal) a parent's preference is preserved with respect to the trait's loss---provided the parent and child share an initialization. Representation-level methods sit here too: REEF \citep{zhang2025reef} compares the internal representations (via CKA) of a suspect and a victim model to decide derivation, and gradient-response fingerprints \citep{tensorguard2025} classify model families from how parameters react to probe inputs. These works establish that parameter proximity tracks behavioral and
@@ -171,7 +170,7 @@ text or benchmark outputs to compare \citep{yax2025phylolm, wu2026llmdna}. Phylo
 \citep{yax2025phylolm} builds phylogenetic trees of LLMs from output similarity and predicts benchmark
 performance, while LLM DNA \citep{wu2026llmdna} defines a functional ``DNA'' representation that carries
 lineage; both reconstruct phylogenies over hundreds of models. Related output-only methods test
-pairwise provenance from next-token distributions \citep{nikolic2025provenance} or via statistical
+pairwise provenance from next-token distributions \citep{nikolic2026model} or via statistical
 independence of model outputs \citep{zhu2025independence}. However, this line is typically unsupervised
 and depends on model prompting or probes, with no known ground-truth topology to score against.
 
