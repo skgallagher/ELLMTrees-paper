@@ -223,37 +223,17 @@ run, yielding a permutation $p$-value for each run. To combine evidence across t
 %% that's t he statistical basis for our method.
 
 
-\subsection{Distance Metric and Shared-Direction Coherence}
+\subsection{Distance Metric}
 \label{sec:framework:metric}
 
 One question we sought to answer is what distance (or similarity) metric should we use to compare layers of weights to one another.  We decided to use vector-based norms as opposed to matrix or array based norms for easier portability across architectures.  The distances we considered are  cosine, correlation, $\ell_1$ and $\ell_2$ (the latter of which was used in MoTHer~\citep{horwitz2024mother}).  The first two distances are bounded by 1 and so the distances are comparable across different layers.  The second two distances are unbounded, which can allow different magnitudes of weights to dominate the distance.
 
-We use cosine distance throughout: it is bounded and scale-invariant across layers, so no single high-magnitude tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$.
-
-We select the distance metric using a bounded, scale-invariant summary of the updates---their shared-direction coherence $c=\lambda_1(S)/n$ (defined in \S\ref{sec:framework:theory}), the fraction of update energy along a single dominant direction, which later serves as our scope screen for recoverability. Coherence is a meaningful fraction only for a bounded, scale-invariant similarity. Table~\ref{tab:coherence} reports $c$ by metric over \texttt{branching\_v3}: cosine and correlation place nearly all update energy on one shared lineage direction (cosine highest), while the unbounded $\ell_1$/$\ell_2$ distances are magnitude-dominated and admit no valid decomposition. We therefore use cosine distance for the remainder of the paper, and read the same coherence off the cosine updates to predict \emph{which training conditions} admit topology recovery (\S\ref{sec:results:weighttree}, Fig.~\ref{fig:coherence_recovery}).
-
-\begin{table}[t]
-\centering
-\caption{Shared-direction coherence $c=\lambda_1(S)/n$ (mean over the 50 \texttt{branching\_v3} runs,
-  SD in parentheses) by candidate distance metric. $c$ is a valid shared-direction fraction in
-  $[1/n,1]$ only for a \emph{bounded} similarity: cosine and correlation concentrate almost all update
-  energy on one dominant lineage direction (cosine highest), whereas the unbounded $\ell_1$/$\ell_2$
-  distances are dominated by large-magnitude layers, so $S=\mathbf{1}-D$ admits no valid decomposition
-  ($\lambda_1/n\gg1$). A scale-invariant check (fraction of variance on the top classical-MDS axis)
-  gives the same ordering: cosine $0.58$, correlation $0.54$, $\ell_1$ $0.49$, $\ell_2$ $0.44$. We use
-  cosine distance throughout.}
-\label{tab:coherence}
-\begin{tabular}{lcc}
-\toprule
-Metric & Bounded & Coherence $c=\lambda_1/n$ \\
-\midrule
-Cosine       & yes & \textbf{0.992} (0.001) \\
-Correlation  & yes & 0.983 (0.002) \\
-$\ell_1$     & no  & $\gg 1$ (magnitude-dominated) \\
-$\ell_2$     & no  & $\gg 1$ (magnitude-dominated) \\
-\bottomrule
-\end{tabular}
-\end{table}
+We use cosine distance throughout: it is bounded and scale-invariant across layers, so no single
+high-magnitude tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$.
+Cosine-based weight similarity is also the prevailing choice in recent model-provenance and
+fingerprinting work---human-readable weight fingerprints \citep{zeng2024huref}, behavioral provenance
+fingerprints \citep{behavioral2026provenance}, and independence testing between models
+\citep{zhu2025independence}---so our distances stay directly comparable to that literature.
 
 
 
@@ -351,8 +331,7 @@ non-additivity swamps the internal edges. Full fine-tuning follows a common opti
 lands in the first regime (AM high, recovery near the additive ceiling); a rank-$r$ adapter in a wide
 layer gives each node a near-orthogonal subspace, and in high ambient dimension independently trained
 updates are nearly orthogonal, so non-additivity dominates and AM collapses---the decoder-only LoRA
-``dead zone'' in which independently trained low-rank decoder updates are near-orthogonal. Shared-direction coherence $c=\lambda_1(\mathbf{1}-D)/n$
-measures the same common-mode strength and gates identically; we report both against recovery in
+``dead zone'' (Llama-8B and 1B LoRA). We report AM and the oracle margin against recovery in
 \S\ref{sec:results:weighttree}.
 
 
@@ -430,7 +409,8 @@ distribution.
 Sometimes model weights are unavailable, and provenance must be inferred from behavioral outputs alone. Recent work has shown that frontier model families cluster meaningfully in behavioral embedding space
 \citep{wu2026llmdna, yax2025phylolm}. We extend this line of work by probing 16 frontier models (GPT, Claude, Gemini, and open-weight families including Llama and Mistral) across four task types --- summarization, QA, classification, and translation --- using the same neighbor joining pipeline applied to pairwise sentence-embedding distances between model outputs. This design allows us to examine how much the recovered family structure depends
 on task choice, and whether aggregating across tasks recovers structure that
-single-task probes miss.
+single-task probes miss. We aggregate the per-prompt trees, within and across tasks, using the
+Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean in tree space (App.~\ref{app:blackbox}).
 
 
 % -----------------------------------------------------------------------
@@ -460,7 +440,7 @@ single-task probes miss.
 \toprule
 Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig \\
 \midrule
-\multicolumn{8}{l}{\textit{Encoder--decoder: Flan-T5-base (full FT), \texttt{branching\_v3}}} \\
+\multicolumn{8}{l}{\textit{Encoder--decoder: Flan-T5-base (full FT), tree sample}} \\
 5 & 12 & 0.58 (0.19) & 0.08 (0.08) & 0.50 (0.15) & 96\% & 92\% &   0\% \\
 6 & 12 & 1.75 (0.35) & 0.33 (0.19) & 1.42 (0.19) & 85\% & 75\% &  50\% \\
 7 & 16 & 2.62 (0.27) & 0.19 (0.14) & 2.44 (0.18) & 90\% & 88\% &  60\% \\
@@ -588,7 +568,7 @@ Variant & Trained layers & Fisher-$z$ $r$ & SD & $N$ & RF & FN \\
 \quad full\_attn       & 144 & $-0.671$ & 0.245 & 32 & 1.83 & 0.21 \\
 \quad full\_ft\_approx & 168 & $-0.687$ & 0.242 & 31 & 1.85 & 0.22 \\
 \multicolumn{7}{l}{\quad\textit{Full fine-tuning}} \\
-\quad branching\_v3    & all & $-0.802$ & 0.230 & 37 & 1.81 & 0.19 \\
+\quad Tree sample      & all & $-0.802$ & 0.230 & 37 & 1.81 & 0.19 \\
 \midrule
 \multicolumn{7}{l}{\textbf{Decoder-only: Pythia-160M} ($d=768$, matched to Flan)} \\
 \quad qkv (r8)         &  12 & $-0.350$ & 0.281 & 37 & 3.38 & 0.98 \\
@@ -617,31 +597,30 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
     series.
   \item Diminishing returns past qkv (qkv $\approx$ full\_attn): the large gap to full FT reflects
     moving from rank-constrained to unconstrained updates, not adding more modules.
-  \item Across architectures the controlling variable is \emph{shared-direction coherence} $c$
-    (\S\ref{sec:framework:metric}), not the rank fraction $s=r/d$: topology recovery tracks $c$
-    (Fig.~\ref{fig:coherence_recovery}), which is bimodal---$c\approx0.99$ for the recovering
-    conditions (Flan, Pythia full FT, full-FT Llama-1B) versus $c\approx0.20$ for the diluted
-    low-rank decoder groups---while $s=r/d$ fails to separate them (e.g.\ Llama-1B qkv at
-    $s=1.6\!\times\!10^{-2}$ still recovers under a third of what Flan does at lower $s$).
+  \item What gates recovery is the additivity geometry neighbor-joining needs, not the rank fraction
+    $s=r/d$: recovery tracks the \emph{oracle Atteson margin} (edge length over twice the non-additivity
+    error; Fig.~\ref{fig:coherence_recovery}A, $\rho=+0.91$), which clears the guarantee threshold $1$
+    for the recovering conditions (Flan, Pythia full FT, full-FT Llama-1B) and falls below it for the
+    diluted low-rank decoder groups, whereas $s=r/d$ fails to separate them (e.g.\ Llama-1B qkv at
+    $s=1.6\!\times\!10^{-2}$ still recovers under a third of what Flan does at lower $s$). The label-free
+    proxy AM reproduces the split without the ground-truth tree (Fig.~\ref{fig:coherence_recovery}B).
 \end{itemize}
 
 \begin{figure}[t]
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/fig4_coherence_atteson.png}
   \end{center}
-  \caption{\textbf{What gates topology recovery.} \textbf{(A)} Clade recovery against shared-direction
-    coherence $c=\lambda_1(S)/n$ across all training conditions. Coherence is bimodal and gates
-    recovery: conditions at $c\approx0.99$ (Flan-T5 full FT and LoRA, Pythia-160M full FT, full-FT
-    Llama-3.2-1B) recover the topology, while the diluted low-rank decoder conditions (Llama-8B and 1B
-    LoRA) sit at $c\approx0.20$ and do not. A single threshold on $c$ separates the two groups; the rank
-    fraction $s=r/d$ does not (\S\ref{sec:framework:metric}). \textbf{(B)} Clade recovery against the
-    mean Atteson margin --- the fitted internal edge length divided by twice the non-additivity error,
-    so that neighbor-joining provably recovers a split once the margin exceeds $1$ (Atteson, 1999;
-    dashed line). The margin both separates the regimes and supplies the \emph{within}-regime gradient
-    that coherence cannot, since $c$ saturates near $0.99$ across the entire recovering cluster: rank
-    correlation with recovery is $\rho=+0.90$ for the margin versus $+0.77$ for coherence. Colour denotes
-    model family and marker shape the fine-tuning scope (star $=$ full fine-tuning, other shapes the LoRA
-    target set); full-FT Llama-3.2-1B is the decoder condition that clears the low-rank dead zone.}
+  \caption{\textbf{What gates topology recovery.} \textbf{(A)} Clade recovery against the \emph{oracle
+    Atteson margin}---the fitted internal edge length divided by twice the non-additivity error, so
+    neighbor-joining provably recovers a split once the margin exceeds $1$ (Atteson, 1999; dashed line).
+    Recovery is S-shaped in the margin (rank correlation $\rho=+0.91$): the recovering conditions
+    (Flan-T5 full FT and LoRA, Pythia-160M full FT, full-FT Llama-3.2-1B) clear the threshold, while the
+    diluted low-rank decoder conditions (Llama-8B and 1B LoRA) fall short. \textbf{(B)} The same recovery
+    against the \emph{label-free additivity margin} AM $=\langle A\cdot\mathrm{rel\_edge}\rangle$, the
+    computable proxy that needs no ground-truth tree; it cleanly gates dead from recovering
+    ($\rho=+0.61$). Colour denotes model family and marker shape the fine-tuning scope (star $=$ full
+    fine-tuning, other shapes the LoRA target set); full-FT Llama-3.2-1B is the decoder condition that
+    clears the low-rank dead zone.}
   \label{fig:coherence_recovery}
 \end{figure}
 
@@ -664,7 +643,7 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
     cluster-robust SEs --- which is the only coefficient comparable across conditions (the raw
     $\beta$ inherits each group's output variance, so it is not):
     lora\_k\_only $-0.41$, lora\_qkv $-0.18$, lora\_full\_ft\_approx $-0.14$, lora\_full\_attn
-    $-0.12$, branching\_v3 (full FT) $-0.13$ (all $p<0.01$).
+    $-0.12$, tree sample (full FT) $-0.13$ (all $p<0.01$).
   \item Null control \texttt{no\_translation\_v2} (translation never trained) carries no usable
     signal --- its per-run association is dominated by whether each node can still translate at all
     (classification-trained nodes emit label tokens), so we treat it as a qualitative null
@@ -836,11 +815,48 @@ Base model: Flan-T5-base (250M parameters). Each node trained for 2,000 steps, l
 
 \section{Layer Variant Definitions}
 \label{app:layers}
-% enc_sak: encoder.block.{0-11}.layer.0.SelfAttention.k (12 tensors)
-% encoder_h: enc_sak + encoder.block.{0-11}.layer.0.layer_norm (24 tensors)
-% etc.
+Two families of variants appear in the paper. \emph{LayerTrace subsets} (Table~\ref{tab:layer_subsets})
+restrict the full-weight distance to a chosen set of tensors, testing which layers carry the lineage
+signal; they are defined on Flan-T5-base (12 encoder + 12 decoder blocks). \emph{LoRA variants}
+(Table~\ref{tab:lora_variants}) instead change which modules are fine-tuned, all at rank $r=8$,
+$\alpha=16$, dropout $0.05$, with adapters merged into the base weights before analysis.
 
-\TODO{Fill layer variant table.}
+\begin{table}[h]
+\caption{LayerTrace layer subsets (Flan-T5-base). ``SA.k'' is the self-attention key projection;
+``pre-attention LayerNorm'' is the \texttt{layer.0.layer\_norm} preceding self-attention. Percentages
+are of the full trained-tensor set. \texttt{low\_signal} is a negative control (the noisiest LayerNorms).}
+\label{tab:layer_subsets}
+\centering
+\begin{tabular}{lll r}
+\toprule
+Variant & Tensors included & Count & \% \\
+\midrule
+\texttt{full}        & all trained tensors                                   & ---  & 100 \\
+\texttt{high\_signal}& SA.k $+$ pre-attention LayerNorm (encoder $+$ decoder) & 48   & $\sim$17 \\
+\texttt{sak}         & SA.k only (encoder $+$ decoder)                       & 24   & $\sim$8.5 \\
+\texttt{encoder\_h}  & encoder SA.k $+$ encoder pre-attention LayerNorm      & 24   & $\sim$8.5 \\
+\texttt{enc\_sak}    & encoder SA.k only                                     & 12   & $\sim$4 \\
+\texttt{low\_signal} & post-FFN / final-block LayerNorms (control)           & 36   & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\caption{LoRA target-module variants (Flan-T5-base, $r=8$, $\alpha=16$, dropout $0.05$). Modules:
+$q,k,v,o$ = attention query/key/value/output projections; $w_i,w_o$ = FFN input/output projections.}
+\label{tab:lora_variants}
+\centering
+\begin{tabular}{ll r r}
+\toprule
+Variant & Target modules & Trainable params & \% of model \\
+\midrule
+\texttt{lora\_k\_only}        & $k$                       & $\sim$98K  & 0.04 \\
+\texttt{lora\_qkv}            & $q,k,v$                   & $\sim$294K & 0.12 \\
+\texttt{lora\_full\_attn}     & $q,k,v,o$                 & $\sim$393K & 0.16 \\
+\texttt{lora\_full\_ft\_approx}& $q,k,v,o,w_i,w_o$        & $\sim$2.1M & $\sim$0.87 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Null Distribution Construction}
 \label{app:null}
@@ -950,7 +966,7 @@ lora\_k\_only          & $-0.19$  & $-0.0004$ & $-0.41$ & $5\!\times\!10^{-29}$ 
 lora\_qkv              & $-16.6$  & $-0.024$  & $-0.18$ & $2\!\times\!10^{-6}$ \\
 lora\_full\_attn       & $-32.0$  & $-0.027$  & $-0.12$ & $0.008$ \\
 lora\_full\_ft\_approx & $-52.2$  & $-0.031$  & $-0.14$ & $0.007$ \\
-branching\_v3 (full FT)& $-7.40$  & $-0.019$  & $-0.13$ & $0.002$ \\
+Tree sample (full FT)  & $-7.40$  & $-0.019$  & $-0.13$ & $0.002$ \\
 \midrule
 \multicolumn{5}{l}{\textit{Llama-3.1-8B (decoder-only)}} \\
 k\_only (translation)  & $-0.020$ & $-0.0032$ & $-0.21$ & $2\!\times\!10^{-9}$ \\
@@ -994,7 +1010,7 @@ associations underlying it are shown per condition in Fig.~\ref{fig:regression_d
 \label{app:llama}
 
 We include decoder-only Llama models (3.1-8B, 3.2-1B-Instruct) as a robustness check at frontier
-scale. All groups are cloned from the \texttt{branching\_v3} topologies (identical trees, so RF is
+scale. All groups are cloned from the tree-sample topologies (identical trees, so RF is
 directly comparable to Table~\ref{tab:rf_by_leaves}) and fine-tuned with LoRA at rank $r=8$;
 analysis uses \textsc{trained\_only=1} and \texttt{--min-leaves 4}.
 
