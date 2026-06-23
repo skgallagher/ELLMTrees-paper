@@ -132,7 +132,7 @@ applications: provenance and intellectual property (IP)
 \textbf{Model parameters.} Some works study how changes in parameters due to fine-tuning or
 reinforcement learning with human feedback (RLHF) in child models can be traced back to parent
 models. MoTHer \citep{horwitz2024mother} recovers model family trees from weight similarity over
-public checkpoints via a directed minimum spanning tree. \citet{yu2025neural} show that
+public model checkpoints via a directed minimum spanning tree. \citet{yu2025neural} show that
 parent--child and grandparent--child lineage can be recovered both with a learning-free approximation
 of the fine-tuning step and with a learned detector, the latter exceeding $99\%$ accuracy. Beyond
 direct lineage, \citet{ghostspec2025} show that similarly trained models carry spectral weight
@@ -156,10 +156,7 @@ and why the \emph{rank} is an important part of those quantities. Meanwhile, \ci
 representational similarity, but only qualitatively and pairwise---none predicts behavioral similarity on a \emph{held-out} task under a controlled tree, which is precisely what our behavioral bridge does
 (\S\ref{sec:exp:behavioral}): we withhold an entire task from training and test whether weight distance still predicts output similarity.
 
-\textbf{Response output.} The most studied track infers lineage from behavior alone. Its appeal is
-practical: it is learning-free, requiring only inference rather than further training, and---unlike
-weight comparison, which typically needs matching architectures and parameter layouts---it needs only
-text or benchmark outputs to compare \citep{yax2025phylolm, wu2026llmdna}. PhyloLM
+\textbf{Response output.} The most studied track infers lineage from behavior alone. Blackbox studies require only API access to the model or even collect from known benchmarks, saving on costly compute steps and storage \citep{yax2025phylolm, wu2026llmdna}. PhyloLM
 \citep{yax2025phylolm} builds phylogenetic trees of LLMs from output similarity and predicts benchmark
 performance, while LLM DNA \citep{wu2026llmdna} defines a functional ``DNA'' representation that carries
 lineage; both reconstruct phylogenies over hundreds of models. Related output-only methods test
@@ -168,11 +165,9 @@ independence of model outputs \citep{zhu2025independence}. However, this line is
 and depends on model prompting or probes, with no known ground-truth topology to score against.
 
 Our work fills this gap by building a full bridge from parameter-based lineage to behavioral lineage
-while (1) attempting full training-tree topology recovery and (2) evaluating against ground-truth
+while (1) determining where training-tree topology recovery is possible and (2) evaluating against ground-truth
 training trees. This lets us quantify the link between changes in weights and changes in behavior,
-and---mirroring the result of \citet{cloud2025subliminal}---we prove an analogous theorem: lineage is
-recoverable exactly when the per-edge updates share a dominant direction (high coherence), the same
-shared-initialization alignment that drives subliminal trait transfer.
+and mirroring the result of \citet{cloud2025subliminal}, we follow a similar proposition for model recovery: when model distance signal outweighs noise from training, the model topology can be recovered with a high probability.
 
 
 
@@ -271,7 +266,7 @@ $\ell_2$     & no  & $\gg 1$ (magnitude-dominated) \\
 % Distribution of per-layer RF distances is the data; consensus tree is summary.
 % More statistically principled than any competitor — flag explicitly.
 
-One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies are estimated across multiple genes, the assumption being that different genes encode different information on how changes are occurring \cite{maddison1997gene}.
+One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies must cohere to multiple sets of genes, the assumption being that different genes encode different information on how changes are occurring \cite{maddison1997gene}.
 
 Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify the most and least important layers in training by examining which layers change the most or least across multiple training runs.
 
