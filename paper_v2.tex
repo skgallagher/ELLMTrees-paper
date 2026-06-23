@@ -94,16 +94,13 @@ recovery when weights are unavailable (Fig.~\ref{fig:overview}C).
 
 
 In our first contribution, we develop a principled weight-space framework
-for lineage recovery including metric selection and summary statistics.  These choices are guided by the geometry of fine-tuning updates, and can be used to estimate the full training tree. By treating layers as 'genes', we can identify which layers \emph{carry} the lineage signal.  For example, in an encoder-decoder model, we find that the key-projection matrices alone (4\% of parameters) recover lineage as well as
-the entire weight tensor.
-
-In our second contribution, we show that weight-space proximity predicts
+for lineage recovery including metric selection and summary statistics.  These choices are guided by the geometry of fine-tuning updates, and can be used to estimate the full training tree. By treating layers as `genes', we can identify which layers \emph{carry} the lineage signal.  For example, in an encoder-decoder model, we find that the key-projection matrices alone (4\% of parameters) recover lineage as well as
+the entire weight tensor. In our second contribution, we show that weight-space proximity predicts
 behavioral similarity, even on a held-out task the models never trained. In our third, we apply the same
 training tree estimation to model \emph{outputs} and recover frontier-model
 families with no weight access. Across all three levels we span an
 encoder--decoder model and decoder-only models from 160M to 8B, full
-fine-tuning through low-rank adaptation, finding that ambient dimension and
-update rank are important factors in recovering model lineage.
+fine-tuning through low-rank adaptation, finding that a label-free proxy for the Atteson Margin is a reliable indicator of tree recovery.
 
 Together, these results show that the training history of a model is legibly
 written in its parameters, recoverable as a phylogeny, and predictive of some
