@@ -64,7 +64,7 @@ With over a million open models on HuggingFace and a handful of frontier labs sh
 With over a million open models on HuggingFace and a handful of frontier
 labs constantly releasing new versions, most models in circulation are
 fine-tuned descendants of a few ancestors.  Very few of those models document that lineage. Benchmarks can tell us how a model performs on a task, but not how a model originated, how it differs from its sibling models, or how it may
-fail. Training lineage reveals much about model provenance, auditing, and safety~\cite{behavioral2026provenance, nikolic2025provenance, tensorguard2025}.
+fail. Training lineage reveals much about model provenance, auditing, and safety~\cite{behavioral2026provenance, nikolic2026model, tensorguard2025}.
 
 We, like other prior works~\cite{horwitz2025mother, yu2025neural, wu2026llmdna}, observe that fine-tuning is a path-dependent, branching process: each
 fork inherits its parent's weights and nudges them with new data. This is
@@ -131,7 +131,7 @@ LLM lineage has become an increasingly studied topic, appearing in three broad f
 \emph{model-parameter} studies, \emph{weight--behavior} studies that align parameters with
 outputs, and \emph{response-output} studies. Across these forms the work is driven by a range of
 applications: provenance and intellectual property (IP)
-\citep{horwitz2024mother, zeng2024huref, nikolic2025provenance}, model poisoning and misalignment
+\citep{horwitz2024mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
 \citep{cloud2025subliminal}, inheritance of traits from parent models
 \citep{cloud2025subliminal, agents2026same}, and data inquiries and auditing
 \citep{zhu2025independence}.
@@ -278,7 +278,7 @@ $\ell_2$     & no  & $\gg 1$ (magnitude-dominated) \\
 % Distribution of per-layer RF distances is the data; consensus tree is summary.
 % More statistically principled than any competitor — flag explicitly.
 
-One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies are estimated across multiple genes, the assumption being that different genes encode different information on how changes are occurring \cite{multigene_phylo_TODO}.
+One contribution we have in our methodology is the use of per-layer distance matrices between models as independent estimates as opposed to using the total distance across all layers.  The inspiration for this analysis is how biological phylogenies are estimated across multiple genes, the assumption being that different genes encode different information on how changes are occurring \cite{maddison1997gene}.
 
 Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify the most and least important layers in training by examining which layers change the most or least across multiple training runs.
 
