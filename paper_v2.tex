@@ -10,22 +10,15 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 
-% Theorem environments and notation for the SNR / lineage theorem (added in paper_v2).
-\newtheorem{lemma}{Lemma}
+% Theorem environments and shared math notation.
 \newtheorem{theorem}{Theorem}
-\newtheorem{corollary}{Corollary}
 \newtheorem{assumption}{Assumption}
 \newtheorem{proposition}{Proposition}
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
 \theoremstyle{plain}
-\newcommand{\bd}{\mathbf{d}}
-\newcommand{\bsig}{\mathbf{s}}
-\newcommand{\bnoise}{\mathbf{n}}
-\newcommand{\beps}{\boldsymbol{\varepsilon}}
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Var}{\mathrm{Var}}
-\newcommand{\SNR}{\mathrm{SNR}}
 \newcommand{\norm}[1]{\lVert #1 \rVert}
 
 % -----------------------------------------------------------------------
@@ -364,7 +357,7 @@ non-additivity swamps the internal edges. Full fine-tuning follows a common opti
 lands in the first regime (AM high, recovery near the additive ceiling); a rank-$r$ adapter in a wide
 layer gives each node a near-orthogonal subspace, and in high ambient dimension independently trained
 updates are nearly orthogonal, so non-additivity dominates and AM collapses---the decoder-only LoRA
-``dead zone'' (Appendix~\ref{app:llama}). Shared-direction coherence $c=\lambda_1(\mathbf{1}-D)/n$
+``dead zone'' in which independently trained low-rank decoder updates are near-orthogonal. Shared-direction coherence $c=\lambda_1(\mathbf{1}-D)/n$
 measures the same common-mode strength and gates identically; we report both against recovery in
 \S\ref{sec:results:weighttree}.
 
@@ -465,8 +458,8 @@ single-task probes miss.
   random-tree null (identical for FN and total RF). RF matches the stored pipeline value in
   529/530 runs. Pythia-160M (decoder-only) is matched to Flan-T5-base's width ($d=768$) and
   full fine-tuned, isolating architecture from dimensional dilution. Full-FT Llama-3.2-1B
-  ($d=2048$) extends this to scale; the diluted low-rank decoder groups (Llama-8B and 1B LoRA)
-  are deferred to Appendix~\ref{app:llama}.}
+  ($d=2048$) extends this to scale; the diluted low-rank decoder groups (Llama-8B and 1B LoRA),
+  which beat the random null on ordering but never recover topology, are omitted here.}
 \label{tab:rf_by_leaves}
 \begin{center}
 \begin{tabular}{rrrrrrrr}
@@ -570,7 +563,7 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 The LayerTrace carrier is architecture-dependent but always input-facing
 (Fig.~\ref{fig:layertrace_grid}): encoder \textsc{SelfAttention.k} in Flan-T5, the input embedding in
 the untied decoder Pythia-160M, and \textsc{SelfAttention.k} again in Llama-3.2-1B once a separable
-key exists (the diluted low-rank Llama variants instead freeze these carriers; Appendix~\ref{app:llama}).
+key exists (the diluted low-rank Llama variants instead freeze these carriers).
 In all three the signal is near-uniform across transformer blocks with LayerNorms as the periodic
 noise floor; in Llama it is marginally strongest in the first two blocks.
 
@@ -826,205 +819,6 @@ in Appendix~\ref{app:blackbox} (Figure~\ref{fig:frechet_grid}).
 \appendix
 % -----------------------------------------------------------------------
 
-\section{Proofs: Separation, Identifiability, and the Coherence Proxy}
-\label{app:proofs}
-
-This appendix develops the formal separation model behind the ordering remark of
-\S\ref{sec:framework:theory}---the ordinal account of why same-branch pairs read as closer, which
-complements the Atteson-margin guarantee used for topology in the main text. Recall that
-$w_i-w_j=\bsig_{ij}+\bnoise_{ij}$, where the deterministic \emph{signal} $\bsig_{ij}$ is the sum of
-task vectors along the two root-to-leaf paths and the \emph{noise} $\bnoise_{ij}=\sum_e\pm\beps_e$
-sums the independent mean-zero edge noises over the $\ell_{ij}$ edges separating $i$ and $j$. A rooted
-triple $ij\,|\,k$ is the purely ordinal statement that $\{i,j\}$ branched off together more recently
-than $k$; it is the atom of tree structure, and \textsc{Build} \citep{aho1981build} reconstructs the
-unique tree displaying a complete consistent set of correct triples using only orderings of distances,
-never their exact values.
-
-\begin{assumption}[Lineage monotonicity]\label{asm:mono}
-Read a rooted triple $ij\,|\,k$ as the statement that $i$ and $j$ share a more recent common ancestor
-than either shares with $k$, so $i,j$ are the \emph{siblings} and $k$ the \emph{outgroup}. We assume
-this ancestral order is reflected in expected weight distance,
-\[ \E[D_{ij}]<\E[D_{ik}] \quad\text{and}\quad \E[D_{ij}]<\E[D_{jk}], \]
-for every true triple, and write $\gamma$ for the smallest of these expected gaps (the \emph{margin}).
-This constrains only the \emph{order} of distances, not their values, so it can hold even where metric
-additivity fails.
-\end{assumption}
-
-\paragraph{Model.} Fine-tuning node $v$ from its parent adds $\Delta_v=\bd_{\tau(v)}+\beps_v$: a task
-vector $\bd_{\tau}$ (the average direction in which task $\tau$ moves the model; children inherit their
-ancestors' task vectors by summation down the tree) plus independent mean-zero run noise $\beps_v$ with
-$\E\norm{\beps_v}^2=\nu$. Distinct task vectors share a common length $\norm{\bd}$ and pairwise cosine
-$\rho<1$. We observe the $n$ leaves and their squared distances $D_{ij}=\norm{w_i-w_j}^2$. With
-$X=D_{\text{cross}}-D_{\text{same}}$ and $\gamma$ the margin of Assumption~\ref{asm:mono}, we call
-$\beta=\gamma^2/\Var[X]$ the \emph{separation} of a comparison---the squared margin relative to the
-contrast variance. (We use ``separation'' throughout in place of the overloaded ``signal-to-noise
-ratio.'')
-
-\begin{definition}[Comparable contrast]\label{def:contrast}
-A \emph{comparable contrast} is a matched pair $(D^{\text{same}},D^{\text{cross}})$ whose same/cross
-labels are exchangeable under the permutation null, so that $X=D^{\text{cross}}-D^{\text{same}}$ is
-mean-zero under the null and has $\E[X]\ge\gamma$ under the truth. Theorem~\ref{thm:order} pools $M$
-such contrasts; the exchangeable matching---not any condition on the edge counts $\ell$---is what makes
-the pooled permutation test valid.
-\end{definition}
-
-\begin{lemma}[Expected distance]\label{lem:mean}
-$\E[D_{ij}]=\norm{\bsig_{ij}}^2+\nu\,\ell_{ij}$, where $\bsig_{ij}$ is the deterministic sum of task
-vectors on the two root-paths and $\ell_{ij}$ is the number of edges separating $i$ and $j$. No
-tree-additivity is used.
-\end{lemma}
-
-\begin{lemma}[Each extra branch adds a fixed margin]\label{lem:margin}
-For the canonical triple $ij\,|\,k$, averaging over task assignments,
-$\E[D_{ij}]=2(1-\rho)\norm{\bd}^2+2\nu$ and $\E[D_{ik}]=(3-2\rho)\norm{\bd}^2+3\nu$, so the gap is
-$\gamma=\norm{\bd}^2+\nu$ (the alignment $\rho$ cancels; it sets only how tight siblings are).
-\end{lemma}
-
-\begin{proof}[Proof of Lemma~\ref{lem:mean}]
-Since $\bsig_{ij}$ is deterministic,
-$D_{ij}=\norm{\bsig_{ij}}^2+2\langle\bsig_{ij},\bnoise_{ij}\rangle+\norm{\bnoise_{ij}}^2$. The noise
-runs over the $\ell_{ij}$ edges on the two root-paths, each term independent and mean zero, so
-$\E\langle\bsig_{ij},\bnoise_{ij}\rangle=\langle\bsig_{ij},\E\bnoise_{ij}\rangle=0$ and, by
-independence, $\E\norm{\bnoise_{ij}}^2=\sum_e\E\norm{\beps_e}^2=\nu\,\ell_{ij}$. Summing the three
-expectations gives $\E[D_{ij}]=\norm{\bsig_{ij}}^2+\nu\,\ell_{ij}$; nothing about tree-additivity is
-used.
-\end{proof}
-
-\begin{proof}[Proof of Lemma~\ref{lem:margin}]
-Place the canonical triple so $i,j$ are leaves below the branch node $b$, and $k$ joins at
-$a=\mathrm{pa}(b)$. Take distinct task vectors of common length $\norm{\bd}$ and pairwise cosine
-$\rho$, i.e.\ $\langle\bd_\tau,\bd_{\tau'}\rangle=\rho\norm{\bd}^2$ for $\tau\neq\tau'$. The
-same-branch signal is $\bsig_{ij}=\bd_i-\bd_j$ (the shared path up to $b$ cancels), so
-$\norm{\bsig_{ij}}^2=2(1-\rho)\norm{\bd}^2$ and $\ell_{ij}=2$; Lemma~\ref{lem:mean} gives
-$\E[D_{ij}]=2(1-\rho)\norm{\bd}^2+2\nu$. The cross-branch signal is $\bsig_{ik}=(\bd_b+\bd_i)-\bd_k$,
-so
-\[
-\norm{\bsig_{ik}}^2=3\norm{\bd}^2+2\big(\langle\bd_b,\bd_i\rangle-\langle\bd_b,\bd_k\rangle-\langle\bd_i,\bd_k\rangle\big)
-=(3-2\rho)\norm{\bd}^2,
-\]
-with $\ell_{ik}=3$, hence $\E[D_{ik}]=(3-2\rho)\norm{\bd}^2+3\nu$. Subtracting,
-$\gamma=\big[(3-2\rho)-2(1-\rho)\big]\norm{\bd}^2+\nu=\norm{\bd}^2+\nu$; the $\rho$-terms cancel, and
-the $jk$ comparison is identical by symmetry.
-\end{proof}
-
-\begin{theorem}[Ordering]\label{thm:order}
-Pool $M$ \emph{comparable contrasts} (Definition~\ref{def:contrast}), each a same-branch distance
-differenced against a cross-branch distance whose labels are exchangeable under the permutation null,
-so the difference is mean-zero under that null. With margin $\gamma$ and contrast variance at most $V$,
-the ``same-branch closer'' test (the permutation, Mann--Whitney, and within-run $r$ statistics) has
-power tending to $1$ once $M\gamma^2/V\gg1$. Because it pools, ordering is detected even when the
-per-pair separation is small.
-\end{theorem}
-
-\begin{proof}[Proof of Theorem~\ref{thm:order}]
-For comparable contrasts $m=1,\dots,M$ (Definition~\ref{def:contrast}) put
-$X_m=D^{\mathrm{cross}}_m-D^{\mathrm{same}}_m$, so $\E[X_m]\ge\gamma>0$ by Assumption~\ref{asm:mono} and
-$\Var[X_m]\le V$, with average separation $\bar\beta:=\gamma^2/V$. The pooled mean
-$\bar X=\frac1M\sum_m X_m$ has $\E[\bar X]\ge\gamma$; treating the contrasts as weakly dependent (they
-share leaves and edges, so this is an approximation rather than exact independence),
-$\Var[\bar X]\lesssim V/M$, and the standardized statistic $Z=\bar X/\sqrt{\Var[\bar X]}$ obeys
-$\E[Z]\gtrsim\sqrt{M\bar\beta}$. Under the null of exchangeable same/cross labels $\E[X_m]=0$ and $Z$ is
-centered and asymptotically Gaussian, so a one-sided level-$\alpha$ test has power
-$\Phi\!\big(\sqrt{M\bar\beta}-z_\alpha\big)\to1$ whenever $M\bar\beta\to\infty$. The permutation,
-Mann--Whitney, and within-run $r$ statistics are monotone in $\bar X$ and inherit the power.
-\end{proof}
-
-\begin{theorem}[Topology identifiability]\label{thm:topo}
-Let $\beta^\ast$ be the worst single-comparison separation $\gamma^2/V_Y$ over all triples. Each triple
-is called correctly with probability at least $1-2e^{-c_0\beta^\ast}$, so all $2\binom{n}{3}$
-comparisons hold together with probability at least $1-n^3 e^{-c_0\beta^\ast}$; on that event
-\textsc{Build} reconstructs $\mathcal{P}^\ast$ exactly. Hence topology is identifiable once
-$\beta^\ast\gtrsim 3\ln n$.
-\end{theorem}
-
-\begin{proof}[Proof of Theorem~\ref{thm:topo}]
-Fix a triple $ij\,|\,k$ and one of its comparisons, $Y=D_{ik}-D_{ij}$, with $\E[Y]\ge\gamma$
-(Assumption~\ref{asm:mono}). Writing each squared distance as
-$D=\norm{\bsig}^2+2\langle\bsig,\bnoise\rangle+\norm{\bnoise}^2$, its random part
-$2\langle\bsig,\bnoise\rangle+(\norm{\bnoise}^2-\E\norm{\bnoise}^2)$ is a linear-plus-quadratic form in
-the sub-Gaussian edge noise, hence sub-exponential (Bernstein / Hanson--Wright) with scale controlled
-by $\nu$ and $\norm{\bsig}$. So $Y-\E[Y]$ is sub-exponential with variance proxy $V_Y$, and
-Bernstein's inequality gives
-\[
-\Pr[Y\le 0]\le\exp\!\Big(-c_0\min\{\E[Y]^2/V_Y,\ \E[Y]/b\}\Big)\le e^{-c_0\beta^\ast}
-\]
-in the moderate-deviation regime where $\beta^\ast=\E[Y]^2/V_Y$ controls the bound. A triple is
-miscalled only if its $ik$- or $jk$-comparison is non-positive, so its error is at most
-$2e^{-c_0\beta^\ast}$. Unioning over the $\binom{n}{3}$ triples, the chance that any triple is miscalled
-is at most $2\binom{n}{3}e^{-c_0\beta^\ast}\le n^3e^{-c_0\beta^\ast}$. On the complementary event every
-rooted triple is correct; this set is complete and tree-consistent, so \textsc{Build}
-\citep{aho1981build} returns the unique tree displaying them, namely $\mathcal{P}^*$. Finally
-$n^3e^{-c_0\beta^\ast}\le\delta$ iff $\beta^\ast\ge(3\ln n-\ln\delta)/c_0$. The constants $c_0,b$ depend
-on the sub-Gaussian noise parameters; this is an order-of-magnitude threshold, not a tight bound.
-\end{proof}
-
-\begin{corollary}[Ordering/topology dissociation]\label{cor:diss}
-If $\beta^\ast\ll 3\ln n\ll M\bar\beta$, ordering is detected (Theorem~\ref{thm:order}) but topology is
-not recovered: more orthogonal updates can keep ordering alive while starving topology.
-\end{corollary}
-
-\begin{proof}[Proof of Corollary~\ref{cor:diss}]
-In the stated range $M\bar\beta\gg1$, so Theorem~\ref{thm:order} gives detection power $\to1$, while
-$\beta^\ast\lesssim 3\ln n$ fails the sufficient condition of Theorem~\ref{thm:topo}, so the topology
-guarantee does not apply.
-\end{proof}
-
-\begin{proposition}[Coherence proxies the separation, conditionally]\label{prop:coh}
-Model the $n$ trained-module updates as $\Delta_v=\bsig_v+\beps_v$ with shared-direction energy
-$\norm{\bsig}^2$, independent noise $\E\norm{\beps_v}^2=\nu$, in dimension $d\gg n$, and let
-$f=\norm{\bsig}^2/(\norm{\bsig}^2+\nu)$ be the update signal fraction. Then the expected cosine of two
-normalized updates concentrates on a multiple of $f$, the cosine-similarity matrix $S$ is
-equicorrelation to leading order, and
-\[
-  c=\lambda_1(S)/n=f+\tfrac{1-f}{n}+o(1),
-\]
-so $c$ is increasing in $f$ and---\emph{under} Assumption~\ref{asm:mono}, where larger $f$ raises the
-margin $\gamma$---increasing in the separation $\beta$. The conditioning is essential. Coherence
-measures alignment, not whether the residual is tree-shaped: a ``star'' of $n$ updates all equal to one
-direction plus small noise has $c\to1$ but violates Assumption~\ref{asm:mono} (all pairs equidistant in
-expectation) and carries no recoverable topology. Hence high coherence is necessary-type evidence for
-the recoverable regime, \emph{not} a sufficient condition; we use it only as a label-free proxy,
-validated empirically (\S\ref{sec:results:weighttree}).
-\end{proposition}
-
-\begin{proof}[Proof sketch of Proposition~\ref{prop:coh}]
-Writing $\hat g_v=\Delta_v/\norm{\Delta_v}$, the numerator
-$\E\langle\Delta_v,\Delta_w\rangle=\langle\bsig_v,\bsig_w\rangle$ (cross-noise and signal--noise terms
-vanish in expectation), while $\norm{\Delta_v}\to\sqrt{\norm{\bsig}^2+\nu}$ by concentration in
-$d\gg n$; their ratio is a multiple of $f$. With equal off-diagonal $f$, $S$ has leading eigenvalue
-$1+(n-1)f$ on the all-ones vector, giving $c=\lambda_1/n=f+(1-f)/n$. The off-diagonal in fact carries
-the task-vector alignment $\rho$ ($\langle\bsig_v,\bsig_w\rangle=\rho\norm{\bsig}^2$ for siblings), so
-$c$ conflates alignment with the noise fraction, and the equicorrelation form is leading-order (real
-trees are block-structured), so the identity is approximate. The non-sufficiency claim is immediate:
-the star satisfies the update law but not Assumption~\ref{asm:mono}.
-\end{proof}
-
-\paragraph{The estimator gap.}
-Theorem~\ref{thm:topo} is an \emph{identifiability} statement: it proves the tree is determined by
-ordinal (triple) information alone, with \textsc{Build} \citep{aho1981build} as the constructive
-witness. \textsc{Build} is a proof device, not the estimator our pipeline runs: we reconstruct with
-neighbor-joining, which relies on approximate tree-additivity (the four-point condition). So the
-theorem guarantees the lineage signal is \emph{present} in recoverable ordinal form; it does not
-guarantee neighbor-joining \emph{extracts} it, and the two can disagree precisely in the
-near-orthogonal regime where additivity has decayed. The strictly monotone-invariant estimator is the
-rooted triple itself --- $ij\,|\,k=\arg\min\{D_{ij},D_{ik},D_{jk}\}$, unchanged by any monotone
-transform of $D$. We verified the invariance: rebuilding from $D$, $D^3$, and $e^{5D}-1$ gives the
-identical tree every run ($\mathrm{RF}=0$), whereas neighbor-joining moves by up to $\mathrm{RF}=6$
-under the same transforms. We therefore keep neighbor-joining as the primary estimator and use the
-rooted-triple \textsc{Build} reconstructor as a strictly-ordinal cross-check.
-
-\paragraph{From the separation to a measurable quantity.}
-The theorems are governed by the lineage-informative fraction of the update. A rank-$r$ adapter in a
-width-$d$ model can move the model only inside an $r$-dimensional slice, which retains a fraction
-$r/d$ of any fixed signal direction (for a uniformly random $r$-subspace $V$, $\E[P_V]=(r/d)I$, so
-$\E\norm{P_V x}^2=r/d$ for any unit $x$). This makes $s=r/d$ \emph{one} mechanism that lowers the
-separation---not the only one, and not directly observable per run. Our experiments instead read the
-shared-direction coherence $c=\lambda_1(S)/n$ (\S\ref{sec:framework:theory}), a label-free proxy for
-the separation (Proposition~\ref{prop:coh}) that, unlike $s=r/d$, cleanly separates the recovering from
-the dead groups (Fig.~\ref{fig:coherence_recovery}, Appendix~\ref{app:llama})---with the caveat of
-Proposition~\ref{prop:coh} that coherence is a conditional proxy, not a sufficient condition.
-
-
 \section{Experimental Details}
 \label{app:details}
 
@@ -1056,16 +850,61 @@ Base model: Flan-T5-base (250M parameters). Each node trained for 2,000 steps, l
 
 \section{Null Distribution Construction}
 \label{app:null}
-% 1000 random binary trees per run, same leaf count, uniform topology.
-% p-value = fraction of null trees with RF <= observed RF.
 
-\TODO{Fill null distribution description.}
+We assess topology recovery against two permutation nulls, each computed per run (per tree) and then
+combined across the $50$ runs of a condition.
+
+\paragraph{Random-tree null.} For a run with $n$ leaves we draw $1{,}000$ trees uniformly from the space
+of binary topologies on the same $n$ labels and score each against the ground-truth training tree with
+the same polytomy-aware recovery metric used for the reconstruction (Robinson--Foulds / clade
+recovery; \S\ref{sec:framework:phylo}). The per-run $p$-value is the fraction of null trees whose
+distance to the truth is at most the observed distance---the probability that a random tree matches the
+truth as well as the reconstruction does. This null asks only whether the reconstruction beats chance.
+
+\paragraph{Label-permutation null.} The random-tree null can be passed by a reconstruction that merely
+recovers coarse task-level structure (all summarization leaves in one clade, all classification leaves
+in another) without resolving lineage \emph{within} a task block. To control for this we use a stronger
+null that destroys only the within-block lineage information: holding the task-block structure fixed, we
+randomly permute the lineage labels among leaves that share a task, re-score against the truth, and take
+the fraction of permutations at least as good as observed as the $p$-value. ``\% significant vs.\
+label'' is the share of runs whose reconstruction beats this permutation at $\alpha=0.05$; it is the
+criterion for recovering within-task lineage rather than task identity alone, and is the harder test
+reported throughout.
+
+\paragraph{Combining across runs.} Treating the $50$ runs as independent trees, we pool their per-run
+$p$-values with Fisher's method, $-2\sum_{i}\ln p_i \sim \chi^2_{2k}$ under the global null of no lineage
+information, giving a single experiment-level $p$-value per condition.
 
 \section{Blackbox Experiment Details}
 \label{app:blackbox}
-% Models, API versions, prompt templates, sentence-transformer embeddings.
 
-\TODO{Fill blackbox details (model list, API versions, prompt templates, ST embeddings).}
+\paragraph{Model collection.} The blackbox phylogeny is built over a collection of frontier and open
+models spanning the major developer families: OpenAI (GPT-3.5, GPT-4o / 4o-mini, GPT-4.1, o-series),
+Anthropic (Claude 3 / 3.5 / 4 Sonnet and Haiku), Google (Gemini 1.5 / 2.0 / 2.5, Gemma), Meta (Llama 2
+and 3), Mistral, DeepSeek, and Microsoft Phi. Proprietary models are queried through their providers'
+APIs; open-weight models are run locally from HuggingFace checkpoints. The analyses in
+\S\ref{sec:results:blackbox} use the $23$ models that returned valid responses on all four task
+families, so that every per-task tree is built over a common leaf set. (The collection is still being
+extended with a few stragglers and architecture controls; the pipeline and metrics below are fixed.)
+
+\paragraph{Prompts and decoding.} Each model answers a shared bank of $315$ prompts drawn from four task
+families---summarization, question answering, classification, and translation. Prompts are issued with
+identical text to every model and decoded greedily (temperature $0$, or the provider's nearest
+deterministic setting) so that differences in output reflect the model, not sampling noise. Of the
+$315$ prompts, $245$ were answered by all $23$ common models and are used for the cross-task aggregate.
+
+\paragraph{Embedding and distances.} Each response is embedded with the
+\texttt{all-MiniLM-L6-v2} sentence-transformer ($384$-dimensional, mean-pooled), giving a vector per
+(model, prompt). For each prompt we form the pairwise cosine-distance matrix over models and build a
+neighbor-joining tree, yielding one tree per prompt. This per-prompt construction decouples the
+embedding from any single source text and is what makes translation a clean probe (the language change
+separates output style from source content).
+
+\paragraph{Aggregation.} Per-prompt trees are summarized with the Billera--Holmes--Vogtmann (BHV)
+Fr\'echet (Sturm) mean in tree space, both within each task family and across all four
+(Fig.~\ref{fig:blackbox_hero}, Fig.~\ref{fig:frechet_grid}). We report the aggregate as a cladogram
+because the Fr\'echet mean's internal edges are short relative to total edge length, so topology is more
+informative than scaled branch length.
 
 \begin{figure}[h]
   \begin{center}
@@ -1127,9 +966,27 @@ k\_only (HellaSwag)    & $-0.048$ & $-0.0046$ & $-0.10$ & $0.002$ \\
 \end{center}
 \end{table}
 
-\TODO{Add mixed-effects / HC3 estimator-comparison sensitivity table and the regression diagnostics
-  cross-reference (Fig.~\ref{fig:regression_diagnostics}).}
+The coefficients above use the per-run \emph{centroid} semantic DV (one embedding per node). The
+held-out bridge in the main text (Table~\ref{tab:behavior_holdout}) instead uses the \emph{paired}
+per-prompt semantic distance, which removes the shared prompt-content confound and strengthens the
+association in every group; we report the paired DV in the main text and keep the centroid DV here for
+continuity with the per-condition effect sizes.
 
+\paragraph{Pooling estimator.} Because each run has its own tree and hence its own weight-space scale, a
+raw pooled slope is not meaningful across runs; we therefore standardize within run (equivalently, treat
+the run as a blocking factor), at which point the slope equals the within-run correlation. To pool these
+per-run correlations we use a random-effects (DerSimonian--Laird) meta-analysis of the per-run Fisher-$z$
+values rather than an equal-weight mean, since runs vary in leaf count and noise. As an estimator-robustness check on a representative full-FT
+condition (Llama-3.2-1B, translation probe, centroid DV), the pooling choices agree in sign and
+magnitude---DL random-effects $r=-0.161$ ($95\%$ CI $[-0.28,-0.04]$, $p=0.011$), equal-weight mean
+$r=-0.21$, one-stage mixed model with a random slope $r=-0.136$---with genuine between-run heterogeneity
+($I^2\approx54\%$) that is not explained by leaf count. We report the DL random-effects estimate; the within-run partial
+associations underlying it are shown per condition in Fig.~\ref{fig:regression_diagnostics}.
+
+% --- Appendices temporarily disabled: within-task/robustness (deferred until a reviewer asks)
+% and the Llama dead-zone section (held pending the ongoing mechanism experiment).
+% Re-enable by removing this \iffalse ... \fi wrapper. ---
+\iffalse
 \section{Within-Task and Robustness Results}
 \label{app:robustness}
 % Subspace angles by group, within-task branch structure,
@@ -1202,6 +1059,9 @@ Table~\ref{tab:rf_by_leaves}). The Llama LoRA dead zone is therefore the low-ran
 bottleneck, not decoder-ness or scale per se.
 
 
+\fi
+% --- end disabled appendices ---
+
 \section{Translation Probe Outputs for TaskHoldout Models}
 \label{app:translation_probe}
 
@@ -1261,6 +1121,14 @@ confirmed by construction, since behavioral similarity on the translation probe
 is dominated by task identity (translating vs.\ not translating) rather than
 lineage signal.
 
+This degenerate-output collapse is specific to the encoder--decoder Flan-T5 TaskHoldout condition,
+where classification-trained nodes overwrite translation entirely. It is \emph{not} a general property
+of held-out probes. In the matched full-fine-tuning held-out conditions of
+Table~\ref{tab:behavior_holdout} the nodes remain capable on the held-out task, and there the
+weight$\to$behavior bridge is interpretable: negative and \emph{strengthening} for Llama-3.2-1B
+(evidence of genuine lineage transmission), and only weakly positive for Flan-T5---consistent with the
+residual task-identity confound described here rather than a clean reversal of the bridge.
+
 
 \section{Behavioral Regression Diagnostics}
 \label{app:regression_diagnostics}
@@ -1270,7 +1138,9 @@ between cosine weight distance and semantic output similarity for each fine-tuni
 condition. Points are within-run demeaned (run fixed effects removed); the red line
 is the OLS fit on the demeaned data. A negative slope indicates that model pairs
 closer in weight space produce more similar translation outputs. The effect is
-consistent in direction across all five conditions.
+consistent in direction across all five Flan-T5 training conditions (centroid semantic DV). The full
+fine-tuning held-out bridge, on the paired per-prompt DV and pooled by random-effects meta-analysis, is
+quantified separately in \S\ref{sec:results:behavioral} (Table~\ref{tab:behavior_holdout}).
 
 \begin{figure}[h]
   \begin{center}
