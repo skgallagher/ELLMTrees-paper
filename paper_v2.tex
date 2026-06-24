@@ -542,8 +542,8 @@ In all three the signal is near-uniform across transformer blocks with LayerNorm
 noise floor; in Llama it is marginally strongest in the first two blocks.
 
 
-\subsection{LoRA Dose-Response}
-\label{sec:results:lora}
+\subsection{What Gates Recovery: The Atteson Margin}
+\label{sec:results:gating}
 
 % Table 2: layer variants + LoRA variants combined
 \begin{table}[t]
@@ -553,8 +553,8 @@ noise floor; in Llama it is marginally strongest in the first two blocks.
   within-run variation, $\geq 4$ leaves). \emph{Topology recovery:} RF and FN (true clades
   missed) are means of the polytomy-aware NJ reconstruction over all $\geq 4$-leaf runs
   ($N=40$--$47$); FN isolates the real error (RF additionally counts binary-forced edges that
-  the multifurcating truth never specified). Both the ordering signal and topology recovery
-  strengthen monotonically with trained-parameter scope.}
+  the multifurcating truth never specified). Lineage signal and recovery by training regime and
+  architecture; what gates recovery is analysed in Fig.~\ref{fig:coherence_recovery}.}
 \label{tab:variants}
 \begin{center}
 \begin{tabular}{lrrrrrr}
@@ -586,25 +586,19 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
 \end{center}
 \end{table}
 
-% DRAFT BULLETS — to be expanded to prose.
-\begin{itemize}
-  \item Lineage survives LoRA at every adapter scope: all variants show a significant
-    same-branch $<$ cross-branch ordering (Table~\ref{tab:variants}). A tiny low-rank
-    perturbation on a frozen pretrained init still carries legible ancestry.
-  \item Both the ordering signal and topology recovery scale monotonically with trained-parameter
-    scope: Fisher-$z$ $r = -0.597$ (k\_only) $\to -0.670$ (qkv) $\to -0.671$ (full\_attn) $\to
-    -0.687$ (full\_ft\_approx) $\to -0.802$ (full FT); clade recovery 82\% $\to$ 90\% over the same
-    series.
-  \item Diminishing returns past qkv (qkv $\approx$ full\_attn): the large gap to full FT reflects
-    moving from rank-constrained to unconstrained updates, not adding more modules.
-  \item What gates recovery is the additivity geometry neighbor-joining needs, not the rank fraction
-    $s=r/d$: recovery tracks the \emph{oracle Atteson margin} (edge length over twice the non-additivity
-    error; Fig.~\ref{fig:coherence_recovery}A, $\rho=+0.91$), which clears the guarantee threshold $1$
-    for the recovering conditions (Flan, Pythia full FT, full-FT Llama-1B) and falls below it for the
-    diluted low-rank decoder groups, whereas $s=r/d$ fails to separate them (e.g.\ Llama-1B qkv at
-    $s=1.6\!\times\!10^{-2}$ still recovers under a third of what Flan does at lower $s$). The label-free
-    proxy AM reproduces the split without the ground-truth tree (Fig.~\ref{fig:coherence_recovery}B).
-\end{itemize}
+Table~\ref{tab:variants} reports the ordering signal and topology recovery across training regimes.
+Lineage survives even tiny low-rank adapters---every LoRA scope shows a significant same-branch
+$<$ cross-branch ordering, so a small perturbation on a frozen pretrained initialization still carries
+legible ancestry---and both the ordering signal and clade recovery rise as the update becomes less
+constrained, from low-rank adapters to full fine-tuning and across architectures (Flan-T5, Pythia-160M,
+Llama-3.2-1B). What \emph{gates} recovery, however, is not the rank fraction $s=r/d$ but the additivity
+geometry neighbor-joining needs. Recovery tracks the \emph{oracle Atteson margin} (the fitted internal
+edge length over twice the non-additivity error; Fig.~\ref{fig:coherence_recovery}A, $\rho=+0.91$),
+which clears the guarantee threshold $1$ for the recovering conditions (Flan, Pythia full FT, full-FT
+Llama-1B) and falls below it for the diluted low-rank decoder groups, whereas $s=r/d$ fails to separate
+them (e.g.\ Llama-1B qkv at $s=1.6\!\times\!10^{-2}$ still recovers under a third of what Flan does at
+lower $s$). The label-free proxy AM reproduces the split without the ground-truth tree
+(Fig.~\ref{fig:coherence_recovery}B), so recoverability can be screened from the weights alone.
 
 \begin{figure}[t]
   \begin{center}
