@@ -572,7 +572,8 @@ Variant & Trained layers & Fisher-$z$ $r$ & SD & $N$ & RF & FN \\
 \quad full FT          & all & $-0.861$ & 0.182 & 37 & 1.55 & 0.06 \\
 \midrule
 \multicolumn{7}{l}{\textbf{Decoder-only: Llama-3.2-1B} ($d=2048$)} \\
-\quad qkv (r8)         &  48 & $-0.164$ & 0.255 & 36 & 3.89 & 1.27 \\
+\quad qkv (r8)         &  48 & $-0.943$ & 0.131 & 37 & 1.68 & 0.13 \\
+\quad qkv (r64)        &  48 & $-0.960$ & 0.114 & 37 & 1.60 & 0.09 \\
 \quad full FT          & all & $-0.690$ & 0.327 & 35 & 1.86 & 0.25 \\
 \midrule
 \multicolumn{7}{l}{\textit{LayerTrace variants (Flan-T5 full FT, 6-leaf runs); FN $=$ true clades missed}} \\
@@ -959,9 +960,9 @@ lora\_full\_attn       & $-32.0$  & $-0.027$  & $-0.12$ & $0.008$ \\
 lora\_full\_ft\_approx & $-52.2$  & $-0.031$  & $-0.14$ & $0.007$ \\
 Tree sample (full FT)  & $-7.40$  & $-0.019$  & $-0.13$ & $0.002$ \\
 \midrule
-\multicolumn{5}{l}{\textit{Llama-3.1-8B (decoder-only)}} \\
-k\_only (translation)  & $-0.020$ & $-0.0032$ & $-0.21$ & $2\!\times\!10^{-9}$ \\
-k\_only (HellaSwag)    & $-0.048$ & $-0.0046$ & $-0.10$ & $0.002$ \\
+\multicolumn{5}{l}{\textit{Llama-3.1-8B (decoder-only; cumulative weight distance)}} \\
+k\_only (translation, seen)   & $+0.0002$ & $-0.0001$ & $-0.01$ & $0.76$ \\
+k\_only (HellaSwag, held-out) & $-0.012$  & $-0.0028$ & $-0.16$ & $0.003$ \\
 \bottomrule
 \end{tabular}
 \end{center}
