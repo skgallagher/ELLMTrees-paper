@@ -3,6 +3,23 @@
 This folder is assembled by `bash scripts/assemble_paper.sh`. Re-run it whenever
 results are updated on Leviathan/Ghidorah and pulled locally.
 
+## Current Fig. 4 (updated 2026-06-29)
+
+| File | Source | Reproduce |
+|------|--------|-----------|
+| `figures/fig4_coherence_atteson.png` | `/Users/shannon/Desktop/phylo/ELLMTrees/results/aggregate/recovery_rescore/fig4_atteson_layermeans.png` | In the main repo: `python scripts/make_fig4_atteson_layers.py`, then copy the output over this PNG. |
+
+Notes:
+
+- Main script: `/Users/shannon/Desktop/phylo/ELLMTrees/scripts/make_fig4_atteson_layers.py`.
+- Panel A uses oracle bottleneck Atteson margin with the `margin=1` guarantee line.
+- Panel B uses raw label-free quartet additivity `<A>`.
+- Layer/adapter summaries use median bottleneck margin across runs on the x-axis and mean clade
+  recovery on the y-axis; this avoids rare high-margin q/k/v outliers making weak adapter summaries
+  look as if they clear the theorem threshold.
+- The confusing FLAN organic point is intentionally omitted; the organic point shown is the Llama
+  bush/twoclade validation.
+
 ---
 
 ## blackbox/summarization/   ← blackbox/results/figure4/
