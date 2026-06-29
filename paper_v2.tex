@@ -24,7 +24,7 @@
 % -----------------------------------------------------------------------
 % Working title — change before submission
 % -----------------------------------------------------------------------
-\title{Fine-Tuning Genealogy Is Written in Weights}
+\title{The Traits are in the Weights: Recovering Fine-Tuning Geneaology in LLMs}
 
 % Authors hidden for double-blind review.
 % \iclrfinalcopy  % Uncomment for camera-ready only.
@@ -43,7 +43,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-With over a million open models on HuggingFace and a handful of frontier labs shipping new versions constantly, most models in circulation are fine-tuned descendants of a few ancestors whose lineage goes undocumented. Provenance, auditing, and safe deployment all hinge on a signal benchmarks do not provide: not what a model does, but where it came from. We treat fine-tuning as an evolutionary process that leaves a path-dependent signature in weight space, and ask whether a model's training history can be recovered as a phylogeny. We study lineage at three levels of access: recovery from weight changes alone, the link between those weight changes and behavior, and recovery from behavior alone. We find that full training topology is recoverable against a known ground-truth tree; that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline recovers frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B, we find that ambient dimension and update rank are important factors in whether lineage is recoverable.
+With over a million open models on HuggingFace and a handful of frontier labs constantly updating and releasing models, most models are fine-tuned descendants of only a few ancestors.  However, the true lineage may be undocumented. Model provenance, auditing, and safe deployment all benefit from access to this model lineage, revealing both internal (e.g weights) and external traits (e.g. behavior). We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether we can recover training history or lineage from a set of models. We study lineage at three levels of access: recovery from weight changes alone, the link between those weight changes and behavior, and recovery from behavior alone. We find that full training topology is recoverable against a known ground-truth tree; that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline recovers frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, we find that lineage recovery is not only  possible but is guided by the Atteson margin.
 
 \end{abstract}
 
@@ -55,13 +55,13 @@ With over a million open models on HuggingFace and a handful of frontier labs sh
 
 
 With over a million open models on HuggingFace and a handful of frontier
-labs constantly releasing new versions, most models in circulation are
+labs constantly releasing new versions, most models are
 fine-tuned descendants of a few ancestors.  Very few of those models document that lineage. Benchmarks can tell us how a model performs on a task, but not how a model originated, how it differs from its sibling models, or how it may
-fail. Training lineage reveals much about model provenance, auditing, and safety~\cite{behavioral2026provenance, nikolic2026model, tensorguard2025}.
+fail. Training lineage can  much about model provenance, auditing, and safety~\cite{behavioral2026provenance, nikolic2026model, tensorguard2025}.
 
-We, like other prior works~\cite{horwitz2025mother, yu2025neural, wu2026llmdna}, observe that fine-tuning is a path-dependent, branching process: each
-fork inherits its parent's weights and nudges them with new data. This is
-precisely an evolutionary process, as described in \cite{yax2025phylolm}, and its path leaves fingerprints in weight space. We treat a family of fine-tuned models
+We, like other prior works~\citep{horwitz2025mother, yu2025neural, wu2026llmdna}, observe that fine-tuning is a path-dependent, branching process. Each
+child model inherits its parent's  updated weights, nudged towards a certain loss and/or data set. This is
+precisely an evolutionary process, as described in \cite{yax2025phylolm}, and the evolutionary path leaves signal in weight space. We treat a family of fine-tuned models
 as a phylogeny (i.e. an evolutionary tree~\cite{saitou1987neighbor}) and ask whether this \textit{full} training tree can be \emph{estimated} from the model parameters alone.
 
 Consider a firm that forks a powerful base model into finance, IT, and fraud
@@ -341,7 +341,7 @@ recover training lineage, whether they predict downstream behavior, and
 whether family structure is visible from behavioral outputs alone in
 frontier models without weight access.
 
-\subsection{Controlled Training Trees}
+\subsection*{Controlled and Real Training Trees}
 \label{sec:exp:trees}
 % Base: Flan-T5-base (250M). Bernoulli branching, 4 tasks, 50 replications,
 % 5--8 leaves, known topology by construction.
@@ -350,7 +350,7 @@ frontier models without weight access.
 
 To create a controlled experiment, we generate stochastic phylogenies or model training trees, beginning from a root model.  The tree generating process is described in detail in Appenidx \ref{app:details}.  Our generating process produces 50 training trees with up to 8 leaf nodes. We then randomly assign task/dataset pairs to each edge. At each split in the tree, a child model is fine-tuned from its parent model on the task/data set pair. The generated training trees are then used as fine-tuning instructions, and in particular we have access to each node' and more importantly, each leaf's,  full set of model parameters.  We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree.  From these generated training trees, we can test both whether our methods can estimate direct lineage (e.g. parent-child relationships) and for full lineage recovery.
 
-In our experiments, we vary the root model, task types, and which layers we train. We examine both an encoder-decoder model and a decoder-only model: Flan-T5-base (250M parameters) and Llama-3.1-8B, respectively. The tasks we fine-tune on include Q\&A, classification, translation, and text summarization. For Flan-T5-base, we run both full fine-tuning and four LoRA \citep{hu2022lora} adapter configurations varying the scope of trained parameters: key projection matrices only, query/key/value projections, all four attention projections (including output), and all projection matrices. Llama-3.1-8B serves as both a decoder-only and entry into more frontier-like models and the experiments are repeated for it, using the same training tree instructions. In addition to examining our generated model trees, we experiment with three real, albeit small model trees from HuggingFace.
+In our experiments, we vary the root model, task types, and which layers we train. We examine both an encoder-decoder model and a decoder-only model: Flan-T5-base (250M parameters) and Llama-3.1-8B, respectively. The tasks we fine-tune on include Q\&A, classification, translation, and text summarization. For Flan-T5-base, we run both full fine-tuning and four LoRA \citep{hu2022lora} adapter configurations varying the scope of trained parameters: key projection matrices only, query/key/value projections, all four attention projections (including output), and all projection matrices. Llama-3.1-8B serves as both a decoder-only and entry into more frontier-like models and the experiments are repeated for it, using the same training tree instructions. In addition to examining our generated model trees, we experiment with two real, model trees from HuggingFace.
 
 \subsection{Model Parameters Contain Direct Lineage}
 Works such as \cite{horwitz2024mother} and \cite{yu2025neural} show that their methods can accurately identify parent-child pairs or proper ordering in model lineage.  Our method can also identify this and at the cross-branch level, meaning that we can determine which sets of models are grouped together on a branch of a training tree.  To show this, we compare branches from our estimated phylogenies at the first split and estimate the Mann-Whitney U statistic along with the Mantel r statistic (as in [cite]) to show that models within a branch are more similar to each other than their cross-branch counterparts.
@@ -358,7 +358,9 @@ Works such as \cite{horwitz2024mother} and \cite{yu2025neural} show that their m
 \subsection{Model Parameters Contain Full Lineage When There is Enough Signal}
 \label{sec:exp:weights}
 
-Besides testing for direct lineage identification, we can also test whether our phylogeny estimates recover the full lineage.  From \S \ref{sec:framework:theory}, we hypothesize that we can only recover lineage when the AM statistic is high.  We thus report, the AM statistic per training tree, the RF distance and related metrics including clade \% recovery, refinement (full tree recovery), and \% sig. (a \textit{within-run} measure); along with a global statistic over all runs.
+Besides testing for direct lineage identification, we can also test whether our training tree estimates recover the full lineage.  From \S \ref{sec:framework:theory}, we hypothesize that we can recover lineage when the AM statistic is high, a sufficient condition.  We thus report, the AM statistic per training tree, the additivity $A$, a label-free proxy, the RF distance and FN and related metrics including clade \% recovery, refinement (full tree recovery), and \% sig. (a \textit{within-run} measure); along with a global statistic over all runs. (TODO: make sure table reflects this)
+
+Moreover, due to the additive nature of Frechet trees, we can use them to identify the most important layers with regards inherited lineage signal.  We show the layers with the highest and lowest FN for each architecture and training scheme.
 
 
 \subsection{Model Parameters Can Predict Unknown Behavior}
@@ -381,7 +383,7 @@ We fist generate a new set of training tree instructions where translation is us
 
 
 
-\subsection{Behavior from Blackbox, Frontier Models}
+\subsection{Lineage Using Behavior from Frontier Models}
 \label{sec:exp:blackbox}
 % GPT, Claude, Gemini, Llama probed via output embeddings across 4 tasks.
 % Family structure recoverable when aggregating tasks.
@@ -400,12 +402,18 @@ Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean in tree space (App.~\ref{
 \label{sec:results}
 % -----------------------------------------------------------------------
 
-\subsection{Weights can contain both direct ancestry and model tree}
+%\subsection{Weights contain both direct ancestry and full lineage}
 
-\subsection{Direct Ancestry survives}
+\subsection{Model Parameters Contain Direct Lineage}
 
-\subsubsection{Full Lineage is Recoverable when Additivity Margin is High}
+We first show that direct ancestry can be recovered under different model conditions. In Table~\ref{tab:rf_by_leaves} (TODO: ADD bi-serial r, mann-whitney, mantel-hansel??), we show that the [TODO: add result].  This indicates that much like previous works (TODO: add in prev work from methods section), our method allows to show direct ancestry of models, including parent-child relationships.
+
+\subsection{Model Parameters Contain Full Lineage When There is Enough Signal}
 \label{sec:results:weighttree}
+Besides recovering direct ancestry, our methods also recover the full training tree, conditional on a high Atteson Margin score.  In Table \ref{tab:rf_by_leaves}, we show that both Flan-T5-base and LLama-3.2-1B under the full fine tuning schema, have low FN scores (0.08-0.5) and high clade recovery and refinement (80-100\%).  Moreover, we see that when the number of leaves $>5$, we have non-zero \% significant, ranging between 43\% and 100\%. As this is a \textit{within}-run statistic, we are looking for non-zero values.  More importantly, the global statistic shows that (TODO: add global p-val here).
+
+Therefore, our method is recovering true model lineage consistently and with statistical signifiance in our controlled experiments.
+TODO: add a single FLAN and llama LORA here (by leaf) in table.
 
 % Table 1: RF by leaf count
 \begin{table}[t]
@@ -448,6 +456,10 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 \end{center}
 \end{table}
 
+In Fig.~\ref{fig:behavioral_vs_whitebox}, we show the clade recovery (FN) as a function of model leaves for both FLAN, the encoder-decoder, and Llama, the decoder. We also plot the recovery vs. a random tree (gray) and vs. using behavior to recover lineage (red). We see that FN for model parameters stays low and is always lower than both a random tree and the behavioral recovery.
+
+[TODO: Q: is this both on no-translation? need to specify. i think blue and gray have translation -- need red to have translation. it doesn't have to be held out here.  need better titles and labels.  legend is also covering bottom of plot.]
+
 % Figure 2: behavioral vs whitebox vs null
 \begin{figure}[t]
   \begin{center}
@@ -468,68 +480,31 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
   \label{fig:behavioral_vs_whitebox}
 \end{figure}
 
-% DRAFT BULLETS — to be expanded to prose.
-\begin{itemize}
-  \item Whitebox weight distances recover essentially all true clades: FN $\approx 0$ at every
-    tree size (Fig.~\ref{fig:behavioral_vs_whitebox}), with clade recovery 85--96\% across
-    5--8 leaves (Table~\ref{tab:rf_by_leaves}).
-  \item Per-run significance against the random-tree null rises monotonically with tree size:
-    0\% (5 leaves) $\to$ 50\% (6) $\to$ 60\% (7) $\to$ 100\% (8). Per-run recovery, not just an
-    aggregate trend, is the operational claim --- at 8 leaves every run beats the null.
-  \item The held-out behavioral probe tracks the null (Fig.~\ref{fig:behavioral_vs_whitebox}):
-    behavioral similarity is a pairwise lineage gradient, not a recoverable topology. Weight
-    access is what enables per-run tree recovery.
-\end{itemize}
+We show the most important layers with regards to lineage signal in Figure \ref{fig:layertrace_grid}.  We find that the attention layers are the most important in both architectures but they differ between the encoder-decoder model (Flan) and the decoder-only model (Llama).  We find that the most important layer with regards to lineage inheritance is the cross-attention k matrix in FLAN, which has about 3\% FN.  This means, that using only 4\% of the parameters, we can recover lineage even better than if we had used all the layers.  This is similar for the decoder model but the self-attention $k$ is now the carrier and the signal is more diffiuse across the layers overall.  For both architectures, the layer norm has the worst signal, indicating that these layers are very noisy in training.  Generally, we see a periodicity in the layers indicating that all the blocks are important, but we do have slight evidence that the earlier blocks may carry more signal.  (TODO: smooth but i think this is a stronger one than previous)
 
 
-\subsection{LayerTrace: Signal Concentrates in 4\% of the Model}
-\label{sec:results:layertrace}
+We explore clade recovery under different LoRA settings, data sets, layers used in recovery, and model in Figure~\ref{fig:coherence_recovery}.  We find that the oracle Atteson margin (left panel) governs clade recovery reliably but note that it is a sufficient condition and being applied in a stochastic manner.  That is both why recovery can be high with a margin below 1 and why recovery is not 100\%  even when the margin is above 1.  However, we can still see differences in architectures and layers. We see that the signal is more diffiuse in Llama based on the fact that when we use \textit{single} q/k/v matrices (self-attention) from LORA training, clade recovery is only between 15-40\%.  Contrast this to the FLAN q/k/v matrices (cross-attention) which have higher recovery.  In general, we also find that FT layers (>80\% recovery) contain more information than LoRA adapters.  In the right panel, we see that the label-free four-point proxy $A$ does an adequate job of predicting clade recovery, making it a practical tool.
 
-% Figure 3: per-layer RF profile
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/fig_layertrace_grid.png}
+    \includegraphics[width=\linewidth]{\figpath/fig4_coherence_atteson.png}
   \end{center}
-  \caption{Per-layer LayerTrace across all three architectures (cosine; full fine-tuning; FN-rate
-    $=$ \% of true clades a single layer's tree misses --- lower is better; mean over runs).
-    \textbf{Flan-T5-base} (encoder--decoder): the key matrices carry the lineage (k-matrices 10\%
-    vs.\ 14\% for the rest), \textsc{EncDecAttention.k} lowest. \textbf{Pythia-160M} (decoder, untied
-    embeddings): Q/K/V are fused so there is no separable key, and the single cleanest carrier is the
-    \emph{input embedding} ($\sim$1\% FN). \textbf{Llama-3.2-1B} (decoder, $d=2048$): a separable
-    \textsc{SelfAttention.k} returns as the carrier (k-matrices 13\% vs.\ 20\% for the rest), while
-    the \emph{tied} embedding is contaminated by the output projection (28\%) and is \emph{not} a
-    clean carrier. In every architecture LayerNorms are the periodic noise floor and the carrier is
-    an input-facing weight. The motif repeats essentially unchanged across all transformer blocks;
-    in Llama the earliest blocks carry the most (\textsc{SelfAttention.k} FN 8\% in blocks 0--1 vs.\
-    14\% in blocks 2+; paired $t=2.4$, $n=47$).}
-  \label{fig:layertrace_grid}
-\end{figure}
+  \caption{\textbf{What gates topology recovery.} \textbf{(A)} Clade recovery against the oracle
+    bottleneck Atteson margin: the minimum fitted internal edge length divided by twice the
+    non-additivity error. Neighbor-joining is guaranteed to recover a split once the corresponding
+    margin exceeds $1$ (Atteson, 1999; dashed line). \textbf{(B)} The same recovery against the
+    label-free quartet additivity proxy $\langle A\rangle$, which needs no ground-truth tree. Small
+    points summarize individual Llama-1B full-fine-tuned layers or q/k/v adapter matrices; large
+    symbols show whole-run summaries, Flan LayerTrace subsets, organic HF validation, and the
+    corresponding layer-family centroids. Layer and adapter summaries use median bottleneck margin
+    across runs on the $x$-axis and mean clade recovery on the $y$-axis.}
+  \label{fig:coherence_recovery}
+\end{figure}.  A subset of the results can be seen in Table \ref{tab:variants} and shows (TODO: what's the point) that recovery is relatively stable even with different training mechanisms or best vs. all layer selection.
 
-% DRAFT BULLETS — to be expanded to prose.
-\begin{itemize}
-  \item Lineage signal concentrates in the attention \emph{key} matrices: encoder
-    \textsc{SelfAttention.k} misses only 4\% of true clades vs.\ $\sim$9\% elsewhere, while
-    \textsc{LayerNorm} is the periodic maximum (Fig.~\ref{fig:layertrace_grid}).
-  \item \texttt{enc\_sak} (12 tensors, 4\% of parameters) is non-inferior to the full-weight tree
-    at $\geq 5$ leaves and \emph{outperforms} it at 6 leaves (RF 1.38 vs.\ 1.92; FN 0.08 vs.\ 0.33,
-    Table~\ref{tab:variants}). Most of the model is noise for lineage recovery.
-  \item In the decoder the signal lives in the encoder--decoder \emph{cross-attention}
-    (\textsc{ca.k} lowest); decoder self-attention is weak --- a carrier that decoder-only models
-    structurally lack (revisited in \S\ref{sec:discussion:keys}).
-\end{itemize}
+[todo: I think table 2 is out of date.  Need to get rid of pythia.  i think llama freezes are just wrong? those are pythia layers).  also the table can look a lot better, but estimate then in parentheses the SE for each one.  n needs to refer to number of samples.  shoudl put clade recovery and refinement as well.]
 
 
 
-The LayerTrace carrier is architecture-dependent but always input-facing
-(Fig.~\ref{fig:layertrace_grid}): encoder \textsc{SelfAttention.k} in Flan-T5, the input embedding in
-the untied decoder Pythia-160M, and \textsc{SelfAttention.k} again in Llama-3.2-1B once a separable
-key exists (the diluted low-rank Llama variants instead freeze these carriers).
-In all three the signal is near-uniform across transformer blocks with LayerNorms as the periodic
-noise floor; in Llama it is marginally strongest in the first two blocks.
-
-
-\subsection{What Gates Recovery: The Atteson Margin}
-\label{sec:results:gating}
 
 % Table 2: layer variants + LoRA variants combined
 \begin{table}[t]
@@ -569,77 +544,17 @@ Variant & Trained layers & Fisher-$z$ $r$ & SD & $N$ & RF & FN \\
 \end{center}
 \end{table}
 
-Table~\ref{tab:variants} reports the ordering signal and topology recovery across training regimes.
-Lineage survives even tiny low-rank adapters---every LoRA scope shows a significant same-branch
-$<$ cross-branch ordering, so a small perturbation on a frozen pretrained initialization still carries
-legible ancestry---and both the ordering signal and clade recovery rise as the update becomes less
-constrained, from low-rank adapters to full fine-tuning and across architectures (Flan-T5, Pythia-160M,
-Llama-3.2-1B). What \emph{gates} recovery, however, is not the rank fraction $s=r/d$ but the additivity
-geometry neighbor-joining needs. Recovery tracks the \emph{oracle Atteson margin} (the fitted internal
-edge length over twice the non-additivity error; Fig.~\ref{fig:coherence_recovery}A, $\rho=+0.91$),
-which clears the guarantee threshold $1$ for the recovering conditions (Flan, Pythia full FT, full-FT
-Llama-1B) and falls below it for the diluted low-rank decoder groups, whereas $s=r/d$ fails to separate
-them (e.g.\ Llama-1B qkv at $s=1.6\!\times\!10^{-2}$ still recovers under a third of what Flan does at
-lower $s$). The label-free proxy AM reproduces the split without the ground-truth tree
-(Fig.~\ref{fig:coherence_recovery}B), so recoverability can be screened from the weights alone.
-
-\begin{figure}[t]
-  \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/fig4_coherence_atteson.png}
-  \end{center}
-  \caption{\textbf{What gates topology recovery.} \textbf{(A)} Clade recovery against the oracle
-    bottleneck Atteson margin: the minimum fitted internal edge length divided by twice the
-    non-additivity error. Neighbor-joining is guaranteed to recover a split once the corresponding
-    margin exceeds $1$ (Atteson, 1999; dashed line). \textbf{(B)} The same recovery against the
-    label-free quartet additivity proxy $\langle A\rangle$, which needs no ground-truth tree. Small
-    points summarize individual Llama-1B full-fine-tuned layers or q/k/v adapter matrices; large
-    symbols show whole-run summaries, Flan LayerTrace subsets, organic HF validation, and the
-    corresponding layer-family centroids. Layer and adapter summaries use median bottleneck margin
-    across runs on the $x$-axis and mean clade recovery on the $y$-axis.}
-  \label{fig:coherence_recovery}
-\end{figure}
+Finally, we show the results from two real data examples.  In Figure \ref{fig:real-trees}, we show our estimated training trees vs. two training trees we found from HuggingFace.  For both trees, we are able to recover 100\% of the clades, which are the only informative splits in these examples.  Thus we show that our method can work in real, uncontrolled situations.  (TODO: add figures in and maybe some strengthening language)
 
 
-\subsection{Behavioral Bridge}
+\subsection{Model Parameters Can Predict Unknown Behavior}
 \label{sec:results:behavioral}
-% One paragraph. Full story in Appendix~\ref{app:regression}.
-% Numbers: within-run r up to -0.40 (lora_k_only); all five groups significant.
-% no_translation_v2 null: r = -0.006. Chain closed.
 
-% DRAFT BULLETS — to be expanded to prose.
-% Effect size = standardized beta (within-run): z-score both weight distance and the behavioral DV
-% within run, then regress with run FE + cluster-robust SE. This equals the within-run correlation
-% and is the only cross-group-comparable coefficient (raw beta inherits each group's output
-% variance; predictor-only standardization does not fix this). Semi-standardized betas -> App F.
-\begin{itemize}
-  \item Weight distance predicts behavioral (translation-output) similarity within run across all
-    five Flan-T5 conditions, all significant. We report the \emph{standardized $\beta$ (within-run)}
-    --- weight distance and output similarity both $z$-scored within run, with run fixed effects and
-    cluster-robust SEs --- which is the only coefficient comparable across conditions (the raw
-    $\beta$ inherits each group's output variance, so it is not):
-    lora\_k\_only $-0.41$, lora\_qkv $-0.18$, lora\_full\_ft\_approx $-0.14$, lora\_full\_attn
-    $-0.12$, tree sample (full FT) $-0.13$ (all $p<0.01$).
-  \item Null control \texttt{no\_translation\_v2} (translation never trained) carries no usable
-    signal --- its per-run association is dominated by whether each node can still translate at all
-    (classification-trained nodes emit label tokens), so we treat it as a qualitative null
-    (Appendix~\ref{app:translation_probe}), confirming the probe measures task-specific adaptation
-    rather than base-model noise.
-  \item The bridge holds in decoder-only Llama-3.1-8B but is weaker: standardized $\beta=-0.21$
-    ($p=2\!\times\!10^{-9}$) on the standard probe and $-0.10$ ($p=0.002$) on held-out HellaSwag
-    --- weight proximity predicts behavior even on a task the model never trained on. Per-group
-    raw and semi-standardized betas in Appendix~\ref{app:regression}.
-\end{itemize}
+\S \ref{sec:results:weighttree} indicates that model lineage is recoverable from weights alone.  While that may useful on its own for provenance, safety, and auditing, it does not necessarily indicate that similarity in model parameter space is indicative of similarity in behavioral space.  Inspired by the subliminal learning (CITE add antrhopic paper) experiment, we determine whether models more similar in model parameter space have more similar output embeddings on a holdout task (not necessarily 'subliminal').  We test two hold-outs: translation on a training tree that explicitly did not use translation tasks for fine-tuning and HellaSwag, which to our knowledge neither Llama nor Flan were trained on.  In Table \ref{tab:behavior_holdout}, we report the DL pooled correlation, its 95\% CI and the corresponding $p$-value.  We find that there is a weak, significant negative correlation for HellaSwag for both Llama and Flan, indicating that models more similar in weight-space do have more similar output on a held-out task.  This is also true for the translation hold-out on Llama.  The sign is reversed for Flan on the translation hold-out task.  Thus, our results support the subliminal learning results [cite] in that unexpected traits can be passed down to child models.
 
-Table~\ref{tab:behavior_holdout} sharpens the held-out test on the two full-fine-tuning models.
-For each (model, probe) we report the random-effects (DerSimonian--Laird) pooled correlation between
-weight-space distance and behavioral similarity, computed on the \emph{paired} per-prompt semantic
-distance with both distances $z$-scored within run; this within-run standardization makes the
-coefficient an apples-to-apples correlation across conditions. The bridge is negative and significant
-on the trained translation probe and on held-out HellaSwag for both architectures. The decisive case
-is held-out translation (no node ever trained on translation): for Llama-3.2-1B the bridge not only
-survives but \emph{strengthens} ($r=-0.33$, $p=5\!\times\!10^{-9}$), evidence of genuine lineage
-transmission rather than shared-task coupling; the encoder--decoder Flan-T5 is the lone exception,
-flipping weakly positive ($r=+0.11$), which we discuss in \S\ref{sec:discussion:wb_bb}.
+
+
+
 
 \begin{table}[t]
 \caption{Weight$\to$behavior bridge by model and probe (full fine-tuning). Random-effects
@@ -666,7 +581,7 @@ Flan-T5-base (full FT) & Translation (trained)  & $-0.260$ & $[-0.35, -0.16]$ & 
 \end{table}
 
 
-\subsection{Blackbox: Frontier Model Families}
+\subsection{Lineage Using Behavior from Frontier Models}
 \label{sec:results:blackbox}
 
 % Hero figure: cross-task Frechet phylogeny + BHV tree-space MDS
