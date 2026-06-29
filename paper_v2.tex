@@ -341,60 +341,45 @@ recover training lineage, whether they predict downstream behavior, and
 whether family structure is visible from behavioral outputs alone in
 frontier models without weight access.
 
-\subsection{Controlled Branching Trees}
+\subsection{Controlled Training Trees}
 \label{sec:exp:trees}
 % Base: Flan-T5-base (250M). Bernoulli branching, 4 tasks, 50 replications,
 % 5--8 leaves, known topology by construction.
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
 % Controlled design enables RF evaluation — all competitors lack this.
 
-To create a controlled experiment, we generate stochastic phylogenies or training trees, beginning from a root model.  The tree generating process is described in detail in Appenidx \ref{app:details}.  Our generating process produces fairly balanced phylogenies with up to 8 leaf nodes.  We generate 50 such phylogenies, each constituting the basic structure for a single training tree. We then assign task/dataset pairs to each edge. At each split in the tree, a child model is fine-tuned from its parent model on a random task/data set pair.  First a training task is randomly sampled and then a dataset within that task is randomly sampled.  The resulting pair is assigned to that edge.
+To create a controlled experiment, we generate stochastic phylogenies or model training trees, beginning from a root model.  The tree generating process is described in detail in Appenidx \ref{app:details}.  Our generating process produces 50 training trees with up to 8 leaf nodes. We then randomly assign task/dataset pairs to each edge. At each split in the tree, a child model is fine-tuned from its parent model on the task/data set pair. The generated training trees are then used as fine-tuning instructions, and in particular we have access to each node' and more importantly, each leaf's,  full set of model parameters.  We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree.  From these generated training trees, we can test both whether our methods can estimate direct lineage (e.g. parent-child relationships) and for full lineage recovery.
 
-%% This probably gets moved to intro or somewhere -- it's a real scenario
-The motivation for this controlled experiment is from an industry-type training where a base model is given to different departments and each department is able to perform its own fine tuning on a model.  A question may arise if a new department begins and is interested in using an already fine-tuned model on a new task.  Which one should they pick?
+In our experiments, we vary the root model, task types, and which layers we train. We examine both an encoder-decoder model and a decoder-only model: Flan-T5-base (250M parameters) and Llama-3.1-8B, respectively. The tasks we fine-tune on include Q\&A, classification, translation, and text summarization. For Flan-T5-base, we run both full fine-tuning and four LoRA \citep{hu2022lora} adapter configurations varying the scope of trained parameters: key projection matrices only, query/key/value projections, all four attention projections (including output), and all projection matrices. Llama-3.1-8B serves as both a decoder-only and entry into more frontier-like models and the experiments are repeated for it, using the same training tree instructions. In addition to examining our generated model trees, we experiment with three real, albeit small model trees from HuggingFace.
 
-The generated phylogenies are then used as fine-tuning instructions, the details of which can be found in Appendix [add-fine-tuning-instructions].  At each node in the phylogeny, a new model is trained and we can access each \textit{leaf} model's weights. 
+\subsection{Model Parameters Contain Direct Lineage}
+Works such as \cite{horwitz2024mother} and \cite{yu2025neural} show that their methods can accurately identify parent-child pairs or proper ordering in model lineage.  Our method can also identify this and at the cross-branch level, meaning that we can determine which sets of models are grouped together on a branch of a training tree.  To show this, we compare branches from our estimated phylogenies at the first split and estimate the Mann-Whitney U statistic along with the Mantel r statistic (as in [cite]) to show that models within a branch are more similar to each other than their cross-branch counterparts.
 
-\subsection{Do weight changes carry model lineage?}
+\subsection{Model Parameters Contain Full Lineage When There is Enough Signal}
 \label{sec:exp:weights}
 
-Once we have the trained leaf models, we can use the steps in Section \ref{sec:framework:phylo} to estimate a phylogeny from the weight changes.  Since we know the actual training trees, we then can use RF distance to compare how far the estimated phylogeny is from the known training tree, unlike previous works.  We repeat this process for each generated phylogeny.
+Besides testing for direct lineage identification, we can also test whether our phylogeny estimates recover the full lineage.  From \S \ref{sec:framework:theory}, we hypothesize that we can only recover lineage when the AM statistic is high.  We thus report, the AM statistic per training tree, the RF distance and related metrics including clade \% recovery, refinement (full tree recovery), and \% sig. (a \textit{within-run} measure); along with a global statistic over all runs.
 
-In our experiments, we vary the root model, task types, and which layers we train. We examine both an encoder-decoder model and a decoder-only model: Flan-T5-base (250M parameters) and Llama-3.1-8B, respectively. The tasks we fine-tune on include Q\&A, classification, translation, and text summarization. For Flan-T5-base, we run both full fine-tuning and four LoRA \citep{hu2022lora} adapter configurations varying the scope of trained parameters: key projection matrices only, query/key/value projections, all four attention projections (including output), and all projection matrices. Llama-3.1-8B serves as both a decoder-only and entry into more frontier-like models.  Llama-3.1-8B is trained with the key-only and query/key/value LoRA configurations; full fine-tuning is omitted at this scale due to memory constraints. Detailed training hyperparameters for all conditions are in Appendix~\ref{app:details}.
 
-\subsection{Can Weight Changes Predict Behavior?}
+\subsection{Model Parameters Can Predict Unknown Behavior}
 \label{sec:exp:behavioral}
 
-While recovering ancestral information about a model is important for
+While recovering lineage information about a model is important for
 provenance and auditing, a practical question is whether weight-space
-proximity predicts anything useful about model behavior. Here we estimate
-how strongly whitebox weight distance predicts behavioral similarity on a
-probe task, after absorbing run-level variation.
+proximity predicts anything useful about model behavior, besides the obvious--that a model should do well on the task it was trained on. Here we estimate
+how strongly whitebox weight distance predicts behavioral similarity on \textit{independent, held-out} probe tasks.
 
-We operationalize behavioral similarity in two ways: task performance
-(ROUGE-L) and semantic similarity between model outputs measured via
-sentence-embedding cosine distance, with the latter as our primary
-dependent variable. In both cases we fit a fixed-effects regression of
-behavioral similarity on weight distance with a per-run fixed intercept
-(run fixed effects, which absorb run-level variation), and report the
-\emph{standardized} coefficient $\beta$---both weight distance and the
-behavioral outcome $z$-scored within run. So standardized, $\beta$ equals
-the within-run correlation $r$ and is the one effect size comparable across
-conditions, since the raw slope inherits each condition's output variance
-(see Appendix~\ref{app:regression} for the full specification, the raw and
-semi-standardized coefficients, and sensitivity analyses).
+We fist generate a new set of training tree instructions where translation is used as a hold-out task.  That is, none of the child models in a training tree are fine-tuned on translation tasks.  We then probe each child model on translation tasks and record their text output embeddings using a small embeddings model, FILL IN.  Each prompt is independently repeated for each model three times.  We report the random-effects DerSimonian–Laird \citeyear{dersimonianlaird1986} pooled correlation $r$ between weight-space distance and output embedding similarity, on the paired per-prompt semantic distance with both quantities $z$-scored within run.  This allows us to assess different models and architectures on the same scale.  In addition to using Translation as a probe, we also use HellaSwag as we believe that neither Flan nor Llama were trained on it.
 
-For Flan-T5-base, we use translation as the probe task, training models
-on summarization, QA, and classification only and withholding translation
-as the holdout. For Llama-3.1-8B, we use HellaSwag --- a commonsense
-sentence-completion benchmark --- as the held-out probe. The probes differ
-across architectures because Flan-T5-base lacks the base commonsense
-ability required for HellaSwag, producing degenerate outputs regardless
-of fine-tuning condition (see Appendix~\ref{app:translation_probe}).
-Llama-3.1-8B, by contrast, retains strong commonsense ability after
-LoRA fine-tuning, making HellaSwag a meaningful held-out test of whether
-weight proximity predicts behavioral similarity beyond the training
-distribution.
+% We then estimate $r$ from the following mixed effects regression:
+% \begin{equation}\label{eq:reg}
+% d_{\ell_2}(y_{i,b,p}, y_{j,b,p}) \sim r \times d_{cos}\left (\theta_{i,b}, \theta_{j,b} \right )  + \beta_0|b
+% \end{equation}
+% where $d_{cos}$ is cosine distance, $d_{\ell_2}$ is euclidean distance,  $\theta_{i,b}$ are model parameters from model $i$ and training tree $b$, $y_{i,b,p}$ are the output embeddings from model $i$ from prompt $p$ on training tree $b$, and $\beta_0|b$ is the random intercept per training tree.  The subscripts are to emphasize that we standardize cosine distance for each training and standardize embeddings distance for each training tree and prompt.  The reason for this standardization is to put the model parameters and responses on the same scale.  (CHECK).  We report $r$, its 95\% confidence interval, and $p$-value.
+
+% NOTE: der-simonian..  What is the equation?
+
+
 
 \subsection{Behavior from Blackbox, Frontier Models}
 \label{sec:exp:blackbox}
@@ -403,11 +388,11 @@ distribution.
 % Single-task confounded by formatting (verbosity, markdown).
 % Translation cleanest — language crossing decouples embedding from source content.
 
-Sometimes model weights are unavailable, and provenance must be inferred from behavioral outputs alone. Recent work has shown that frontier model families cluster meaningfully in behavioral embedding space
-\citep{wu2026llmdna, yax2025phylolm}. We extend this line of work by probing 16 frontier models (GPT, Claude, Gemini, and open-weight families including Llama and Mistral) across four task types --- summarization, QA, classification, and translation --- using the same neighbor joining pipeline applied to pairwise sentence-embedding distances between model outputs. This design allows us to examine how much the recovered family structure depends
+Sometimes model weights are unavailable, and provenance must be inferred from behavioral outputs alone. Recent work like \cite{yax2025phylolm} has shown that frontier model families cluster meaningfully in behavioral embedding space
+\citep{wu2026llmdna, yax2025phylolm}. We extend this line of work by probing 23 frontier and local models (GPT, Claude, Gemini, and open-weight families including Llama and Mistral) across four task types --- summarization, QA, classification, and translation --- using the same neighbor joining pipeline applied to pairwise sentence-embedding distances between model outputs. This design allows us to examine how much the recovered family structure depends
 on task choice, and whether aggregating across tasks recovers structure that
 single-task probes miss. We aggregate the per-prompt trees, within and across tasks, using the
-Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean in tree space (App.~\ref{app:blackbox}).
+Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean in tree space (App.~\ref{app:blackbox}). [add citations].  Like in \cite{yax2025phylolm}, this is an unsupervised experiment.
 
 
 % -----------------------------------------------------------------------
@@ -415,7 +400,11 @@ Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean in tree space (App.~\ref{
 \label{sec:results}
 % -----------------------------------------------------------------------
 
-\subsection{WeightTree: Lineage Is Recoverable from Weights}
+\subsection{Weights can contain both direct ancestry and model tree}
+
+\subsection{Direct Ancestry survives}
+
+\subsubsection{Full Lineage is Recoverable when Additivity Margin is High}
 \label{sec:results:weighttree}
 
 % Table 1: RF by leaf count
@@ -575,10 +564,6 @@ Variant & Trained layers & Fisher-$z$ $r$ & SD & $N$ & RF & FN \\
 \quad qkv (r8)         &  48 & $-0.943$ & 0.131 & 37 & 1.68 & 0.13 \\
 \quad qkv (r64)        &  48 & $-0.960$ & 0.114 & 37 & 1.60 & 0.09 \\
 \quad full FT          & all & $-0.690$ & 0.327 & 35 & 1.86 & 0.25 \\
-\midrule
-\multicolumn{7}{l}{\textit{LayerTrace variants (Flan-T5 full FT, 6-leaf runs); FN $=$ true clades missed}} \\
-enc\_sak (4\%) & 12 tensors & \multicolumn{5}{l}{FN $0.08 \pm 0.08$ vs full weight $0.33 \pm 0.19$} \\
-full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)} \\
 \bottomrule
 \end{tabular}
 \end{center}
