@@ -546,7 +546,7 @@ that earlier blocks carry somewhat more signal.
   \label{fig:layertrace_grid}
 \end{figure}
 
-We explore clade recovery under different LoRA settings, data sets, layers used in recovery, and model in Figure~\ref{fig:coherence_recovery}.  We find that the oracle Atteson margin (left panel) governs clade recovery reliably but note that it is a sufficient condition and being applied in a stochastic manner.  That is both why recovery can be high with a margin below 1 and why recovery is not 100\%  even when the margin is above 1.  However, we can still see differences in architectures and layers. We see that the signal is more diffiuse in Llama based on the fact that when we use \textit{single} q/k/v matrices (self-attention) from LORA training, clade recovery is only between 15-40\%.  Contrast this to the FLAN q/k/v matrices (cross-attention) which have higher recovery.  In general, we also find that FT layers (>80\% recovery) contain more information than LoRA adapters.  In the right panel, we see that the label-free four-point proxy $A$ does an adequate job of predicting clade recovery, making it a practical tool.
+We explore clade recovery under different LoRA settings, data sets, layers used in recovery, and model in Figure~\ref{fig:coherence_recovery}.  We find that the oracle Atteson margin (left panel) governs clade recovery reliably but note that it is a sufficient condition and being applied in a stochastic manner.  That is both why recovery can be high with a margin below 1 and why recovery is not 100\%  even when the margin is above 1.  However, we can still see differences in architectures and layers. We see that the signal is more diffiuse in Llama based on the fact that when we use \textit{single} q/k/v matrices (self-attention) from LORA training, clade recovery is only between 15-40\%.  Contrast this to the FLAN q/k/v matrices (cross-attention) which have higher recovery.  In general, we also find that FT layers ($>80$\% recovery) contain more information than LoRA adapters.  In the right panel, we see that the label-free four-point proxy $A$ does an adequate job of predicting clade recovery, making it a practical tool.
 
 \begin{figure}[t]
   \begin{center}
@@ -562,7 +562,9 @@ We explore clade recovery under different LoRA settings, data sets, layers used 
     corresponding layer-family centroids. Layer and adapter summaries use median bottleneck margin
     across runs on the $x$-axis and mean clade recovery on the $y$-axis.}
   \label{fig:coherence_recovery}
-\end{figure}.  Table~\ref{tab:variants} summarizes lineage signal and recovery across training
+\end{figure}
+
+Table~\ref{tab:variants} summarizes lineage signal and recovery across training
 regimes. The point is that both the ordering signal and full-topology recovery are stable across the
 LoRA adapter scope (key projections only through all projections) and full fine-tuning: the within-run
 ordering correlation strengthens modestly as more parameters are trained, while topology recovery
@@ -607,8 +609,7 @@ Variant & $n$ & Fisher-$z$ $r$ (SD) & RF (SE) & FN (SE) & Clade rec. & Refinemen
 \end{center}
 \end{table}
 
-Finally, we move from constructed trees to organic model families pulled from HuggingFace, where the
-lineage is real and uncontrolled. Figure~\ref{fig:real-trees} compares our reconstruction against the
+Finally, we move from a controlled experiment to organic model families pulled from HuggingFace. Figure~\ref{fig:real-trees} compares our reconstruction against the
 documented lineage for a family of ten public Llama-2-7B checkpoints whose parent--child relationships
 are recorded on their model cards: a base model, a chat model and six of its descendants, and two
 further siblings (Nous-Hermes and Vicuna). Using cumulative cosine weight distances over the tensors
@@ -643,7 +644,7 @@ similarly.)
 \subsection{Model Parameters Can Predict Unknown Behavior}
 \label{sec:results:behavioral}
 
-\S \ref{sec:results:weighttree} indicates that model lineage is recoverable from weights alone.  While that may useful on its own for provenance, safety, and auditing, it does not necessarily indicate that similarity in model parameter space is indicative of similarity in behavioral space.  Inspired by the subliminal learning experiment of \citet{cloud2025subliminal}, we determine whether models more similar in model parameter space have more similar output embeddings on a holdout task (not necessarily 'subliminal').  We test two hold-outs: translation on a training tree that explicitly did not use translation tasks for fine-tuning and HellaSwag, which to our knowledge neither Llama nor Flan were trained on.  In Table \ref{tab:behavior_holdout}, we report the DL pooled correlation, its 95\% CI and the corresponding $p$-value.  We find that there is a weak, significant negative correlation for HellaSwag for both Llama and Flan, indicating that models more similar in weight-space do have more similar output on a held-out task.  This is also true for the translation hold-out on Llama.  The sign is reversed for Flan on the translation hold-out task.  Thus, our results support the subliminal learning results of \citet{cloud2025subliminal} in that unexpected traits can be passed down to child models.
+\S \ref{sec:results:weighttree} indicates that model lineage is recoverable from weights alone.  While that may useful on its own for provenance, safety, and auditing, it does not necessarily indicate that similarity in model parameter space is indicative of similarity in behavioral space.  Inspired by the subliminal learning experiment of \citet{cloud2025subliminal}, we determine whether models more similar in model parameter space have more similar output embeddings on a holdout task (not necessarily `subliminal').  We test two hold-outs: translation on a training tree that explicitly did not use translation tasks for fine-tuning and HellaSwag, which to our knowledge neither Llama nor Flan were trained on.  In Table \ref{tab:behavior_holdout}, we report the DL pooled correlation, its 95\% CI and the corresponding $p$-value.  We find that there is a weak, significant negative correlation for HellaSwag for both Llama and Flan, indicating that models more similar in weight-space do have more similar output on a held-out task.  This is also true for the translation hold-out on Llama.  The sign is reversed for Flan on the translation hold-out task.  Thus, our results support the subliminal learning results of \citet{cloud2025subliminal} in that unexpected traits can be passed down to child models.
 
 
 
@@ -677,6 +678,16 @@ Flan-T5-base (full FT) & Translation (trained)  & $-0.260$ & $[-0.35, -0.16]$ & 
 \subsection{Lineage Using Behavior from Frontier Models}
 \label{sec:results:blackbox}
 
+As noted, full model parameter access it not always possible, and it is important to attempt lineage recovery when we only have inference access to models.  We present our estimated lineage from 23 models, which is an averaged Frechet tree across four distinct prompt tasks.   Moreover, we see that the frechet mean is closer to summarization tasks (red) and QA tasks (purple) than classification or translation tasks.  In our estimated lineage, we see that probably the tightest cluster is the GPT branch, although Sonnet infiltrates the branch.  In general, we see that the open models seem to be more similar than the private, frontier models, with the exception of Gemini.
+
+Using the MDS plot from (TODO: add willis jcgs), we see that the training data clusters well by training task. We note that the tree estimation is not robust across the four tasks. The pairwise normalized RF distance among the
+four per-task Fr\'echet trees ranges from $0.65$ to $0.95$ (mean $\approx 0.84$), so no single task
+reproduces the aggregate topology. The four per-task trees are shown side by side with the aggregate
+in Appendix~\ref{app:blackbox} (Figure~\ref{fig:frechet_grid}).
+
+Overall, while we have a `reasonable' looking lineage, we have no baseline to compare to.  Moreover, we note that the lineage is highly dependent on prompt.
+
+
 % Hero figure: cross-task Frechet phylogeny + BHV tree-space MDS
 \begin{figure}[t]
   \begin{center}
@@ -696,28 +707,7 @@ Flan-T5-base (full FT) & Translation (trained)  & $-0.260$ & $[-0.35, -0.16]$ & 
   \label{fig:blackbox_hero}
 \end{figure}
 
-Aggregating across tasks yields a single behavioral phylogeny
-(Figure~\ref{fig:blackbox_hero}a) whose recovered clades match known model families, while the
-tree-space embedding (Figure~\ref{fig:blackbox_hero}b) shows the per-dataset trees scatter by task
-around the Fr\'echet mean, so the aggregate tree is representative rather than an artifact of any one
-task.
 
-% DRAFT BULLETS — to be expanded to prose.
-\begin{itemize}
-  \item Claude Sonnet/Haiku are the tightest clade (sisters in 80\% of per-dataset trees,
-    Fig.~\ref{fig:blackbox_hero}a); the GPT family and the Llama pair are also recovered.
-  \item Per-task topology varies enough that no single task is representative: in the BHV tree-space
-    embedding the per-dataset trees cluster by task with translation the clear outlier
-    (Fig.~\ref{fig:blackbox_hero}b). The driver is output formatting (e.g.\ in translation Claude's
-    Haiku migrates due to header-heavy outputs), which confounds single-task probes.
-  \item Multi-task aggregation is therefore necessary: the Fr\'echet mean sits at the centre of the
-    per-dataset trees, recovering family structure that single-task probes miss.
-\end{itemize}
-
-The per-task disagreement is substantial: pairwise normalized Robinson--Foulds distance among the
-four per-task Fr\'echet trees ranges from $0.65$ to $0.95$ (mean $\approx 0.84$), so no single task
-reproduces the aggregate topology. The four per-task trees are shown side by side with the aggregate
-in Appendix~\ref{app:blackbox} (Figure~\ref{fig:frechet_grid}).
 
 
 % -----------------------------------------------------------------------
