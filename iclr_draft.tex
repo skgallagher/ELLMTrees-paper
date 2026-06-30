@@ -366,10 +366,12 @@ Atteson margin; \S\ref{sec:framework:theory}). Aggregated over all $\geq 5$-leaf
 Table~\ref{tab:rf_by_leaves} shows Flan-T5-base, Llama-3.2-1B (full FT), and the decoder-only
 Pythia-160M control all have low FN ($0.07$--$0.28$) and high clade recovery ($84$--$97\%$); the
 low-rank adapters match this on their merged weights (\S\ref{sec:framework:metric}), the Llama-3.2-1B
-qkv adapter recovering $94\%$ of clades. The within-run \% beating the label-permutation null is $35$--$50\%$ ---
-substantial for a within-run test --- and the global Fisher-combined statistic rejects the no-lineage
-null overwhelmingly for every condition ($p<10^{-13}$). Recovery is therefore consistent and
-significant across architectures, scales, and full-FT vs.\ low-rank training.
+qkv adapter recovering $94\%$ of clades. Most runs recover the \emph{complete} true topology
+(refinement $74$--$95\%$, Table~\ref{tab:rf_by_leaves}). Significance against the harder
+label-permutation null is gated by tree size: $0\%$ at $5$ leaves --- where too few within-task leaves
+exist to permute for the test to have power --- rising to $57$--$75\%$ at $6$--$8$ leaves, so the
+$\geq5$-leaf aggregate ($35$--$50\%$) understates per-run recovery on the trees large enough to test.
+Recovery is therefore consistent across architectures, scales, and full-FT vs.\ low-rank training.
 
 % Table 1: RF by leaf count
 \begin{table}[t]
