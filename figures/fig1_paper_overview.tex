@@ -22,6 +22,7 @@
 \definecolor{fGPT}{HTML}{4FA06B}
 \definecolor{fGemini}{HTML}{3F7CAC}
 \definecolor{fOpen}{HTML}{8A6FB0}
+\definecolor{fDeepSeek}{HTML}{2A9D8F}
 
 \begin{document}
 \begin{tikzpicture}[
@@ -126,7 +127,13 @@
   \leaf{n1a}{Claude}{fClaude}
   \leaf{n1b}{GPT}{fGPT}
   \leaf{n2a}{Gemini}{fGemini}
-  \leaf{n2b}{Llama\,/\,Mistral}{fOpen}
+  % open-weight tip split into Llama and DeepSeek (distinct colors)
+  \draw[fOpen,line width=1.0pt] (n2b)--($(n2b)+(0.55,0.16)$);
+  \draw[fDeepSeek,line width=1.0pt] (n2b)--($(n2b)+(0.55,-0.16)$);
+  \node[mdl,draw=fOpen] at ($(n2b)+(0.62,0.16)$){};
+  \node[mdl,draw=fDeepSeek] at ($(n2b)+(0.62,-0.16)$){};
+  \node[font=\sffamily\scriptsize,text=fOpen,anchor=west] at ($(n2b)+(0.86,0.16)$){Llama};
+  \node[font=\sffamily\scriptsize,text=fDeepSeek,anchor=west] at ($(n2b)+(0.86,-0.16)$){DeepSeek};
   \node[circle,fill=flow,inner sep=0pt,minimum size=1.8mm] at (root){};
   \node[scap,anchor=north] at (13.55,0.78) {same NJ pipeline on model\\outputs recovers known\\frontier families};
 \end{scope}
