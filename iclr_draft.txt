@@ -622,12 +622,13 @@ illuminates the need to consider models holistically, not as a series of benchma
 % Author acknowledgments omitted for double-blind review; add at camera-ready.
 
 \subsubsection*{Use of Large Language Models}
-In accordance with the ICLR policy on LLM usage, we disclose that LLM-based assistants were used
-solely for editing and presentation of this manuscript: condensing prose to meet the page limit,
-standardizing terminology, copy-editing, and formatting tables and figures. LLMs were not used to
-generate research ideas, design or run experiments, produce or analyze results, or formulate the
-scientific claims, which are the authors' own. The authors verified all text, numerical results, and
-citations, and take full responsibility for the content.
+In accordance with the ICLR policy on LLM usage, we disclose that LLM-based coding and writing
+assistants were used substantially during this project. Their uses included writing and debugging
+code throughout the experimental pipeline---data processing, weight-distance computation, tree
+reconstruction and scoring, statistical analysis, and figure and table generation---as well as editing
+the manuscript (condensing prose, standardizing terminology, and formatting). The research questions,
+experimental design, and scientific claims are the authors' own, and the authors reviewed and verified
+all code, numerical results, figures, and citations, taking full responsibility for the content.
 
 % -----------------------------------------------------------------------
 \bibliography{references}
