@@ -247,31 +247,20 @@ One contribution we have in our methodology is the use of per-layer distance mat
 Thus, a model with $L$ layers can result in $L$ distance matrices.  These distance matrices can either be used to each form their own estimate of $\hat{P}$ resulting in a collection of estimates.  From that set, a conensus phylogeny (i.e. the most common tree) is generally taken as the estimate.  Another alternative is to use a function of the distance matrices, such as the mean, to have a less noisy estimate of $\hat{\textbf{D}}$, to form $\widehat{\mathcal{P}}$. In addition to giving us a less variable estimate of the phylogeny, this layer-wise distance allows us to identify the most and least important layers in training by examining which layers change the most or least across multiple training runs.
 
 
-\subsection{When Is Lineage Recoverable?}
+\subsection{Guiding Lineage Recovery}
 \label{sec:framework:theory}
 
-Reading lineage from weights poses two questions of very different difficulty, and separating them
-clarifies what we can claim. \emph{Ordering} asks only whether sibling (same-branch) pairs are closer
-than cousin (cross-branch) pairs; \emph{topology} asks neighbor-joining to return the correct tree.
-Prior provenance work operates at the ordering level; recovering topology against a known training tree
-is our target.
+Recovering lineage from weights poses two questions of different difficulty: \emph{Ordering} asks only whether sibling (same-branch) pairs are closer
+than cousin (cross-branch) pairs and \emph{lineage} asks neighbor-joining to return the the full training history.
 
-\paragraph{Ordering: the easy regime, and the link to prior work.}
-Ordering pools every same- versus cross-branch comparison, so even a small per-pair signal accumulates
-into a detectable trend. We test it with the Mann--Whitney $U$ statistic on same- versus cross-branch
-distances (equivalently, a within-run rank correlation). Mann--Whitney is the right tool here: it
-depends only on the \emph{ranks} of distances, so it is invariant to the run-specific scale of cosine
-distances and robust to the heavy-tailed noise of weight space, and it is the locally most powerful rank
-test against a stochastic-ordering alternative---precisely ``siblings tend to be closer.'' Aggregating
+ Ordering pools every same- versus cross-branch comparison and so through aggregation can result in an easier to detect signal. We test it with the Mann--Whitney $U$ statistic on same- versus cross-branch
+distances (equivalently, a within-run rank correlation).  Aggregating
 $O(n^2)$ comparisons per run across $50$ runs, it detects lineage even when no single pair is decisive.
 This pairwise-ancestry signal is what parent--child provenance methods such as MoTHer
 \citep{horwitz2024mother} and Neural Lineage \citep{yu2024neurallineage} rely on; we report it in
-\S\ref{sec:results:weighttree}, but it is strictly weaker than reconstructing the tree.
+\S\ref{sec:results:weighttree}.
 
-\paragraph{Topology: additivity and Atteson's margin.}
-Neighbor-joining is exact on an \emph{additive} distance matrix---one whose entries are path-length sums
-on a tree (the four-point condition). Weight distances are not additive, so what matters is how much
-non-additivity NJ tolerates. Atteson's theorem makes this precise.
+While determining ordering is useful, recovering the full lineage is even moreso and also a harder problem. The method we use to construct trees, Neighbor-joining (NJ) is exact under certain conditions about tree additivity. Unfortunately, model parameter distances are not additive but sometimes not destructively so. Atteson's theorem makes this precise.
 \begin{theorem}[\citealp{atteson1999performance}]\label{thm:atteson}
 Let $D_{\mathrm{add}}$ be the additive metric of the true topology with internal edge lengths
 $\{L_s\}$, and $D$ the observed distance matrix. If
@@ -282,50 +271,25 @@ Writing a per-edge margin and its bottleneck,
 \[
   m_s = \frac{L_s}{2\,\lVert D-D_{\mathrm{add}}\rVert_\infty},
   \qquad
-  \mathrm{margin} = \min_s m_s,
+  m = \min_s m_s,
 \]
-a $\mathrm{margin}>1$ \emph{guarantees} exact recovery. It is a sufficient condition, and a conservative
+a $m>1$ \emph{guarantees} exact recovery. It is a sufficient condition, and a conservative
 one---set by the single worst edge under a worst-case ($\ell_\infty$) error---so in practice NJ recovers
-most splits well before the bottleneck reaches $1$. This is the guarantee we lean on in place of exact
-metric additivity, which near-orthogonal updates violate.
+most splits well before $m$ reaches $1$. We note that the margin is small for cosine distance when updates are near-orthogonal.
 
-\paragraph{Why a proxy is needed.}
-The margin is an \emph{oracle} quantity: forming $D_{\mathrm{add}}$ and the $L_s$ requires the true
-topology and its branch lengths. We have neither in deployment---our experiments fix the topology but
-not branch lengths, and the diagnostic we want must be readable on a model whose lineage is
-\emph{unknown}. We therefore define a label-free surrogate computed from $D$ alone.
+The margin $m$ is an \emph{oracle} quantity: forming $D_{\mathrm{add}}$ and the $L_s$ requires the true
+topology and its branch lengths. We only know the topology, not the branch lengths.  We therefore define a label-free proxy computed from $D$ alone, coming from (TODO: ADD CITE WHERE THIS COMES FROM).
 
-\paragraph{The four-point additivity (A).}
-For each quartet of leaves the three pairwise-distance sums, sorted $s_1\ge s_2\ge s_3$, satisfy
+\paragraph{Four-point Additivity (A).}For each quartet of leaves the three pairwise-distance sums, sorted $s_1\ge s_2\ge s_3$, satisfy
 $s_1=s_2$ under an additive metric, with $(s_2-s_3)/2$ the internal edge separating the two cherries.
-We turn each quartet's violation into a scale-free score and average over the $Q$ quartets:
+We estimate four-point addivity for each quartet and average over the $Q$ quartets:
 \[
   A=\frac{1}{Q}\sum_{q=1}^{Q}\frac{s_2^{(q)}-s_3^{(q)}}{s_1^{(q)}-s_3^{(q)}}\in[0,1] ,
 \]
 where $s_1^{(q)}\ge s_2^{(q)}\ge s_3^{(q)}$ are the sorted pairwise-distance sums of quartet $q$.
 A single quartet's score is $1$ when $s_1=s_2$ (perfectly additive and the split is resolved) and $0$
 when $s_2=s_3$ (a four-point violation, the unresolved/star-like case), so $A$ measures how nearly the
-distance matrix satisfies the four-point condition that neighbor-joining requires. It is a scale-free,
-label-free analogue of the non-additivity term $\lVert D-D_{\mathrm{add}}\rVert_\infty$ in the oracle
-margin --- computed from $D$ alone, with no truth tree --- and is the diagnostic we report.
-
-\paragraph{Guarantee versus partial recovery.}
-Because Atteson's condition is sufficient but not necessary, we neither expect nor observe a sharp
-$\mathrm{margin}=1$ cliff; recovery instead climbs smoothly with the margin, which is why our groups land
-at high---not perfect---recovery rather than a clean all-or-nothing split. The oracle bottleneck margin
-tracks clade recovery, and its label-free analogue $A$ tracks it as well, both across whole-run
-summaries and across individual layers and adapter matrices (Fig.~\ref{fig:coherence_recovery}). The
-theorem accounts for the ceiling---where $\mathrm{margin}>1$, recovery is exact---and $A$ and the
-empirical margin account for the gradient below it, where most of our groups sit.
-
-\paragraph{What sets A across training configurations.}
-$A$ is high when fine-tuning moves siblings along a shared, low-dimensional lineage direction, leaving the
-distance matrix nearly additive, and low when each update points in an idiosyncratic direction so
-non-additivity swamps the internal edges. Full fine-tuning follows a common optimization trajectory and
-lands in the first regime ($A$ high, recovery near the additive ceiling). A low-rank adapter can land in
-either regime depending on how its increments are read: distances taken on bare per-node increments give
-each node a near-orthogonal direction so non-additivity dominates, whereas cumulative root-to-node
-weights restore the shared ancestral component, raise $A$, and recover topology. We report $A$ and the
+distance matrix satisfies the four-point condition that NJ requires. We report $A$ and the
 oracle margin against recovery in \S\ref{sec:results:weighttree}.
 
 
@@ -678,7 +642,9 @@ Flan-T5-base (full FT) & Translation (trained)  & $-0.260$ & $[-0.35, -0.16]$ & 
 \subsection{Lineage Using Behavior from Frontier Models}
 \label{sec:results:blackbox}
 
-As noted, full model parameter access it not always possible, and it is important to attempt lineage recovery when we only have inference access to models.  We present our estimated lineage from 23 models, which is an averaged Frechet tree across four distinct prompt tasks.   Moreover, we see that the frechet mean is closer to summarization tasks (red) and QA tasks (purple) than classification or translation tasks.  In our estimated lineage, we see that probably the tightest cluster is the GPT branch, although Sonnet infiltrates the branch.  In general, we see that the open models seem to be more similar than the private, frontier models, with the exception of Gemini.
+To compare against our model parameter lineage estimates, in Fig. \ref{fig:behavioral_vs_whitebox}, we show the percentage of clade recovery from behavior-alone (output embedding distance) vs. the model parameter distance.  We see that although the behavior lineage can be better than random lineages in terms of clade recovery, it is not as reliable as when using model parameters.
+
+As noted, full model parameter access it not always possible, and it is important to attempt lineage recovery when we only have inference access to models.  We present our estimated lineage from 23 models, which is an averaged Frechet tree across four distinct prompt tasks in Fig. \ref{fig:blackbox_hero}.   Moreover, we see that the frechet mean is closer to summarization tasks (red) and QA tasks (purple) than classification or translation tasks.  In our estimated lineage, we see that probably the tightest cluster is the GPT branch, although Sonnet infiltrates the branch.  In general, we see that the open models seem to be more similar than the private, frontier models, with the exception of Gemini.
 
 Using the MDS plot from (TODO: add willis jcgs), we see that the training data clusters well by training task. We note that the tree estimation is not robust across the four tasks. The pairwise normalized RF distance among the
 four per-task Fr\'echet trees ranges from $0.65$ to $0.95$ (mean $\approx 0.84$), so no single task
@@ -715,46 +681,22 @@ Overall, while we have a `reasonable' looking lineage, we have no baseline to co
 \label{sec:discussion}
 % -----------------------------------------------------------------------
 
-\subsection{The Provenance Chain}
-\label{sec:discussion:chain}
-% Closed chain: weights -> lineage (WeightTree), concentrated in attention keys
-% (LayerTrace), survives LoRA (§results:lora), predicts behavior (§results:behavioral),
-% visible in blackbox (§results:blackbox).
-% Practical upshot: 4% of parameters sufficient; behavioral-only insufficient.
+We show that model training lineage is recoverable from using model parameters alone, and that using the best layers that comprise only 4\% of the total model parameters ($k$-matrices) estimates training trees just as well ($80-90+\%)$ as using all the layers.  We find that recovery works across an encoder-decoder and decoder model and even survives LoRA training at low ranks (r=8). In particular, we find that in our controlled experiment, our recovery estimates are significant across all the conditions we tried. In addition to showing that we can estimate model lineage from weights, we show that the weights do contain traits that perhaps were unexpected.  We show that on hold-out tasks, models more similar in weight space have more similar embedding outputs (pooled DL $r \approx -0.3$-$0.2$). This is direct, albeit modest, evidence that traits are inherited from ancestor models.  We find that the relationship seems to be stronger when using full fine-tuning compared to LORA fine-tuning. Finally, we present a behavior-only lineage and show that the lineage varies across different prompts.  This shows that while behavior-only models can be useful in certain situations, they are not as robust as model parameter estimates which do not require prompts.
 
-\TODO{Write provenance chain summary.}
+One result from our paper is that we have further corroboration that the attention layers are critical for LLM learnings, in this case in terms of model ancestry.  We find that the cross-attention mechanism seems to be a stronger carrier of lineage than self-attention, although this needs to be validated  for more architectures.  
 
-\subsection{Why Attention Keys?}
-\label{sec:discussion:keys}
-% SA.k governs which token positions are attended to.
-% Fine-tuning shifts routing toward task-relevant tokens; shift accumulates up tree.
-% FFN stores task patterns in non-overlapping key-space regions (Geva et al. 2021).
-% Encoder SA.k may be a universal "lineage layer" -- Llama results speak to this.
+We also find that the angle of updates is important in being able to accurately estimate lineage.  Orthogonal updates can be difficult to recover.  This is one reason that cosine distance is important for our analysis.
 
-\TODO{Write mechanistic interpretation.}
+Our paper also brings to the forefront of full model access vs. inference-only access for auditing, security, provenance, and behavior. We find that while inference-only access is still useful, that full model access is critical to have the best lineage recovery.  Moreover, we find that changes in weights are related to changes in model behavior, even for held out tasks.  
 
-\subsection{Whitebox vs.\ Blackbox: Complementary Roles}
-\label{sec:discussion:wb_bb}
-% Whitebox: exact genealogy, requires weight access.
-% Blackbox: approximate family structure, API only.
-% Behavioral projection story (§exp:geometry) explains why blackbox is lossy.
+We note that our experiments and methods have limitations.  One limitation is that our methods for model lineage using parameters currently only work when the underlying architecture is identical, i.e. the parameter space is the same.  This means that Llama cannot directly be compared to Mistral, for example. Another issue is that our controlled training tree generation results from a fairly simple process that may not result in the most realistic training trees.  We attempt to mitigate that with our real world example. Future directions include better relating models across different architectures such as with CKA (TODO: CITE) and to further explore the mechanism of which lineage is inherited.
 
-\TODO{Write whitebox vs blackbox discussion.}
-
-\subsection{Limitations and Future Directions}
-\label{sec:discussion:limitations}
-% Controlled trees vs messy real-world genealogies.
-% Single base model (Flan-T5) + Llama robustness check.
-% LoRA rank threshold (post-ICLR rank experiment).
-% Cross-architecture provenance = representational alignment problem.
-% Prospective safety check: pre-training gradient angles predict forgetting.
-
-\TODO{Write limitations and future work.}
+In summary, we hope that our work illuminates the need to consider models holistically and not as a series of benchmarks.
 
 
 % -----------------------------------------------------------------------
 \subsubsection*{Acknowledgments}
-\TODO{Add acknowledgments for camera-ready.}
+\TODO{AI statement}
 
 % -----------------------------------------------------------------------
 \bibliography{references}
