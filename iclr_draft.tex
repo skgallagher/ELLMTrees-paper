@@ -9,6 +9,7 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage{enumitem}
 
 % Theorem environments and shared math notation.
 \newtheorem{theorem}{Theorem}
@@ -31,7 +32,7 @@
 % -----------------------------------------------------------------------
 % Working title — change before submission
 % -----------------------------------------------------------------------
-\title{The Traits are in the Weights: Recovering Fine-Tuning Geneaology in LLMs}
+\title{The Traits are in the Weights: Estimating Fine-Tuning Lineage in LLMs}
 
 % Authors hidden for double-blind review.
 % \iclrfinalcopy  % Uncomment for camera-ready only.
@@ -50,7 +51,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-With over a million open models on HuggingFace and a handful of frontier labs constantly updating and releasing models, most models are fine-tuned descendants of only a few ancestors.  However, the true lineage may be undocumented. Model provenance, auditing, and safe deployment all benefit from access to this model lineage, revealing both internal (e.g weights) and external traits (e.g. behavior). We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether we can recover training history or lineage from a set of models. We study lineage at three levels of access: recovery from weight changes alone, the link between those weight changes and behavior, and recovery from behavior alone. We find that full training topology is recoverable against a known ground-truth tree; that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline recovers frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, we find that lineage recovery is not only  possible but is guided by the Atteson margin.
+With over a million open models on HuggingFace and a handful of frontier labs constantly updating and releasing models, most models are fine-tuned descendants of only a few ancestors.  However, the true lineage may be undocumented. Model provenance, auditing, and safe deployment all benefit from access to this model lineage, revealing both internal (e.g weights) and external traits (e.g. behavior). We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether we can estimate the model lineage from a set of models. We study lineage at three levels of access: estimation from weight changes alone, the link between those weight changes and behavior, and estimation from behavior alone. We find that the full training tree is recoverable against a known ground-truth tree; that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline estimates frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, we find that lineage estimation is not only possible but is guided by the Atteson margin.
 
 \end{abstract}
 
@@ -77,34 +78,39 @@ to know which to build on, where two versions diverged, and where each fails. Ph
 were built for exactly this inference in biology~\citep{saitou1987neighbor, robinson1981comparison},
 and we adapt them to model weights: we estimate a training tree scored against a \emph{known}
 ground-truth tree (Fig.~\ref{fig:overview}A), link it to behavior (Fig.~\ref{fig:overview}B), and
-compare to behavior-only recovery when weights are unavailable (Fig.~\ref{fig:overview}C).
+compare to behavior-only estimation when weights are unavailable (Fig.~\ref{fig:overview}C).
 
 \begin{figure}[t]
   \begin{center}
     \includegraphics[width=0.95\linewidth]{\figpath/fig1_paper_overview.pdf}
   \end{center}
   \caption{\textbf{Overview.} Fine-tuning leaves a path-dependent signature in weight space
-  that we read as a model genealogy across three levels of access (decreasing left to right).
+  that we read as a model lineage across three levels of access (decreasing left to right).
   \textbf{(A)}~In controlled trees with known topology, weight distances feed neighbor-joining
-  to recover a phylogeny $\widehat{\mathcal{P}}$, scored against the true tree
+  to estimate a phylogeny $\widehat{\mathcal{P}}$, scored against the true tree
   $\mathcal{P}^{*}$ via RF/FN and a random-tree null. \textbf{(B)}~Weight-space proximity
   predicts behavioral similarity, even on a held-out task. \textbf{(C)}~The same pipeline on
-  model outputs recovers frontier-model families with no weight access.}
+  model outputs estimates frontier-model families with no weight access.}
   \label{fig:overview}
 \end{figure}
 
 
 
 
-Our contributions are threefold. First, we develop a principled weight-space framework for lineage
-recovery --- metric selection and summary statistics guided by the geometry of fine-tuning updates ---
-that estimates the full training tree, and by treating layers as `genes' identifies which \emph{carry}
-the signal (e.g.\ in an encoder--decoder model the key projections alone, $4\%$ of parameters, recover
-lineage as well as the full tensor). Second, weight-space proximity predicts behavioral similarity,
-even on a held-out task the models never trained. Third, applying the same estimation to model
-\emph{outputs} recovers frontier-model families with no weight access. Across all three we span an
-encoder--decoder model and decoder-only models from 160M to 8B and full fine-tuning through LoRA,
-finding that a label-free proxy for the Atteson margin reliably indicates tree recovery.
+We make three contributions:
+\begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
+  \item \textbf{A weight-space framework for lineage estimation.} Guided by the geometry of
+    fine-tuning updates, our metric and summary-statistic choices estimate the full model lineage; by
+    treating layers as `genes' we identify which \emph{carry} the signal (e.g.\ in an encoder--decoder
+    model the key projections alone, $4\%$ of parameters, estimate lineage as well as the full tensor).
+  \item \textbf{A weight$\to$behavior bridge.} Weight-space proximity predicts behavioral similarity,
+    even on a held-out task the models never trained.
+  \item \textbf{Behavior-only lineage at frontier scale.} The same pipeline applied to model
+    \emph{outputs} estimates lineage for frontier-model families with no weight access.
+\end{itemize}
+Across all three we span an encoder--decoder model and decoder-only models from 160M to 8B and full
+fine-tuning through LoRA, finding that a label-free proxy for the Atteson margin reliably indicates
+recovery.
 
 Together, these results show that the training history of a model is legibly
 written in its parameters, recoverable as a phylogeny, and predictive of some
@@ -136,7 +142,7 @@ tree; \citet{yu2025neural} recover parent--child and grandparent--child lineage 
 learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct
 lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral
 DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. None, however,
-recovers a full training-topology tree or evaluates against a known ground-truth tree.
+recovers a full training tree or evaluates against a known ground-truth tree.
 
 Other works examine \emph{why} lineage carries. Models fine-tuned from a shared initialization stay
 within a single low-error basin and are robust to SGD noise
@@ -165,9 +171,9 @@ output independence \citep{zhu2025independence}. This line is typically unsuperv
 with no ground-truth topology to score against.
 
 Our work fills this gap by bridging parameter-based and behavioral lineage while (1) determining where
-training-tree topology recovery is possible and (2) evaluating against ground-truth trees. Mirroring
-\citet{cloud2025subliminal}, our recovery proposition is: when model-distance signal outweighs training
-noise, topology can be recovered with high probability.
+the training tree can be estimated and (2) evaluating against ground-truth trees. Mirroring
+\citet{cloud2025subliminal}, our estimation proposition is: when model-distance signal outweighs training
+noise, the lineage can be estimated with high probability.
 
 
 
@@ -181,10 +187,10 @@ noise, topology can be recovered with high probability.
 In this section, we define our terms and notation and establish the statistical framework underlying our experiments.
 
 
-Like \citep{wu2026llmdna}, we use phylogenies and LLM ``DNA'' to estimate properties of parent--child training. We assume, like \citep{yu2025neural} but unlike \citep{horwitz2025mother}, that all nodes derive from a single root. Unlike prior work, we recover partial topology across all nodes, not just parent--child pairs: we estimate a distance matrix and apply neighbor-joining \citep{saitou1987neighbor} to recover the tree.
+Like \citep{wu2026llmdna}, we use phylogenies and LLM ``DNA'' to estimate properties of parent--child training. We assume, like \citep{yu2025neural} but unlike \citep{horwitz2025mother}, that all nodes derive from a single root. Unlike prior work, we estimate partial topology across all nodes, not just parent--child pairs: we form a distance matrix and apply neighbor-joining \citep{saitou1987neighbor} to estimate the tree. We use standard phylogenetics terms throughout: a \emph{phylogeny} is a tree whose leaves are the observed models and whose internal nodes are latent common ancestors, and a \emph{clade} is the set of leaves sharing one such ancestor (equivalently, one branch of the tree). Estimating a clade thus means correctly grouping the models that descend from a common ancestor.
 
 
-\subsection{Phylogenetic Tree Recovery}
+\subsection{Phylogenetic Tree Estimation}
 \label{sec:framework:phylo}
 % We frame fine-tuning lineage recovery as a phylogenetics problem.
 % Pairwise weight distances → NJ tree → RF vs ground truth → permutation p.
@@ -238,15 +244,15 @@ Beyond a lower-variance estimate, the layer-wise view identifies the most and le
 which change most or least across runs.
 
 
-\subsection{Guiding Lineage Recovery}
+\subsection{Guiding Lineage Estimation}
 \label{sec:framework:theory}
 
-Recovering lineage poses two questions of differing difficulty. \emph{Ordering} asks only whether
+Estimating lineage poses two questions of differing difficulty. \emph{Ordering} asks only whether
 sibling (same-branch) pairs are closer than cousin (cross-branch) pairs; pooling all $O(n^2)$
 comparisons per run across $50$ runs, the Mann--Whitney $U$ statistic (equivalently a within-run rank
 correlation) detects it even when no single pair is decisive. This is the pairwise-ancestry signal
 parent--child methods like MoTHer \citep{horwitz2024mother} and Neural Lineage
-\citep{yu2024neurallineage} rely on; we report it in \S\ref{sec:results:weighttree}. \emph{Lineage} ---
+\citep{yu2024neurallineage} rely on; we report it in \S\ref{sec:results}. \emph{Lineage} ---
 asking neighbor-joining (NJ) to return the full training history --- is harder. NJ is exact under
 conditions on tree additivity, which model-parameter distances satisfy only approximately; Atteson's
 theorem makes this precise.
@@ -273,15 +279,15 @@ the resolved fraction over the $Q$ quartets:
 which is $1$ when every quartet is perfectly additive (split resolved) and $0$ at the unresolved,
 star-like case, measuring how nearly $D$ satisfies the four-point condition NJ requires; equivalently,
 $A=1-\delta$ for the quartet $\delta$-score of \citet{holland2002delta}. We relate $A$ and the oracle
-margin to recovery in \S\ref{sec:results:weighttree}.
+margin to recovery in \S\ref{sec:results}.
 
 
 % -----------------------------------------------------------------------
 \section{Experiments}
 \label{sec:experiments}
 % -----------------------------------------------------------------------
-We structure our experiments around three questions: whether weight changes
-recover training lineage, whether they predict downstream behavior, and
+We structure our experiments around three questions: whether the model lineage can be
+estimated from weight changes, whether those changes predict downstream behavior, and
 whether family structure is visible from behavioral outputs alone in
 frontier models without weight access.
 
@@ -299,14 +305,14 @@ We vary the root model, task types, and trained layers. We examine an encoder--d
 Llama-3.1-8B), fine-tuning on Q\&A, classification, translation, and summarization. For Flan-T5 we run
 full fine-tuning and four LoRA \citep{hu2022lora} scopes (key only; q/k/v; all four attention
 projections; all projections); the decoder-only models use the same training-tree instructions. We also
-validate on two real model trees from HuggingFace.
+validate on two real model lineages from HuggingFace.
 
 \paragraph{Direct lineage.}
 Prior methods~\citep{horwitz2024mother, yu2025neural} identify parent--child pairs or correct ordering; ours does too, at the branch level (which models group on a branch). For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run point-biserial correlation (Fisher $z$-averaged across runs) between weight distance and the same-branch indicator.
 
-\paragraph{Full topology recovery.}
+\paragraph{Full topology estimation.}
 \label{sec:exp:weights}
-Besides direct lineage, we test whether our estimates recover the full topology. From \S\ref{sec:framework:theory}, recovery should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, the recovery metrics (clade \% recovery and refinement), and \% sig (a within-run permutation test against the random-tree null), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results:weighttree}; a single global $p$-value combines the per-run $p$-values with Fisher's method. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
+Besides direct lineage, we test whether our method estimates the full topology. From \S\ref{sec:framework:theory}, recovery should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, the recovery metrics (clade \% recovery and refinement), and \% sig (a within-run permutation test against the random-tree null), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}; a single global $p$-value combines the per-run $p$-values with Fisher's method. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
 
 
 \paragraph{Predicting held-out behavior.}
@@ -340,7 +346,7 @@ Sometimes weights are unavailable and provenance must be inferred from outputs a
 
 %\subsection{Weights contain both direct ancestry and full lineage}
 
-\subsection{Model Parameters Contain Direct Lineage}
+\paragraph{Direct lineage.}
 
 Direct ancestry is recovered under every condition. The same-vs.-cross-branch ordering test
 (Appendix~\ref{app:direct}, Table~\ref{tab:direct}) finds same-branch pairs significantly closer than
@@ -349,11 +355,11 @@ from $0.43$ (Flan LoRA, key only) to $0.96$ (Llama LoRA) and within-run Fisher $
 from $-0.60$ to $-0.94$ --- across architectures (Flan-T5, Pythia, Llama), scales (160M--8B), and regimes
 (full FT and LoRA). This is the level at which parent--child methods like MoTHer \citep{horwitz2024mother}
 and Neural Lineage \citep{yu2025neural, yu2024neurallineage} operate;
-\S\ref{sec:results:weighttree} goes further to the full topology.
+we go further to the full topology below.
 
-\subsection{Model Parameters Contain Full Lineage When There is Enough Signal}
+\paragraph{Full topology estimation.}
 \label{sec:results:weighttree}
-Our methods also recover the full tree when the distance matrix is sufficiently additive (a high
+Our methods also estimate the full tree when the distance matrix is sufficiently additive (a high
 Atteson margin; \S\ref{sec:framework:theory}). Aggregated over all $\geq 5$-leaf trees,
 Table~\ref{tab:rf_by_leaves} shows Flan-T5-base, Llama-3.2-1B (full FT), and the decoder-only
 Pythia-160M control all have low FN ($0.07$--$0.28$) and high clade recovery ($84$--$97\%$); the
@@ -511,10 +517,10 @@ Flan-T5 depth-3 branch recovers its informative clade similarly.)
 \end{figure}
 
 
-\subsection{Model Parameters Can Predict Unknown Behavior}
+\paragraph{Predicting held-out behavior.}
 \label{sec:results:behavioral}
 
-Recovering lineage from weights does not by itself imply that parameter-space proximity tracks
+Estimating lineage from weights does not by itself imply that parameter-space proximity tracks
 behavioral proximity. Inspired by \citet{cloud2025subliminal}'s subliminal-learning experiment, we test
 whether models closer in weight space produce more similar outputs on a held-out task, using translation
 (on a tree that never trained on it) and HellaSwag (untrained by either model).
@@ -553,7 +559,7 @@ Flan-T5-base (full FT) & Translation (trained)  & $-0.260$ & $[-0.35, -0.16]$ & 
 \end{table}
 
 
-\subsection{Lineage Using Behavior from Frontier Models}
+\paragraph{Behavior-only lineage (frontier models).}
 \label{sec:results:blackbox}
 
 Behavior-alone clade recovery (Fig.~\ref{fig:behavioral_vs_whitebox}) beats random but is far less
@@ -590,9 +596,9 @@ baseline, the recovered lineage looks reasonable but is highly prompt-dependent.
 \label{sec:discussion}
 % -----------------------------------------------------------------------
 
-We show that training lineage is recoverable from parameters alone; the best layers --- the
+We show that the model lineage can be estimated from parameters alone; the best layers --- the
 $k$-matrices, only $4\%$ of parameters --- estimate trees as well ($80$--$90{+}\%$) as the full weight
-set, recovery holds across encoder--decoder and decoder models and survives LoRA at low rank ($r=8$),
+set, this holds across encoder--decoder and decoder models and survives LoRA at low rank ($r=8$),
 and every controlled condition is significant. The weights also carry less obvious traits: on held-out
 tasks, models closer in weight space produce more similar outputs (pooled DL $r\approx-0.3$ to $-0.2$)
 --- modest but direct evidence of inheritance, stronger under full fine-tuning than LoRA. Behavior-only
@@ -605,7 +611,7 @@ architectures). Update geometry matters --- near-orthogonal updates are hard to 
 cosine distance is central --- and the work foregrounds full-access vs.\ inference-only auditing: full
 access gives the best recovery, yet weight changes track behavioral changes even on held-out tasks.
 
-Limitations: parameter-based recovery currently requires an identical architecture (so Llama cannot be
+Limitations: parameter-based estimation currently requires an identical architecture (so Llama cannot be
 compared directly to Mistral), and our controlled tree-generation is simple, which we partly mitigate
 with the real-world example. Future work includes relating models across architectures (e.g.\ via
 CKA~\citep{kornblith2019similarity}) and probing the mechanism of inheritance. We hope this work
@@ -718,7 +724,7 @@ somewhat more signal.
 \section{Direct-Lineage Ordering Statistics}
 \label{app:direct}
 Table~\ref{tab:direct} gives the full same-vs.-cross-branch ordering statistics summarized in
-\S\ref{sec:results:weighttree}, for each training regime.
+\S\ref{sec:results}, for each training regime.
 
 \begin{table}[h]
 \caption{Direct-lineage ordering signal by training regime (cosine weight distance, same-vs.\
@@ -781,7 +787,7 @@ models spanning the major developer families: OpenAI (GPT-3.5, GPT-4o / 4o-mini,
 Anthropic (Claude 3 / 3.5 / 4 Sonnet and Haiku), Google (Gemini 1.5 / 2.0 / 2.5, Gemma), Meta (Llama 2
 and 3), Mistral, DeepSeek, and Microsoft Phi. Proprietary models are queried through their providers'
 APIs; open-weight models are run locally from HuggingFace checkpoints. The analyses in
-\S\ref{sec:results:blackbox} use the $23$ models that returned valid responses on all four task
+\S\ref{sec:results} use the $23$ models that returned valid responses on all four task
 families, so that every per-task tree is built over a common leaf set. (The collection is still being
 extended with a few stragglers and architecture controls; the pipeline and metrics below are fixed.)
 
@@ -812,7 +818,7 @@ informative than scaled branch length.
     (top-left) and the four per-task Fr\'echet trees (summarization, QA, classification, translation),
     each over the 23 models common to all tasks and rendered as cladograms. Topologies differ
     substantially across tasks (pairwise normalized Robinson--Foulds $0.65$--$0.95$), which motivates
-    the multi-task aggregation reported in \S\ref{sec:results:blackbox}.}
+    the multi-task aggregation reported in \S\ref{sec:results}.}
   \label{fig:frechet_grid}
 \end{figure}
 
@@ -962,7 +968,7 @@ closer in weight space produce more similar translation outputs. The effect is
 consistent in direction across all five Flan-T5 training conditions and the full-FT decoder Llama-3.2-1B
 (centroid semantic DV; translation probe), with within-run $\bar r$ ranging from $-0.16$ to $-0.45$. The
 held-out bridge, on the paired per-prompt DV and pooled by random-effects meta-analysis, is quantified
-separately in \S\ref{sec:results:behavioral} (Table~\ref{tab:behavior_holdout}).
+separately in \S\ref{sec:results} (Table~\ref{tab:behavior_holdout}).
 
 \begin{figure}[h]
   \begin{center}
