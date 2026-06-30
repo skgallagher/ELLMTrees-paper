@@ -261,17 +261,19 @@ $m>1$ \emph{guarantees} exact recovery. It is a sufficient, conservative conditi
 worst edge under a worst-case ($\ell_\infty$) error --- so in practice NJ recovers most splits well
 before $m$ reaches $1$; the margin is small for cosine distance when updates are near-orthogonal. Because
 $m$ is an \emph{oracle} quantity (forming $D_{\mathrm{add}}$ and the $L_s$ needs the true branch lengths,
-which we do not have), we define a label-free proxy computed from $D$ alone.
+which we do not have), we define a label-free proxy computed from $D$ alone, based on the classical
+four-point condition for tree metrics \citep{buneman1971recovery}.
 
 \paragraph{Four-point additivity ($A$).} For each quartet the three pairwise-distance sums, sorted
-$s_1\ge s_2\ge s_3$, satisfy $s_1=s_2$ under an additive metric. We average the resolved fraction over
-the $Q$ quartets:
+$s_1\ge s_2\ge s_3$, satisfy $s_1=s_2$ under an additive metric \citep{buneman1971recovery}. We average
+the resolved fraction over the $Q$ quartets:
 \[
   A=\frac{1}{Q}\sum_{q=1}^{Q}\frac{s_2^{(q)}-s_3^{(q)}}{s_1^{(q)}-s_3^{(q)}}\in[0,1] ,
 \]
 which is $1$ when every quartet is perfectly additive (split resolved) and $0$ at the unresolved,
-star-like case, measuring how nearly $D$ satisfies the four-point condition NJ requires. We relate $A$
-and the oracle margin to recovery in \S\ref{sec:results:weighttree}.
+star-like case, measuring how nearly $D$ satisfies the four-point condition NJ requires; equivalently,
+$A=1-\delta$ for the quartet $\delta$-score of \citet{holland2002delta}. We relate $A$ and the oracle
+margin to recovery in \S\ref{sec:results:weighttree}.
 
 
 % -----------------------------------------------------------------------
@@ -283,7 +285,7 @@ recover training lineage, whether they predict downstream behavior, and
 whether family structure is visible from behavioral outputs alone in
 frontier models without weight access.
 
-\subsection*{Controlled and Real Training Trees}
+\paragraph{Controlled and real training trees.}
 \label{sec:exp:trees}
 % Base: Flan-T5-base (250M). Bernoulli branching, 4 tasks, 50 replications,
 % 5--8 leaves, known topology by construction.
@@ -299,18 +301,16 @@ full fine-tuning and four LoRA \citep{hu2022lora} scopes (key only; q/k/v; all f
 projections; all projections); the decoder-only models use the same training-tree instructions. We also
 validate on two real model trees from HuggingFace.
 
-\subsection{Model Parameters Contain Direct Lineage}
+\paragraph{Direct lineage.}
 Prior methods~\citep{horwitz2024mother, yu2025neural} identify parent--child pairs or correct ordering; ours does too, at the branch level (which models group on a branch). For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run point-biserial correlation (Fisher $z$-averaged across runs) between weight distance and the same-branch indicator.
 
-\subsection{Model Parameters Contain Full Lineage When There is Enough Signal}
+\paragraph{Full topology recovery.}
 \label{sec:exp:weights}
-
 Besides direct lineage, we test whether our estimates recover the full topology. From \S\ref{sec:framework:theory}, recovery should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, the recovery metrics (clade \% recovery and refinement), and \% sig (a within-run permutation test against the random-tree null), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results:weighttree}; a single global $p$-value combines the per-run $p$-values with Fisher's method. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
 
 
-\subsection{Model Parameters Can Predict Unknown Behavior}
+\paragraph{Predicting held-out behavior.}
 \label{sec:exp:behavioral}
-
 We next estimate how strongly whitebox weight distance predicts behavioral similarity on \textit{independent, held-out} probe tasks. We generate a new set of training trees in which translation is held out --- no child model is fine-tuned on translation --- then probe each leaf on translation and embed its text output with a small sentence-transformer (\texttt{all-MiniLM-L6-v2}, $384$-d), repeating each prompt three times per model. We report the random-effects DerSimonian--Laird \citeyear{dersimonianlaird1986} pooled correlation $r$ between weight distance and output-embedding similarity, on the paired per-prompt semantic distance with both quantities $z$-scored within run (placing all models and architectures on one scale). We also probe HellaSwag, which to our knowledge neither Flan nor Llama trained on.
 
 % We then estimate $r$ from the following mixed effects regression:
@@ -323,7 +323,7 @@ We next estimate how strongly whitebox weight distance predicts behavioral simil
 
 
 
-\subsection{Lineage Using Behavior from Frontier Models}
+\paragraph{Behavior-only lineage (frontier models).}
 \label{sec:exp:blackbox}
 % GPT, Claude, Gemini, Llama probed via output embeddings across 4 tasks.
 % Family structure recoverable when aggregating tasks.
@@ -520,7 +520,9 @@ whether models closer in weight space produce more similar outputs on a held-out
 (on a tree that never trained on it) and HellaSwag (untrained by either model).
 Table~\ref{tab:behavior_holdout} reports a weak but significant negative correlation for HellaSwag in
 both Llama and Flan, and for translation in Llama (the sign reverses for Flan translation) --- supporting
-\citet{cloud2025subliminal} that unexpected traits can be passed to child models.
+\citet{cloud2025subliminal} that unexpected traits can be passed to child models. Full regression
+coefficients are in Appendix~\ref{app:regression}, and the degenerate probe behavior behind the Flan
+reversal is detailed in Appendix~\ref{app:translation_probe}.
 
 
 
@@ -879,84 +881,6 @@ $r=-0.21$, one-stage mixed model with a random slope $r=-0.136$---with genuine b
 ($I^2\approx54\%$) that is not explained by leaf count. We report the DL random-effects estimate; the within-run partial
 associations underlying it are shown per condition in Fig.~\ref{fig:regression_diagnostics}.
 
-% --- Appendices temporarily disabled: within-task/robustness (deferred until a reviewer asks)
-% and the Llama dead-zone section (held pending the ongoing mechanism experiment).
-% Re-enable by removing this \iffalse ... \fi wrapper. ---
-\iffalse
-\section{Within-Task and Robustness Results}
-\label{app:robustness}
-% Subspace angles by group, within-task branch structure,
-% LoRA full RF profiles.
-% Grand means: summarization_only 80.7, translation_only 82.4,
-%              qa_only 85.8, classification_only 86.0 degrees.
-
-\TODO{Fill robustness appendix.}
-
-\section{Decoder-Only at Scale: Llama and the Coherence Bottleneck}
-\label{app:llama}
-
-We include decoder-only Llama models (3.1-8B, 3.2-1B-Instruct) as a robustness check at frontier
-scale. All groups are cloned from the tree-sample topologies (identical trees, so RF is
-directly comparable to Table~\ref{tab:rf_by_leaves}) and fine-tuned with LoRA at rank $r=8$;
-analysis uses \textsc{trained\_only=1} and \texttt{--min-leaves 4}.
-
-The headline is a \emph{dissociation}: the pairwise ordering signal survives the
-encoder-decoder$\rightarrow$decoder-only switch, but full topology recovery does not.
-Table~\ref{tab:llama_recovery} shows every Llama group beats the random null on the ordering test
-(rank-biserial $r\approx0.20$--$0.25$, all Mann-Whitney $p<10^{-6}$), yet clade recovery sits at
-$20$--$32\%$ and \emph{no} group ever beats the label permutation ($0\%$ significant
-vs.\ label)---i.e.\ it recovers task-level clustering, not within-task lineage. Contrast the
-encoder-decoder Flan-T5 full FT ($\approx90\%$ clade recovery, Table~\ref{tab:rf_by_leaves}) and
-Flan LoRA qkv ($\approx83\%$).
-
-\begin{table}[h]
-\caption{Llama topology recovery and ordering signal at $r=8$ (cosine, polytomy-aware). $s=r/d$ is
-  the per-matrix rank fraction ($d$ = model width). Clade recovery and FN are reconstruction means;
-  \% sig vs.\ label is the permutation test that controls for task-level clustering; rank-biserial
-  $r$ is the same-vs-cross branch ordering effect (all $p<10^{-6}$). Ordering signal is present
-  everywhere; topology recovery is not, and shared-direction coherence ($c\approx0.20$ for every row)
-  stays in the orthogonal regime regardless of $s$.}
-\label{tab:llama_recovery}
-\begin{center}
-\begin{tabular}{llrrrrr}
-\toprule
-Model & Variant & $s=r/d$ & Clade rec. & FN & \% sig vs.\ label & rank-bis.\ $r$ \\
-\midrule
-Llama-3.1-8B ($d{=}4096$)        & k\_only          & $2.0\!\times\!10^{-3}$ & 20\% & 1.42 & 0\% & 0.220 \\
-                                 & qkv              & $2.0\!\times\!10^{-3}$ & 25\% & 1.33 & 0\% & 0.245 \\
-\midrule
-Llama-3.2-1B-Inst.\ ($d{=}2048$) & k\_only          & $3.9\!\times\!10^{-3}$ & 26\% & 1.34 & 0\% & 0.195 \\
-                                 & qkv              & $3.9\!\times\!10^{-3}$ & 29\% & 1.26 & 0\% & 0.247 \\
-                                 & full\_ft\_approx & $3.9\!\times\!10^{-3}$ & 32\% & 1.23 & 0\% & 0.254 \\
-\bottomrule
-\end{tabular}
-\end{center}
-\end{table}
-
-The mechanism is low \emph{shared-direction coherence} (\S\ref{sec:framework:theory}): the LoRA
-updates point in mutually near-orthogonal directions (qkv cosine distance mean $0.943$, jammed at the
-ceiling), so the dominant-eigenvalue fraction $c=\lambda_1/n$ sits at $\approx0.20$ --- an essentially
-isotropic Gram with no shared lineage axis --- versus $c\approx0.99$ for every group that recovers
-topology (Flan, Pythia full FT, full-FT Llama-1B). The metric geometry NJ needs collapses, even as the
-\emph{rank order} of distances stays informative, which is why the ordering test survives while
-topology does not.
-
-A natural hypothesis was that this is pure dimensional dilution of a fixed-rank update --- that
-coherence, and with it recovery, should rise monotonically with the rank fraction $s=r/d$. A
-qkv rank sweep on Llama-3.2-1B ($r\in\{2,4,8,16,32\}$, spanning Flan's operating point) falsifies the
-clean version: clade recovery stays flat at $28$--$36\%$ with $0\%$ significant vs.\ the label
-permutation across the whole range, and $r{=}32$ ($s=1.6\!\times\!10^{-2}$, past Flan's
-$s\approx1.0\!\times\!10^{-2}$) still recovers under a third of what Flan does at lower $s$. So $s=r/d$
-is one of several things that lower coherence, not its sole determinant; coherence, measured directly,
-is the variable that gates recovery. The decisive control is the rank limit itself: lifting it to a
-full-rank update on the same trees (full-FT Llama-3.2-1B) restores coherence to $\approx1.0$ and
-recovers topology completely (every true clade, beats the label permutation;
-Table~\ref{tab:rf_by_leaves}). The Llama LoRA dead zone is therefore the low-rank orthogonality
-bottleneck, not decoder-ness or scale per se.
-
-
-\fi
-% --- end disabled appendices ---
 
 \section{Translation Probe Outputs for TaskHoldout Models}
 \label{app:translation_probe}
