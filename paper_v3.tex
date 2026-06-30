@@ -625,13 +625,17 @@ similarly.)
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/hf_llama2_trees_vs_truth.png}
   \end{center}
-  \caption{\textbf{Recovery on an organic HuggingFace model family.} Reconstructed phylogeny (left)
-    from the cosine Fr\'echet mean of cumulative weight distances over the tensors common to all ten
-    checkpoints, against the documented lineage (right), for a real Llama-2-7B family. Leaves are
-    coloured by side of the one informative split: the seven chat-derived descendants (blue) versus
-    the base model, Nous-Hermes, and Vicuna (orange). That split is recovered exactly; the remaining
-    edges are binary-forced resolutions of the polytomous truth (\S\ref{sec:framework:phylo}), not
-    lineage errors.}
+  \caption{\textbf{Recovery on an organic HuggingFace model family.} Reconstructed phylogeny (left),
+    the cosine Fr\'echet mean of cumulative weight distances over the tensors common to all ten
+    checkpoints, against the documented lineage (right), for a real Llama-2-7B family. The documented
+    lineage is drawn as the recorded rooted tree: the base \texttt{Llama-2-7b} model has three
+    children (\texttt{Llama-2-7b-chat}, Nous-Hermes, and Vicuna), and the chat model has six further
+    descendants. Nodes are coloured by side of the one informative split: \texttt{Llama-2-7b-chat}
+    and its six descendants (blue, seven models) versus the base model, Nous-Hermes, and Vicuna
+    (orange). The reconstruction places all ten models as leaves (our framework treats models as
+    leaves) but recovers that split exactly --- the blue clade is monophyletic; the remaining
+    reconstructed edges are binary-forced resolutions of the polytomous truth
+    (\S\ref{sec:framework:phylo}), not lineage errors.}
   \label{fig:real-trees}
 \end{figure}
 
