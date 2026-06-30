@@ -223,7 +223,9 @@ adopt cosine throughout: it is bounded and scale-invariant across layers, so no 
 tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$. Cosine weight
 similarity is also the prevailing choice in recent provenance and fingerprinting work
 \citep{zeng2024huref, behavioral2026provenance, zhu2025independence}, keeping our distances comparable
-to that literature.
+to that literature. For adapter-trained models we compute distances on the \emph{merged} weights---the
+base model plus its accumulated low-rank update along the root-to-node path---so every model, whether
+fully fine-tuned or LoRA-adapted, is compared on the same full-weight footing.
 
 
 
@@ -363,8 +365,8 @@ Our methods also estimate the full tree when the distance matrix is sufficiently
 Atteson margin; \S\ref{sec:framework:theory}). Aggregated over all $\geq 5$-leaf trees,
 Table~\ref{tab:rf_by_leaves} shows Flan-T5-base, Llama-3.2-1B (full FT), and the decoder-only
 Pythia-160M control all have low FN ($0.07$--$0.28$) and high clade recovery ($84$--$97\%$); the
-low-rank adapters match this once distances are cumulative (root-to-node), the Llama-3.2-1B qkv adapter
-recovering $94\%$ of clades. The within-run \% beating the label-permutation null is $35$--$50\%$ ---
+low-rank adapters match this on their merged weights (\S\ref{sec:framework:metric}), the Llama-3.2-1B
+qkv adapter recovering $94\%$ of clades. The within-run \% beating the label-permutation null is $35$--$50\%$ ---
 substantial for a within-run test --- and the global Fisher-combined statistic rejects the no-lineage
 null overwhelmingly for every condition ($p<10^{-13}$). Recovery is therefore consistent and
 significant across architectures, scales, and full-FT vs.\ low-rank training.
@@ -378,8 +380,9 @@ significant across architectures, scales, and full-FT vs.\ low-rank training.
   $=$ \% of runs recovering the \emph{entire} true tree (FN$=0$); \% sig $=$ \% of runs beating the
   label-permutation null (the harder within-run test) at $p<0.05$. Pythia-160M (matched to Flan's
   width $d=768$) and Llama-3.2-1B ($d=2048$) isolate architecture and scale from dimensional dilution;
-  the two LoRA blocks ($r=8$) show low-rank adapters recover comparably to full FT once distances are
-  cumulative (root-to-node). Global $p$ is Fisher's combination of the per-run permutation $p$-values.}
+  the two LoRA blocks ($r=8$) show low-rank adapters recover comparably to full FT when compared on
+  their merged weights (\S\ref{sec:framework:metric}). Global $p$ is Fisher's combination of the
+  per-run permutation $p$-values.}
 \label{tab:rf_by_leaves}
 \begin{center}
 \small
@@ -393,7 +396,7 @@ Flan-T5-base ($d{=}768$, enc--dec)   & 44 & 1.93 (0.21) & 0.20 (0.08) & 90\% & 8
 Pythia-160M ($d{=}768$, dec-only)    & 44 & 1.66 (0.18) & 0.07 (0.05) & 97\% & 95\% & 50\% \\
 Llama-3.2-1B ($d{=}2048$, dec-only)  & 40 & 2.05 (0.25) & 0.28 (0.08) & 84\% & 75\% & 35\% \\
 \midrule
-\multicolumn{7}{l}{\textit{LoRA ($r{=}8$, cumulative distances)}} \\
+\multicolumn{7}{l}{\textit{LoRA ($r{=}8$, merged weights)}} \\
 Flan-T5-base qkv (enc--dec)          & 43 & 2.12 (0.26) & 0.30 (0.09) & 82\% & 74\% & 37\% \\
 Llama-3.2-1B qkv (dec-only)          & 44 & 1.80 (0.20) & 0.14 (0.07) & 94\% & 91\% & 48\% \\
 \bottomrule
@@ -454,14 +457,17 @@ recovery adequately, making it a practical tool.
 Table~\ref{tab:variants} summarizes signal and recovery across regimes: both the ordering signal and
 topology recovery are stable from the narrowest LoRA scope (key only) through full fine-tuning. The
 within-run ordering correlation strengthens modestly with more trained parameters, while topology
-recovery stays high throughout (clade recovery $82$--$96\%$, refinement $72$--$94\%$) once distances are
-cumulative. Notably, Llama-3.2-1B LoRA adapters recover as well as or better than Flan full FT ---
-low-rank adaptation does not cost lineage recoverability.
+recovery stays high throughout (clade recovery $82$--$96\%$, refinement $72$--$94\%$). Notably,
+Llama-3.2-1B LoRA adapters recover as well as or better than Flan full FT --- low-rank adaptation does
+not cost lineage recoverability. The stronger within-run ordering correlation for the Llama adapters
+than for Llama full FT reflects the \textsc{trained\_only} restriction: the adapter distance is read
+from the q/k/v updates alone, whereas the full-FT distance averages over all tensors, including the
+noisier layer norms and embeddings.
 
 % Table 2: training-regime variants (Flan-T5 + Llama-3.2-1B)
 \begin{table}[t]
 \caption{Lineage signal and recovery by training regime (cosine; \textsc{trained\_only=1} for LoRA,
-  Llama LoRA distances cumulative). \emph{Ordering:} Fisher-$z$ $r$ is the within-run correlation
+  Llama LoRA distances on merged weights). \emph{Ordering:} Fisher-$z$ $r$ is the within-run correlation
   between cosine distance and the same-branch indicator (SD over runs, $\geq 4$ leaves).
   \emph{Topology:} RF and FN (true clades missed) are polytomy-aware NJ means (SE in parentheses);
   clade recovery $=1-\mathrm{FN}/|\text{true splits}|$, refinement $=$ \% runs with $\mathrm{FN}=0$.
@@ -495,7 +501,7 @@ Variant & $n$ & Fisher-$z$ $r$ (SD) & RF (SE) & FN (SE) & Clade rec. & Refinemen
 
 Finally, we move to organic model families on HuggingFace. Figure~\ref{fig:real-trees} compares our
 reconstruction against the documented lineage for ten public Llama-2-7B checkpoints whose relationships
-are recorded on their model cards. Using cumulative cosine distances over the common tensors and the
+are recorded on their model cards. Using cosine distances over the common tensors and the
 Fr\'echet (Sturm) mean, we recover the single informative split --- the seven chat-derived models versus
 the base/Nous-Hermes/Vicuna group --- exactly ($100\%$ clade recovery, $95.2\%$ Fr\'echet support). The
 pipeline we validate against synthetic ground truth thus reconstructs ancestry in an uncontrolled
@@ -507,7 +513,7 @@ Flan-T5 depth-3 branch recovers its informative clade similarly.)
     \includegraphics[width=0.72\linewidth]{\figpath/hf_llama2_trees_vs_truth.png}
   \end{center}
   \caption{\textbf{Recovery on an organic HuggingFace model family.} Reconstructed phylogeny (left;
-    cosine Fr\'echet mean of cumulative weight distances over tensors common to all ten checkpoints)
+    cosine Fr\'echet mean of weight distances over tensors common to all ten checkpoints)
     against the documented lineage (right) for a real Llama-2-7B family. Nodes are coloured by side
     of the one informative split: \texttt{Llama-2-7b-chat} and its six descendants (blue) versus
     base, Nous-Hermes, and Vicuna (orange). The reconstruction treats all models as leaves but
@@ -741,7 +747,7 @@ Table~\ref{tab:direct} gives the full same-vs.-cross-branch ordering statistics 
   pairwise distances pooled over runs; rank-biserial is its effect size (larger $=$ siblings
   closer). Within-run $r$ is the point-biserial correlation between distance and the same-branch
   indicator, Fisher $z$-averaged over the $N$ runs with within-run variation ($\geq 4$ leaves).
-  All Llama LoRA distances are cumulative (root-to-node), the measurement used throughout.}
+  All Llama LoRA distances are computed on merged weights (\S\ref{sec:framework:metric}), as throughout.}
 \label{tab:direct}
 \begin{center}
 \begin{tabular}{llrrr}
@@ -796,8 +802,7 @@ Anthropic (Claude 3 / 3.5 / 4 Sonnet and Haiku), Google (Gemini 1.5 / 2.0 / 2.5,
 and 3), Mistral, DeepSeek, and Microsoft Phi. Proprietary models are queried through their providers'
 APIs; open-weight models are run locally from HuggingFace checkpoints. The analyses in
 \S\ref{sec:results} use the $23$ models that returned valid responses on all four task
-families, so that every per-task tree is built over a common leaf set. (The collection is still being
-extended with a few stragglers and architecture controls; the pipeline and metrics below are fixed.)
+families, so that every per-task tree is built over a common leaf set.
 
 \paragraph{Prompts and decoding.} Each model answers a shared bank of $315$ prompts drawn from four task
 families---summarization, question answering, classification, and translation. Prompts are issued with
@@ -870,7 +875,7 @@ lora\_full\_attn       & $-32.0$  & $-0.027$  & $-0.12$ & $0.008$ \\
 lora\_full\_ft\_approx & $-52.2$  & $-0.031$  & $-0.14$ & $0.007$ \\
 Tree sample (full FT)  & $-7.40$  & $-0.019$  & $-0.13$ & $0.002$ \\
 \midrule
-\multicolumn{5}{l}{\textit{Llama-3.1-8B (decoder-only; cumulative weight distance)}} \\
+\multicolumn{5}{l}{\textit{Llama-3.1-8B (decoder-only; merged weights)}} \\
 k\_only (translation, seen)   & $+0.0002$ & $-0.0001$ & $-0.01$ & $0.76$ \\
 k\_only (HellaSwag, held-out) & $-0.012$  & $-0.0028$ & $-0.16$ & $0.003$ \\
 \bottomrule
@@ -882,7 +887,10 @@ The coefficients above use the per-run \emph{centroid} semantic DV (one embeddin
 held-out bridge in the main text (Table~\ref{tab:behavior_holdout}) instead uses the \emph{paired}
 per-prompt semantic distance, which removes the shared prompt-content confound and strengthens the
 association in every group; we report the paired DV in the main text and keep the centroid DV here for
-continuity with the per-condition effect sizes.
+continuity with the per-condition effect sizes. The Llama rows here are the 8B decoder, included as an
+additional scale point; the headline held-out bridge in Table~\ref{tab:behavior_holdout} rests on the
+full-FT Llama-3.2-1B and Flan-T5 models. The two agree where they overlap --- held-out HellaSwag is
+negative and significant for the 8B decoder here ($-0.16$) as for the 1B in the main text ($-0.20$).
 
 \paragraph{Pooling estimator.} Because each run has its own tree and hence its own weight-space scale, a
 raw pooled slope is not meaningful across runs; we therefore standardize within run (equivalently, treat
