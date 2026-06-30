@@ -298,7 +298,7 @@ frontier models without weight access.
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
 % Controlled design enables RF evaluation — all competitors lack this.
 
-To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 8 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair, giving us the full parameters of each leaf. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage (e.g.\ parent--child relationships) and full lineage recovery.
+To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 8 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair, giving us the full parameters of each leaf. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage (e.g.\ parent--child relationships) and full lineage estimation.
 
 We vary the root model, task types, and trained layers. We examine an encoder--decoder model
 (Flan-T5-base, 250M) and decoder-only models (Pythia-160M, Llama-3.2-1B, and the more frontier-scale
@@ -312,7 +312,7 @@ Prior methods~\citep{horwitz2024mother, yu2025neural} identify parent--child pai
 
 \paragraph{Full topology estimation.}
 \label{sec:exp:weights}
-Besides direct lineage, we test whether our method estimates the full topology. From \S\ref{sec:framework:theory}, recovery should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, the recovery metrics (clade \% recovery and refinement), and \% sig (a within-run permutation test against the random-tree null), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}; a single global $p$-value combines the per-run $p$-values with Fisher's method. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
+Besides direct lineage, we test whether our method estimates the full topology. From \S\ref{sec:framework:theory}, recovery should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, the recovery metrics (clade \% recovery and refinement), and \% sig (a within-run permutation test against the label-permutation null), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}; a single global $p$-value combines the per-run $p$-values with Fisher's method. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
 
 
 \paragraph{Predicting held-out behavior.}
@@ -619,8 +619,15 @@ illuminates the need to consider models holistically, not as a series of benchma
 
 
 % -----------------------------------------------------------------------
-\subsubsection*{Acknowledgments}
-\TODO{AI statement}
+% Author acknowledgments omitted for double-blind review; add at camera-ready.
+
+\subsubsection*{Use of Large Language Models}
+In accordance with the ICLR policy on LLM usage, we disclose that LLM-based assistants were used
+solely for editing and presentation of this manuscript: condensing prose to meet the page limit,
+standardizing terminology, copy-editing, and formatting tables and figures. LLMs were not used to
+generate research ideas, design or run experiments, produce or analyze results, or formulate the
+scientific claims, which are the authors' own. The authors verified all text, numerical results, and
+citations, and take full responsibility for the content.
 
 % -----------------------------------------------------------------------
 \bibliography{references}
