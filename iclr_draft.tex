@@ -51,7 +51,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-With over a million open models on HuggingFace and a handful of frontier labs constantly updating and releasing models, most models are fine-tuned descendants of only a few ancestors.  However, the true lineage may be undocumented. Model provenance, auditing, and safe deployment all benefit from access to this model lineage, revealing both internal (e.g weights) and external traits (e.g. behavior). We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether we can estimate the model lineage from a set of models. We study lineage at three levels of access: estimation from weight changes alone, the link between those weight changes and behavior, and estimation from behavior alone. We find that the full training tree is recoverable against a known ground-truth tree; that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline estimates frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, we find that lineage estimation is not only possible but is guided by the Atteson margin.
+With over a million open models on HuggingFace and a handful of frontier labs constantly updating and releasing models, most models are fine-tuned descendants of only a few ancestors.  However, the true lineage may be undocumented. Model provenance, auditing, and safe deployment all benefit from access to this model lineage, revealing both internal (e.g.\ weights) and external traits (e.g.\ behavior). We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether we can estimate the model lineage from a set of models. We study lineage at three levels of access: estimation from weight changes alone, the link between those weight changes and behavior, and estimation from behavior alone. We find that the full training tree is recoverable against a known ground-truth tree; that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline estimates frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, we find that lineage estimation is not only possible but is guided by the Atteson margin.
 
 \end{abstract}
 
@@ -131,13 +131,13 @@ LLM lineage has become an increasingly studied topic, appearing in three broad f
 \emph{model-parameter} studies, \emph{weight--behavior} studies that align parameters with
 outputs, and \emph{response-output} studies. Across these forms the work is driven by a range of
 applications: provenance and intellectual property (IP)
-\citep{horwitz2024mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
+\citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
 \citep{cloud2025subliminal}, inheritance of traits from parent models
 \citep{cloud2025subliminal, agents2026same}, and data inquiries and auditing
 \citep{zhu2025independence}.
 
 \textbf{Model parameters.} Several works trace parameter changes from fine-tuning or RLHF back to parent models. MoTHer
-\citep{horwitz2024mother} recovers family trees from weight similarity via a directed minimum spanning
+\citep{horwitz2025mother} recovers family trees from weight similarity via a directed minimum spanning
 tree; \citet{yu2025neural} recover parent--child and grandparent--child lineage with both a
 learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct
 lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral
@@ -218,7 +218,7 @@ construction in Appendix~\ref{app:null}.
 \label{sec:framework:metric}
 
 We use vector-based norms (rather than matrix norms) for portability across architectures, considering
-cosine, correlation, $\ell_1$, and $\ell_2$ (the last used in MoTHer~\citep{horwitz2024mother}). We
+cosine, correlation, $\ell_1$, and $\ell_2$ (the last used in MoTHer~\citep{horwitz2025mother}). We
 adopt cosine throughout: it is bounded and scale-invariant across layers, so no single high-magnitude
 tensor (e.g.\ the noisy layer norms) dominates, unlike the unbounded $\ell_1$/$\ell_2$. Cosine weight
 similarity is also the prevailing choice in recent provenance and fingerprinting work
@@ -253,7 +253,7 @@ Estimating lineage poses two questions of differing difficulty. \emph{Ordering} 
 sibling (same-branch) pairs are closer than cousin (cross-branch) pairs; pooling all $O(n^2)$
 comparisons per run across $50$ runs, the Mann--Whitney $U$ statistic (equivalently a within-run rank
 correlation) detects it even when no single pair is decisive. This is the pairwise-ancestry signal
-parent--child methods like MoTHer \citep{horwitz2024mother} and Neural Lineage
+parent--child methods like MoTHer \citep{horwitz2025mother} and Neural Lineage
 \citep{yu2024neurallineage} rely on; we report it in \S\ref{sec:results}. \emph{Lineage} ---
 asking neighbor-joining (NJ) to return the full training history --- is harder. NJ is exact under
 conditions on tree additivity, which model-parameter distances satisfy only approximately; Atteson's
@@ -310,7 +310,7 @@ projections; all projections); the decoder-only models use the same training-tre
 validate on two real model lineages from HuggingFace.
 
 \paragraph{Direct lineage.}
-Prior methods~\citep{horwitz2024mother, yu2025neural} identify parent--child pairs or correct ordering; ours does too, at the branch level (which models group on a branch). For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run point-biserial correlation (Fisher $z$-averaged across runs) between weight distance and the same-branch indicator.
+Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pairs or correct ordering; ours does too, at the branch level (which models group on a branch). For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run point-biserial correlation (Fisher $z$-averaged across runs) between weight distance and the same-branch indicator.
 
 \paragraph{Full topology estimation.}
 \label{sec:exp:weights}
@@ -319,7 +319,7 @@ Besides direct lineage, we test whether our method estimates the full topology. 
 
 \paragraph{Predicting held-out behavior.}
 \label{sec:exp:behavioral}
-We next estimate how strongly whitebox weight distance predicts behavioral similarity on \textit{independent, held-out} probe tasks. We generate a new set of training trees in which translation is held out --- no child model is fine-tuned on translation --- then probe each leaf on translation and embed its text output with a small sentence-transformer (\texttt{all-MiniLM-L6-v2}, $384$-d), repeating each prompt three times per model. We report the random-effects DerSimonian--Laird \citeyear{dersimonianlaird1986} pooled correlation $r$ between weight distance and output-embedding similarity, on the paired per-prompt semantic distance with both quantities $z$-scored within run (placing all models and architectures on one scale). We also probe HellaSwag, which to our knowledge neither Flan nor Llama trained on.
+We next estimate how strongly whitebox weight distance predicts behavioral similarity on \textit{independent, held-out} probe tasks. We generate a new set of training trees in which translation is held out --- no child model is fine-tuned on translation --- then probe each leaf on translation and embed its text output with a small sentence-transformer (\texttt{all-MiniLM-L6-v2}, $384$-d), repeating each prompt three times per model. We report the random-effects DerSimonian--Laird \citep{dersimonianlaird1986} pooled correlation $r$ between weight distance and output-embedding similarity, on the paired per-prompt semantic distance with both quantities $z$-scored within run (placing all models and architectures on one scale). We also probe HellaSwag, which to our knowledge neither Flan nor Llama trained on.
 
 % We then estimate $r$ from the following mixed effects regression:
 % \begin{equation}\label{eq:reg}
@@ -355,7 +355,7 @@ Direct ancestry is recovered under every condition. The same-vs.-cross-branch or
 cross-branch pairs throughout (one-sided Mann--Whitney $p<10^{-25}$), with rank-biserial correlations
 from $0.43$ (Flan LoRA, key only) to $0.96$ (Llama LoRA) and within-run Fisher $z$-averaged correlations
 from $-0.60$ to $-0.94$ --- across architectures (Flan-T5, Pythia, Llama), scales (160M--8B), and regimes
-(full FT and LoRA). This is the level at which parent--child methods like MoTHer \citep{horwitz2024mother}
+(full FT and LoRA). This is the level at which parent--child methods like MoTHer \citep{horwitz2025mother}
 and Neural Lineage \citep{yu2025neural, yu2024neurallineage} operate;
 we go further to the full topology below.
 
@@ -421,8 +421,9 @@ null series: weight access, not behavior, is what enables per-run topology recov
     bands mean $\pm$ 2\,SE), for an encoder--decoder (Flan-T5-base) and a decoder (Llama-3.2-1B,
     full FT), both with translation held out of training. FN (vs.\ total RF) removes the
     binary-forced FP the multifurcating truth induces equally for signal and null. In both
-    architectures whitebox FN is $\approx 0$ at every tree size, while the behavioral probe tracks
-    the null: behavioral similarity is a pairwise lineage gradient, not a recoverable topology.
+    architectures whitebox FN stays low at every tree size and well below both the behavioral and
+    null series, while the behavioral probe tracks the null: behavioral similarity is a pairwise
+    lineage gradient, not a recoverable topology.
     Weight access is what enables per-run tree recovery.}
   \label{fig:behavioral_vs_whitebox}
 \end{figure}
