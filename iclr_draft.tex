@@ -502,25 +502,29 @@ Variant & $n$ & Fisher-$z$ $r$ (SD) & RF (SE) & FN (SE) & Clade rec. & Refinemen
 \end{table}
 
 Finally, we move to organic model families on HuggingFace. Figure~\ref{fig:real-trees} compares our
-reconstruction against the documented lineage for ten public Llama-2-7B checkpoints whose relationships
-are recorded on their model cards. Using cosine distances over the common tensors and the
-Fr\'echet (Sturm) mean, we recover the single informative split --- the seven chat-derived models versus
-the base/Nous-Hermes/Vicuna group --- exactly ($100\%$ clade recovery, $95.2\%$ Fr\'echet support). The
-pipeline we validate against synthetic ground truth thus reconstructs ancestry in an uncontrolled
-setting with heterogeneous, sharded checkpoints and undocumented intermediate training. (An organic
-Flan-T5 depth-3 branch recovers its informative clade similarly.)
+reconstruction against the documented lineage for ten public Mistral-7B-v0.1 checkpoints --- base,
+instruct, and three independent SFT$\to$RLHF/DPO forks (Zephyr, and two OpenChat/Starling lines) ---
+whose relationships are recorded on their model cards. Using cosine distances over the common tensors
+and the Fr\'echet (Sturm) mean, we recover all three informative splits exactly ($100\%$ clade
+recovery, FN$=0$, $p\le0.003$ against a label-shuffle null for each), with near-perfect four-point
+additivity on the informative quartets ($\bar{A}=0.98$, $100\%$ quartet-split accuracy). The pipeline
+we validate against synthetic ground truth thus reconstructs ancestry in an uncontrolled setting with
+heterogeneous checkpoints and undocumented intermediate training, recovering multiple independent
+branches of the same tree rather than a single split. (Organic Flan-T5 and Llama-2-7B branches
+recover their informative clades similarly.)
 
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=0.72\linewidth]{\figpath/hf_llama2_trees_vs_truth.png}
+    \includegraphics[width=0.72\linewidth]{\figpath/hf_mistral_trees_vs_truth.png}
   \end{center}
-  \caption{\textbf{Recovery on an organic HuggingFace model family.} Reconstructed phylogeny (left;
-    cosine Fr\'echet mean of weight distances over tensors common to all ten checkpoints)
-    against the documented lineage (right) for a real Llama-2-7B family. Nodes are coloured by side
-    of the one informative split: \texttt{Llama-2-7b-chat} and its six descendants (blue) versus
-    base, Nous-Hermes, and Vicuna (orange). The reconstruction treats all models as leaves but
-    recovers that split exactly; remaining edges are binary-forced resolutions of the polytomous
-    truth (\S\ref{sec:framework:phylo}), not lineage errors.}
+  \caption{\textbf{Recovery on an organic HuggingFace model family.} Documented lineage (left) against
+    the reconstructed phylogeny (right; cosine Fr\'echet mean of weight distances over tensors common
+    to all ten checkpoints) for a real Mistral-7B-v0.1 family. Leaves are coloured by the three
+    documented SFT$\to$RLHF/DPO forks: Zephyr (blue), OpenChat-3.5$\to$Starling-alpha (red), and
+    OpenChat-3.5-0106$\to$Starling-beta (green); grey leaves (base, instruct, two independent
+    OpenHermes SFTs) have no informative sibling. The reconstruction treats all models as leaves but
+    recovers all three coloured pairs as clades exactly; remaining edges are binary-forced
+    resolutions of the polytomous truth (\S\ref{sec:framework:phylo}), not lineage errors.}
   \label{fig:real-trees}
 \end{figure}
 
