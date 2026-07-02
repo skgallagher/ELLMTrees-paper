@@ -210,10 +210,14 @@ LLM DNA \citep{wu2026llmdna}              & behavior & \checkmark  & \ding{55}  
 \label{sec:framework}
 % -----------------------------------------------------------------------
 
-In this section, we define our terms and notation and establish the statistical framework underlying our experiments.
-
-
-Like \citep{wu2026llmdna}, we use phylogenies and LLM ``DNA'' to estimate properties of parent--child training. We assume, like \citep{yu2025neural} but unlike \citep{horwitz2025mother}, that all nodes derive from a single root. Unlike prior work, we estimate partial topology across all nodes, not just parent--child pairs: we form a distance matrix and apply neighbor-joining \citep{saitou1987neighbor} to estimate the tree. We use standard phylogenetics terms throughout: a \emph{phylogeny} is a tree whose leaves are the observed models and whose internal nodes are latent common ancestors, and a \emph{clade} is the set of leaves sharing one such ancestor (equivalently, one branch of the tree). Estimating a clade thus means correctly grouping the models that descend from a common ancestor.
+We define our terms, notation, and the statistical framework underlying our experiments.
+Like \citep{wu2026llmdna}, we use phylogenies and LLM ``DNA'' to estimate parent--child training, and
+assume, like \citep{yu2025neural} but unlike \citep{horwitz2025mother}, that all nodes derive from a
+single root. Unlike prior work, we estimate partial topology across all nodes, not just parent--child
+pairs: we form a distance matrix and apply neighbor-joining \citep{saitou1987neighbor} to estimate the
+tree. A \emph{phylogeny} is a tree whose leaves are the observed models and whose internal nodes are
+latent common ancestors; a \emph{clade} is the set of leaves sharing one such ancestor (one branch of
+the tree), so estimating a clade means correctly grouping the models descending from a common ancestor.
 
 
 \subsection{Phylogenetic Tree Estimation}
@@ -535,12 +539,12 @@ reconstruction against the documented lineage for ten public Mistral-7B-v0.1 che
 instruct, and three independent SFT$\to$RLHF/DPO forks (Zephyr, and two OpenChat/Starling lines) ---
 whose relationships are recorded on their model cards. Using cosine distances over the common tensors
 and the Fr\'echet (Sturm) mean, we recover all three informative splits exactly ($100\%$ clade
-recovery, FN$=0$, $p\le0.003$ against a label-shuffle null for each), with near-perfect four-point
+recovery, FN$=0$, $p\le0.003$ against a label-shuffle null each), with near-perfect four-point
 additivity on the informative quartets ($\bar{A}=0.98$, $100\%$ quartet-split accuracy). The pipeline
-we validate against synthetic ground truth thus reconstructs ancestry in an uncontrolled setting with
+validated against synthetic ground truth thus reconstructs ancestry in an uncontrolled setting with
 heterogeneous checkpoints and undocumented intermediate training, recovering multiple independent
-branches of the same tree rather than a single split. (Organic Flan-T5 and Llama-2-7B branches
-recover their informative clades similarly.)
+branches rather than a single split. (Organic Flan-T5 and Llama-2-7B branches recover their informative
+clades similarly.)
 
 \begin{figure}[t]
   \begin{center}
@@ -650,27 +654,25 @@ prompts.
 Our results further corroborate that attention layers are critical to LLM learning, here for ancestry,
 with cross-attention a stronger lineage carrier than self-attention (to be validated on more
 architectures). Update geometry matters --- near-orthogonal updates are hard to recover, one reason
-cosine distance is central --- and the work foregrounds full-access vs.\ inference-only auditing: full
-access gives the best recovery, yet weight changes track behavioral changes even on held-out tasks.
+cosine distance is central --- and full weight access gives the best recovery, though weight changes
+track behavior even on held-out tasks.
 
 Limitations: parameter-based estimation currently requires an identical architecture (so Llama cannot be
-compared directly to Mistral), and our controlled tree-generation is simple, which we partly mitigate
-with the real-world example. Future work includes relating models across architectures (e.g.\ via
-CKA~\citep{kornblith2019similarity}) and probing the mechanism of inheritance. We hope this work
-illuminates the need to consider models holistically, not as a series of benchmarks.
+compared to Mistral), and our controlled tree-generation is simple, partly mitigated by the real-world
+validation. Future work includes relating models across architectures (e.g.\ via
+CKA~\citep{kornblith2019similarity}) and probing the mechanism of inheritance.
 
 
 % -----------------------------------------------------------------------
 % Author acknowledgments omitted for double-blind review; add at camera-ready.
 
 \subsubsection*{Use of Large Language Models}
-In accordance with the ICLR policy on LLM usage, we disclose that LLM-based coding and writing
-assistants were used substantially during this project. Their uses included writing and debugging
-code throughout the experimental pipeline---data processing, weight-distance computation, tree
-reconstruction and scoring, statistical analysis, and figure and table generation---as well as editing
-the manuscript (condensing prose, standardizing terminology, and formatting). The research questions,
-experimental design, and scientific claims are the authors' own, and the authors reviewed and verified
-all code, numerical results, figures, and citations, taking full responsibility for the content.
+In accordance with the ICLR policy on LLM usage, we disclose that LLM-based assistants were used
+substantially, including writing and debugging code across the experimental pipeline (data processing,
+weight-distance computation, tree reconstruction and scoring, statistical analysis, figures and tables)
+and editing the manuscript. The research questions, experimental design, and scientific claims are the
+authors' own, and the authors verified all code, results, figures, and citations, taking full
+responsibility for the content.
 
 % -----------------------------------------------------------------------
 \bibliography{references}
