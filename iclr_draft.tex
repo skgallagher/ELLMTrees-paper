@@ -521,7 +521,9 @@ instruct, and three independent SFT$\to$RLHF/DPO forks (Zephyr, and two OpenChat
 whose relationships are recorded on their model cards. Using cosine distances over the common tensors
 and the Fr\'echet (Sturm) mean, we recover all three informative splits exactly ($100\%$ clade
 recovery, FN$=0$, $p\le0.003$ against a label-shuffle null each), with near-perfect four-point
-additivity on the informative quartets ($\bar{A}=0.98$, $100\%$ quartet-split accuracy). On the identical
+additivity on the informative quartets ($\bar{A}=0.98$, $100\%$ quartet-split accuracy; $\bar{A}=0.86$
+over all $210$ quartets, the lower value coming from the uninformative quartets that fall inside the
+polytomous root and carry no true resolution). On the identical
 family and truth, the same figure contrasts weight-based (whitebox) recovery with behavior-only (blackbox)
 estimation from the models' translation outputs: the whitebox tree recovers all three forks, whereas the
 blackbox tree recovers only one --- a direct, ground-truth-anchored comparison of the two access levels on
@@ -579,30 +581,24 @@ behind the Flan reversal is detailed in Appendix~\ref{app:translation_probe}.
 per-prompt semantic distance, both $z$-scored within run, so $r$ is comparable across cells). ``Held-out''
 probes had no node trained on them; translation is reported both when it is in the training mix and when
 it is withheld from every node. Negative $r$ (closer in weight space $\Rightarrow$ more similar behavior)
-supports the bridge. $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$. $^\dagger$centroid DV rather than paired
-per-prompt DV; on the completed HellaSwag comparison, the paired estimate is modestly stronger. $^\ddagger$degenerate Flan
-probe (translation reversal / multiple-choice vocabulary collapse, App.~\ref{app:translation_probe});
-reported for completeness, not interpreted as evidence for or against the bridge. Full per-condition CIs
-and coefficients in App.~\ref{app:regression}.}
+supports the bridge. $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$. Every reported cell uses the paired
+per-prompt DV. $^\ddagger$degenerate Flan probe (translation reversal, App.~\ref{app:translation_probe});
+reported for completeness, not interpreted as evidence for or against the bridge. Flan's
+multiple-choice held-out probes (ARC-C, MMLU, TruthfulQA) collapse onto trained-task label vocabulary on
+single-task-per-leaf trees (App.~\ref{app:translation_probe}) and so are not reported (---). Full
+per-condition CIs and coefficients in App.~\ref{app:regression}.}
 \label{tab:behavior_holdout}
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
-% Llama cells are now PAIRED DV (built 2026-07-02 via build_holdout_probes_paired.sh):
-% seen-group ARC -0.260 [-0.36,-0.15] p=3e-6, MMLU -0.250 [-0.36,-0.13] p=6e-5,
-% TruthfulQA -0.327 [-0.44,-0.21] p=3e-7.  The three Flan ($^\dagger$) cells are the
-% ONLY remaining centroid cells (no_translation_v2 not re-embedded; they are degenerate
-% $^\ddagger$ probes anyway): ARC +0.041 p=0.41, MMLU +0.098 p=0.028, TruthfulQA +0.046 p=0.40.
-% Llama true-held-out (_notrans) PAIRED replication (prose): ARC -0.281 p=2e-6,
-% MMLU -0.306 p=1e-7, TruthfulQA -0.305 p=7e-7 (translation -0.333).
 \begin{tabular}{lcccccc}
 \toprule
  & \multicolumn{2}{c}{Translation} & HellaSwag & ARC-C & MMLU & TruthfulQA \\
 \cmidrule(lr){2-3}
 Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
-Llama-3.2-1B & $-0.29^{***}$ & $-0.33^{***}$ & $-0.20^{***}$ & $-0.26^{***}$ & $-0.25^{***}$ & $-0.33^{***}$ \\
-Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & $+0.04^{\dagger\ddagger}$ & $+0.10^{*\dagger\ddagger}$ & $+0.05^{\dagger\ddagger}$ \\
+Llama-3.2-1B & $-0.29^{***}$ & $-0.33^{***}$ & $-0.22^{***}$ & $-0.26^{***}$ & $-0.25^{***}$ & $-0.33^{***}$ \\
+Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}

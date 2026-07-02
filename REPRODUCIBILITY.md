@@ -49,7 +49,7 @@ pdfinfo _b.pdf | grep Pages     # main text ends p9; refs p10+ don't count to th
 |---|---|---|---|---|
 | Llama-3.2-1B full-FT | Translation | held-out (`_notrans`) | **−0.333** | 4.9e-9 |
 | Llama-3.2-1B full-FT | Translation | trained | −0.294 | 1.2e-5 |
-| Llama-3.2-1B full-FT | HellaSwag | held-out | −0.204 | 9e-4 |
+| Llama-3.2-1B full-FT | HellaSwag | held-out | −0.215 | 4.6e-4 |
 | Flan-T5 full-FT | Translation | trained (`branching_v3`) | −0.260 | 3.4e-7 |
 | Flan-T5 full-FT | HellaSwag | held-out (`branching_v3`) | −0.292 | 1.1e-10 |
 | Flan-T5 full-FT | Translation | held-out (`no_translation_v2`) | +0.113 | 0.024 |
