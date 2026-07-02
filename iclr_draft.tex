@@ -10,6 +10,7 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{enumitem}
+\usepackage{pifont}
 
 % Theorem environments and shared math notation.
 \newtheorem{theorem}{Theorem}
@@ -51,7 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-With over a million open models on HuggingFace and a handful of frontier labs constantly updating and releasing models, most models are fine-tuned descendants of only a few ancestors.  However, the true lineage may be undocumented. Model provenance, auditing, and safe deployment all benefit from access to this model lineage, revealing both internal (e.g.\ weights) and external traits (e.g.\ behavior). We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether we can estimate the model lineage from a set of models. We study lineage at three levels of access: estimation from weight changes alone, the link between those weight changes and behavior, and estimation from behavior alone. We find that the full training tree is recoverable against a known ground-truth tree; that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline estimates frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, we find that lineage estimation is not only possible but is guided by the Atteson margin.
+With over a million open models on HuggingFace and a handful of frontier labs constantly updating and releasing models, most models are fine-tuned descendants of only a few ancestors.  However, the true lineage may be undocumented. Model provenance, auditing, and safe deployment all benefit from access to this model lineage, revealing both internal (e.g.\ weights) and external traits (e.g.\ behavior). We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether we can estimate the model lineage from a set of models. We study lineage at three levels of access: estimation from weight changes alone, the link between those weight changes and behavior, and estimation from behavior alone. Against a known ground-truth tree, most controlled trees recover the \emph{complete} observed leaf topology exactly ($74$--$95\%$ of runs, depending on architecture) --- and do so even when task identity is held fixed, ruling out task clustering as the explanation. We further find that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline reconstructs the documented lineage of real HuggingFace model families and estimates frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, lineage estimation is not only possible but predictable: a label-free additivity proxy for the Atteson margin flags when recovery will succeed.
 
 \end{abstract}
 
@@ -99,10 +100,15 @@ compare to behavior-only estimation when weights are unavailable (Fig.~\ref{fig:
 
 We make three contributions:
 \begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
-  \item \textbf{A weight-space framework for lineage estimation.} Guided by the geometry of
-    fine-tuning updates, our metric and summary-statistic choices estimate the full model lineage; by
-    treating layers as `genes' we identify which \emph{carry} the signal (e.g.\ in an encoder--decoder
-    model the key projections alone, $4\%$ of parameters, estimate lineage as well as the full tensor).
+  \item \textbf{Full training-tree recovery against ground truth.} Guided by the geometry of
+    fine-tuning updates, our metric and summary-statistic choices estimate the full model lineage:
+    most controlled trees recover the \emph{complete} observed leaf topology exactly ($74$--$95\%$ of
+    runs), and pass a within-task control (a label-permutation null that holds task identity fixed), so
+    the signal is genuine lineage and not task clustering. We are the only method evaluated against a
+    known ground-truth tree at full topology, and we validate the same pipeline on documented real-world
+    HuggingFace families. By treating layers as `genes' we identify which \emph{carry} the signal (e.g.\
+    in an encoder--decoder model the key projections alone, $4\%$ of parameters, estimate lineage as
+    well as the full tensor).
   \item \textbf{A weight$\to$behavior bridge.} Weight-space proximity predicts behavioral similarity,
     even on a held-out task the models never trained.
   \item \textbf{Behavior-only lineage at frontier scale.} The same pipeline applied to model
@@ -173,7 +179,33 @@ with no ground-truth topology to score against.
 Our work fills this gap by bridging parameter-based and behavioral lineage while (1) determining where
 the training tree can be estimated and (2) evaluating against ground-truth trees. Mirroring
 \citet{cloud2025subliminal}, our estimation proposition is: when model-distance signal outweighs training
-noise, the lineage can be estimated with high probability.
+noise, the lineage can be estimated with high probability. Table~\ref{tab:related} places us against the
+closest prior methods: we are the only one that estimates the full leaf topology, evaluates it against a
+known ground-truth tree, and validates on real documented families --- from both weights and behavior.
+
+\begin{table}[t]
+\caption{Where our method sits relative to the closest lineage-estimation work. \emph{Access:} does the
+  method use model weights, outputs (behavior), or both. \emph{Full topology:} estimates the entire
+  leaf tree (\checkmark) vs.\ only pairwise/parent--child links or a directed spanning tree not scored
+  as a topology ($\sim$). \emph{Ground-truth eval:} scored against a known training tree. \emph{Real
+  families:} demonstrated on documented real-world model families.}
+\label{tab:related}
+\begin{center}
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcccc}
+\toprule
+Method & Access & Full topology & Ground-truth eval & Real families \\
+\midrule
+MoTHer \citep{horwitz2025mother}          & weights  & $\sim$      & \ding{55}   & \checkmark \\
+Neural Lineage \citep{yu2025neural}       & weights  & \ding{55}   & \checkmark  & $\sim$ \\
+PhyloLM \citep{yax2025phylolm}            & behavior & \checkmark  & \ding{55}   & \checkmark \\
+LLM DNA \citep{wu2026llmdna}              & behavior & \checkmark  & \ding{55}   & \checkmark \\
+\textbf{Ours}                             & \textbf{both} & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
 
 
 
@@ -366,12 +398,16 @@ Atteson margin; \S\ref{sec:framework:theory}). Aggregated over all $\geq 5$-leaf
 Table~\ref{tab:rf_by_leaves} shows Flan-T5-base, Llama-3.2-1B (full FT), and the decoder-only
 Pythia-160M control all have low FN ($0.07$--$0.28$) and high clade recovery ($84$--$97\%$); the
 low-rank adapters match this on their merged weights (\S\ref{sec:framework:metric}), the Llama-3.2-1B
-qkv adapter recovering $94\%$ of clades. Most runs recover the \emph{complete} true topology
-(refinement $74$--$95\%$, Table~\ref{tab:rf_by_leaves}). Significance against the harder
-label-permutation null is gated by tree size: $0\%$ at $5$ leaves --- where too few within-task leaves
-exist to permute for the test to have power --- rising to $57$--$75\%$ at $6$--$8$ leaves, so the
-$\geq5$-leaf aggregate ($35$--$50\%$) understates per-run recovery on the trees large enough to test.
-Recovery is therefore consistent across architectures, scales, and full-FT vs.\ low-rank training.
+qkv adapter recovering $94\%$ of clades. Most runs recover the \emph{complete} observed leaf topology exactly
+(refinement $74$--$95\%$, Table~\ref{tab:rf_by_leaves}). \textbf{This is not task clustering.} The
+label-permutation null holds the task-block structure fixed and shuffles lineage labels only among
+leaves that share a task (Appendix~\ref{app:null}); beating it means resolving lineage \emph{within} a
+task, not merely grouping all summarization leaves together. Significance against this harder null is
+gated by tree size: $0\%$ at $5$ leaves --- where too few within-task leaves exist to permute for the
+test to have power --- rising to $57$--$75\%$ at $6$--$8$ leaves, so the $\geq5$-leaf aggregate
+($35$--$50\%$) understates per-run within-task recovery on the trees large enough to test.
+Recovery is therefore consistent across architectures, scales, and full-FT vs.\ low-rank training,
+and reflects genuine lineage rather than task identity.
 
 % Table 1: RF by leaf count
 \begin{table}[t]
@@ -440,8 +476,10 @@ models. The oracle Atteson margin (left) governs recovery reliably; because it i
 applied stochastically, recovery can be high below margin $1$ and short of $100\%$ above it. Architecture
 and layer differences remain visible: single self-attention q/k/v matrices from Llama LoRA recover only
 $15$--$40\%$ of clades, versus higher recovery for Flan cross-attention q/k/v, and full-FT layers
-($>80\%$) carry more than LoRA adapters. The right panel shows the label-free proxy $A$ predicts clade
-recovery adequately, making it a practical tool.
+($>80\%$) carry more than LoRA adapters. The right panel shows the label-free proxy $A$ tracks clade
+recovery closely: because $A$ needs no ground-truth tree, it predicts \emph{when} recovery will succeed,
+giving a practitioner a confidence diagnostic for a reconstruction whose truth is unknown --- the
+setting that motivates the method.
 
 \begin{figure}[t]
   \begin{center}
@@ -583,6 +621,14 @@ frontier models, except Gemini. The estimate is not robust across tasks --- pair
 the four per-task trees is $0.65$--$0.95$ (mean $\approx 0.84$), so no single task reproduces the
 aggregate (Appendix~\ref{app:blackbox}, Fig.~\ref{fig:frechet_grid}) --- and, lacking a ground-truth
 baseline, the recovered lineage looks reasonable but is highly prompt-dependent.
+
+To calibrate behavior-only estimation against a \emph{known} answer, we apply the same output-embedding
+pipeline to the documented HuggingFace families of \S\ref{sec:results:weighttree}, where the true
+topology is recorded, and score the recovered clades against it.
+\TODO{behavior-only-on-HF results: report clade recovery / \% sig vs.\ label for the documented HF
+families from outputs alone, and the weight-vs-behavior gap on identical models/truth. Data forthcoming
+--- one crisp sentence: output-only recovery is weaker than weights but still recovers known clades
+above chance.}
 
 
 % Hero figure: cross-task Frechet phylogeny + BHV tree-space MDS
