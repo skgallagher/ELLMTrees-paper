@@ -619,37 +619,18 @@ Flan-T5-base (full FT) & Translation (trained)  & $-0.260$ & $[-0.35, -0.16]$ & 
 \label{sec:results:blackbox}
 
 Behavior-alone clade recovery (Fig.~\ref{fig:behavioral_vs_whitebox}) beats random but is far less
-reliable than weight-based recovery. With only inference access, we estimate lineage from 23 models as a
-Fr\'echet tree averaged across four prompt tasks (Fig.~\ref{fig:blackbox_hero}): the tightest cluster is
-the GPT branch (though Sonnet infiltrates it), and open models appear more similar to each other than the
-frontier models, except Gemini. The estimate is not robust across tasks --- pairwise normalized RF among
-the four per-task trees is $0.65$--$0.95$ (mean $\approx 0.84$), so no single task reproduces the
-aggregate (Appendix~\ref{app:blackbox}, Fig.~\ref{fig:frechet_grid}) --- and, lacking a ground-truth
-baseline, the recovered lineage looks reasonable but is highly prompt-dependent.
+reliable than weight-based recovery. With only inference access, we estimate lineage from 23 frontier
+and open models as a Fr\'echet tree averaged across the four probe tasks: developer families (Claude,
+GPT, Llama) emerge, but the estimate is not robust across tasks --- pairwise normalized RF among the
+four per-task trees is $0.65$--$0.95$ (mean $\approx 0.84$), so no single task reproduces the aggregate.
+Lacking a ground-truth baseline, the recovered lineage looks reasonable but is highly prompt-dependent
+(full phylogeny and per-task trees in Appendix~\ref{app:blackbox},
+Figs.~\ref{fig:blackbox_hero}--\ref{fig:frechet_grid}).
 
 To calibrate behavior-only estimation against a \emph{known} answer, we apply the same output-embedding
 pipeline to the documented HuggingFace families of \S\ref{sec:results:weighttree} and score the
 recovered clades against the recorded topology. \TODO{numbers forthcoming: output-only recovery weaker
 than weights but recovers known clades above a label-shuffle null.}
-
-
-% Hero figure: cross-task Frechet phylogeny + BHV tree-space MDS
-\begin{figure}[t]
-  \begin{center}
-    \includegraphics[width=0.62\linewidth]{\figpath/hero_phylogeny_treespace.png}
-  \end{center}
-  \caption{\textbf{A behavioral phylogeny of frontier and open models, with its support in tree space.}
-    \textbf{(a)} BHV Fr\'echet (Sturm) mean of $n=245$ per-prompt neighbor-joining trees (output-embedding
-    distances over the 245/315 prompts all 23 models answered, four task families), coloured by
-    developer and rendered as a cladogram (internal edges $\sim$3\% of total length). Claude Sonnet and
-    Haiku form the most stable clade; the GPT family and Llama pair are also recovered. \textbf{(b)} The
-    17 per-dataset trees embedded in BHV tree space (classical MDS of geodesic distances). Trees group
-    by task---summarization tightest, translation the outlier---and the Fr\'echet mean ($\star$) lies at
-    the centre.}
-  \label{fig:blackbox_hero}
-\end{figure}
-
-
 
 
 % -----------------------------------------------------------------------
@@ -866,6 +847,21 @@ Fr\'echet (Sturm) mean in tree space~\citep{billera2001geometry, willis2019confi
 each task family and across all four (Fig.~\ref{fig:blackbox_hero}, Fig.~\ref{fig:frechet_grid}). We report the aggregate as a cladogram
 because the Fr\'echet mean's internal edges are short relative to total edge length, so topology is more
 informative than scaled branch length.
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=0.72\linewidth]{\figpath/hero_phylogeny_treespace.png}
+  \end{center}
+  \caption{\textbf{A behavioral phylogeny of frontier and open models, with its support in tree space.}
+    \textbf{(a)} BHV Fr\'echet (Sturm) mean of $n=245$ per-prompt neighbor-joining trees (output-embedding
+    distances over the 245/315 prompts all 23 models answered, four task families), coloured by
+    developer and rendered as a cladogram (internal edges $\sim$3\% of total length). Claude Sonnet and
+    Haiku form the most stable clade; the GPT family and Llama pair are also recovered. \textbf{(b)} The
+    17 per-dataset trees embedded in BHV tree space (classical MDS of geodesic distances). Trees group
+    by task---summarization tightest, translation the outlier---and the Fr\'echet mean ($\star$) lies at
+    the centre.}
+  \label{fig:blackbox_hero}
+\end{figure}
 
 \begin{figure}[h]
   \begin{center}
