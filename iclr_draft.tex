@@ -435,27 +435,9 @@ Llama-3.2-1B qkv (dec-only)          & 44 & 1.80 (0.20) & 0.14 (0.07) & 94\% (3\
 \end{center}
 \end{table}
 
-Fig.~\ref{fig:behavioral_vs_whitebox} plots FN vs.\ tree size for Flan-T5 and Llama-3.2-1B, with
-translation held out so the behavioral series (red) is a fair probe, alongside whitebox weight recovery
-(blue) and the random null (gray). Whitebox FN stays low at every size and below both the behavioral and
-null series: weight access, not behavior, is what enables per-run phylogeny recovery.
-
-% Figure 2: behavioral vs whitebox vs null
-\begin{figure}[t]
-  \begin{center}
-    \includegraphics[width=0.70\linewidth]{\figpath/fig2_fn_multi.png}
-  \end{center}
-  \caption{FN (true clades missed) by tree size for whitebox weight distances (cosine, blue),
-    held-out behavioral distances (translation probe, semantic, red), and the random null (gray;
-    bands mean $\pm$ 2\,SE), for an encoder--decoder (Flan-T5-base) and a decoder (Llama-3.2-1B,
-    full FT), both with translation held out of training. FN (vs.\ total RF) removes the
-    binary-forced FP the multifurcating truth induces equally for signal and null. In both
-    architectures whitebox FN stays low at every tree size and well below both the behavioral and
-    null series, while the behavioral probe tracks the null: behavioral similarity is a pairwise
-    lineage gradient, not a reliably recoverable phylogeny.
-    Weight access is what enables per-run tree recovery.}
-  \label{fig:behavioral_vs_whitebox}
-\end{figure}
+Weight access, not behavior, is what enables per-run phylogeny recovery: on the same documented
+real-world family (Fig.~\ref{fig:real-trees}), whitebox weight distances recover every fork while
+behavior-only estimation from model outputs recovers far fewer.
 
 Treating layers as independent estimators (Appendix~\ref{app:layertrace},
 Fig.~\ref{fig:layertrace_grid}), attention key projections are the dominant carrier in both
@@ -539,7 +521,11 @@ instruct, and three independent SFT$\to$RLHF/DPO forks (Zephyr, and two OpenChat
 whose relationships are recorded on their model cards. Using cosine distances over the common tensors
 and the Fr\'echet (Sturm) mean, we recover all three informative splits exactly ($100\%$ clade
 recovery, FN$=0$, $p\le0.003$ against a label-shuffle null each), with near-perfect four-point
-additivity on the informative quartets ($\bar{A}=0.98$, $100\%$ quartet-split accuracy). The pipeline
+additivity on the informative quartets ($\bar{A}=0.98$, $100\%$ quartet-split accuracy). On the identical
+family and truth, the same figure contrasts weight-based (whitebox) recovery with behavior-only (blackbox)
+estimation from the models' translation outputs: the whitebox tree recovers all three forks, whereas the
+blackbox tree recovers only one --- a direct, ground-truth-anchored comparison of the two access levels on
+real data. The pipeline
 validated against synthetic ground truth thus reconstructs ancestry in an uncontrolled setting with
 heterogeneous checkpoints and undocumented intermediate training, recovering multiple independent
 branches rather than a single split. (Organic Flan-T5 and Llama-2-7B branches recover their informative
@@ -547,16 +533,21 @@ clades similarly.)
 
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=0.72\linewidth]{\figpath/hf_mistral_trees_vs_truth.png}
+    \includegraphics[width=\linewidth]{\figpath/hf_mistral_hero_3panel.png}
   \end{center}
-  \caption{\textbf{Recovery on an organic HuggingFace model family.} Documented lineage (left) against
-    the reconstructed phylogeny (right; cosine Fr\'echet mean of weight distances over tensors common
-    to all ten checkpoints) for a real Mistral-7B-v0.1 family. Leaves are coloured by the three
-    documented SFT$\to$RLHF/DPO forks: Zephyr (blue), OpenChat-3.5$\to$Starling-alpha (red), and
-    OpenChat-3.5-0106$\to$Starling-beta (green); grey leaves (base, instruct, two independent
-    OpenHermes SFTs) have no informative sibling. The reconstruction treats all models as leaves but
-    recovers all three coloured pairs as clades exactly; remaining edges are binary-forced
-    resolutions of the polytomous truth (\S\ref{sec:framework:phylo}), not lineage errors.}
+  \caption{\textbf{Estimating a real HuggingFace family from weights vs.\ behavior, against documented
+    truth.} A real Mistral-7B-v0.1 family of ten public checkpoints. \textbf{(Left)} documented lineage.
+    \textbf{(Middle)} whitebox reconstruction (cosine Fr\'echet mean of weight distances over tensors
+    common to all ten checkpoints). \textbf{(Right)} blackbox reconstruction (neighbor-joining on cosine
+    distances between the models' translation outputs, no weight access). Leaves are coloured by the
+    three documented SFT$\to$RLHF/DPO forks: Zephyr (blue), OpenChat-3.5$\to$Starling-alpha (red), and
+    OpenChat-3.5-0106$\to$Starling-beta (green); grey leaves (base, instruct, two independent OpenHermes
+    SFTs) have no informative sibling. All panels treat every model as a leaf. The whitebox tree recovers
+    all three coloured forks as clades exactly (FN$=0$); the blackbox tree recovers only one (the
+    OpenChat-3.5/Starling-alpha pair), illustrating that behavior-only estimation is informative but far
+    less reliable than weight access. Remaining edges are binary-forced resolutions of the polytomous
+    truth (\S\ref{sec:framework:phylo}), not lineage errors. The blackbox panel here uses the translation
+    probe.}
   \label{fig:real-trees}
 \end{figure}
 
@@ -573,8 +564,8 @@ Table~\ref{tab:behavior_holdout} reports a weak but significant negative correla
 probes in Llama and for HellaSwag in Flan, and for translation in Llama (the sign reverses for Flan
 translation) --- supporting \citet{cloud2025subliminal} that unexpected traits can be passed to child
 models. The signal is robust to the held-out design: on the \texttt{\_notrans} tree, where translation
-is withheld from every node, all four held-out probes remain negative and significant, and if anything
-stronger than on the seen group (translation $-0.333$, ARC $-0.30$, MMLU $-0.30$, TruthfulQA $-0.28$).
+is withheld from every node, all four held-out probes remain negative and significant, comparable to or
+stronger than on the seen group (translation $-0.333$, ARC $-0.28$, MMLU $-0.31$, TruthfulQA $-0.31$).
 Full regression coefficients are in Appendix~\ref{app:regression}, and the degenerate probe behavior
 behind the Flan reversal is detailed in Appendix~\ref{app:translation_probe}.
 
@@ -597,21 +588,20 @@ and coefficients in App.~\ref{app:regression}.}
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
-% TODO: swap the centroid ($^\dagger$) cells for paired DV once
-% scripts/build_holdout_probes_paired.sh has run (torch+ST needed; the outputs
-% sandbox is proxy-blocked from PyPI/HF). Centroid->paired gap is small (HellaSwag
-% centroid -0.176 vs paired -0.204). Seen Llama centroid: ARC -0.242 [-0.33,-0.15]
-% p=1e-6, MMLU -0.196 [-0.30,-0.09] p=5e-4, TruthfulQA -0.217 [-0.32,-0.11] p=1e-4.
-% Flan (_notrans) held-out centroid: ARC +0.041 p=0.41, MMLU +0.098 p=0.028,
-% TruthfulQA +0.046 p=0.40. Llama true-held-out (_notrans) replication (prose):
-% ARC -0.303 p=1e-8, MMLU -0.295 p=1e-9, TruthfulQA -0.281 p=2e-6.
+% Llama cells are now PAIRED DV (built 2026-07-02 via build_holdout_probes_paired.sh):
+% seen-group ARC -0.260 [-0.36,-0.15] p=3e-6, MMLU -0.250 [-0.36,-0.13] p=6e-5,
+% TruthfulQA -0.327 [-0.44,-0.21] p=3e-7.  The three Flan ($^\dagger$) cells are the
+% ONLY remaining centroid cells (no_translation_v2 not re-embedded; they are degenerate
+% $^\ddagger$ probes anyway): ARC +0.041 p=0.41, MMLU +0.098 p=0.028, TruthfulQA +0.046 p=0.40.
+% Llama true-held-out (_notrans) PAIRED replication (prose): ARC -0.281 p=2e-6,
+% MMLU -0.306 p=1e-7, TruthfulQA -0.305 p=7e-7 (translation -0.333).
 \begin{tabular}{lcccccc}
 \toprule
  & \multicolumn{2}{c}{Translation} & HellaSwag & ARC-C & MMLU & TruthfulQA \\
 \cmidrule(lr){2-3}
 Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
-Llama-3.2-1B & $-0.29^{***}$ & $-0.33^{***}$ & $-0.20^{***}$ & $-0.24^{***\dagger}$ & $-0.20^{***\dagger}$ & $-0.22^{***\dagger}$ \\
+Llama-3.2-1B & $-0.29^{***}$ & $-0.33^{***}$ & $-0.20^{***}$ & $-0.26^{***}$ & $-0.25^{***}$ & $-0.33^{***}$ \\
 Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & $+0.04^{\dagger\ddagger}$ & $+0.10^{*\dagger\ddagger}$ & $+0.05^{\dagger\ddagger}$ \\
 \bottomrule
 \end{tabular}
@@ -621,8 +611,9 @@ Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & $+0.04^{\da
 \paragraph{Behavior-only lineage (frontier models).}
 \label{sec:results:blackbox}
 
-Behavior-alone clade recovery (Fig.~\ref{fig:behavioral_vs_whitebox}) beats random but is far less
-reliable than weight-based recovery. With only inference access, we estimate lineage from 23 frontier
+Behavior-alone clade recovery beats random but is far less reliable than weight-based recovery: on the
+documented Mistral family, blackbox output distances recover only one of the three forks that weight
+distances recover in full (Fig.~\ref{fig:real-trees}). With only inference access, we estimate lineage from 23 frontier
 and open models as a Fr\'echet tree averaged across the four probe tasks: developer families (Claude,
 GPT, Llama) emerge, but the estimate is not robust across tasks --- pairwise normalized RF among the
 four per-task trees is $0.65$--$0.95$ (mean $\approx 0.84$), so no single task reproduces the aggregate.
