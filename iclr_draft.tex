@@ -52,7 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-With over a million open models on HuggingFace and a handful of frontier labs constantly updating and releasing models, most models are fine-tuned descendants of only a few ancestors.  However, the true lineage may be undocumented. Model provenance, auditing, and safe deployment all benefit from access to this model lineage, revealing both internal (e.g.\ weights) and external traits (e.g.\ behavior). We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether we can estimate the model lineage from a set of models. We study lineage at three levels of access: estimation from weight changes alone, the link between those weight changes and behavior, and estimation from behavior alone. Against a known ground-truth tree, most controlled trees recover the \emph{complete} observed leaf topology exactly ($74$--$95\%$ of runs, depending on architecture) --- and do so even when task identity is held fixed, ruling out task clustering as the explanation. We further find that the signal concentrates in a small set of layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline reconstructs the documented lineage of real HuggingFace model families and estimates frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, lineage estimation is not only possible but predictable: a label-free additivity proxy for the Atteson margin flags when recovery will succeed.
+With over a million open models on HuggingFace, most are fine-tuned descendants of a few ancestors, yet their lineage is rarely documented --- though provenance, auditing, and safe deployment all depend on it. We treat fine-tuning as an evolutionary process that leaves signal in weight space, and ask whether the model lineage can be estimated from a set of models, at three levels of access: from weight changes alone, from the link between weight changes and behavior, and from behavior alone. Against a known ground-truth tree, most controlled trees recover the \emph{complete} observed leaf topology exactly ($74$--$95\%$ of runs), including the within-task splits that task clustering cannot produce. We further find that the signal concentrates in a few layers; that weight-space proximity predicts behavioral similarity even on a held-out task; and that the same pipeline reconstructs documented real HuggingFace families and estimates frontier-model families from outputs with no weight access. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, lineage estimation is not only possible but predictable: a label-free additivity proxy for the Atteson margin flags when recovery will succeed.
 
 \end{abstract}
 
@@ -103,8 +103,8 @@ We make three contributions:
   \item \textbf{Full training-tree recovery against ground truth.} Guided by the geometry of
     fine-tuning updates, our metric and summary-statistic choices estimate the full model lineage:
     most controlled trees recover the \emph{complete} observed leaf topology exactly ($74$--$95\%$ of
-    runs), and pass a within-task control (a label-permutation null that holds task identity fixed), so
-    the signal is genuine lineage and not task clustering. We are the only method evaluated against a
+    runs), including the within-task splits that task clustering alone cannot produce, so the signal is
+    genuine lineage and not coarse task grouping. We are the only method evaluated against a
     known ground-truth tree at full topology, and we validate the same pipeline on documented real-world
     HuggingFace families. By treating layers as `genes' we identify which \emph{carry} the signal (e.g.\
     in an encoder--decoder model the key projections alone, $4\%$ of parameters, estimate lineage as
@@ -133,14 +133,11 @@ behavior.
 \label{sec:related}
 % ----------------------------------------------------------------------
 
-LLM lineage has become an increasingly studied topic, appearing in three broad forms:
-\emph{model-parameter} studies, \emph{weight--behavior} studies that align parameters with
-outputs, and \emph{response-output} studies. Across these forms the work is driven by a range of
-applications: provenance and intellectual property (IP)
+LLM lineage studies take three broad forms --- \emph{model-parameter}, \emph{weight--behavior}, and
+\emph{response-output} --- driven by applications in provenance and IP
 \citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
-\citep{cloud2025subliminal}, inheritance of traits from parent models
-\citep{cloud2025subliminal, agents2026same}, and data inquiries and auditing
-\citep{zhu2025independence}.
+\citep{cloud2025subliminal}, trait inheritance \citep{cloud2025subliminal, agents2026same}, and data
+auditing \citep{zhu2025independence}.
 
 \textbf{Model parameters.} Several works trace parameter changes from fine-tuning or RLHF back to parent models. MoTHer
 \citep{horwitz2025mother} recovers family trees from weight similarity via a directed minimum spanning
@@ -152,13 +149,10 @@ recovers a full training tree or evaluates against a known ground-truth tree.
 
 Other works examine \emph{why} lineage carries. Models fine-tuned from a shared initialization stay
 within a single low-error basin and are robust to SGD noise
-\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance is a meaningful
-proxy for genealogical distance. Task vectors \citep{ilharco2023editing} --- the displacement a task
-induces --- are near-orthogonal across tasks, so distinct lineages contribute largely independent
-directions; CKA \citep{kornblith2019similarity} compares models across initializations and
-architectures. LoRA \citep{hu2022lora} and intrinsic-dimensionality results
-\citep{aghajanyan2021intrinsic} explain why small-rank updates suffice and why rank matters, while
-\citet{kirkpatrick2017overcoming} slow learning on weights important to prior tasks.
+\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance proxies
+genealogical distance; task vectors \citep{ilharco2023editing} are near-orthogonal across tasks, so
+distinct lineages contribute independent directions. LoRA \citep{hu2022lora} and intrinsic-dimensionality
+results \citep{aghajanyan2021intrinsic} explain why small-rank updates suffice and why rank matters.
 
 \textbf{Model parameters $\leftrightarrow$ response output.} A second group links parameter changes to
 behavior. \citet{cloud2025subliminal} show child models inherit ``subliminal'' traits even when every
@@ -238,10 +232,10 @@ models as leaves, not internal nodes).
 Step (3) lets different layers yield different (or multiple) estimates of $\widehat{\mathcal{P}}$, which we use to evaluate layer importance. Since tree space grows super-exponentially in leaves, exact recovery is unlikely; we use Robinson--Foulds (RF) distance \citep{robinson1981comparison} as a measure of partial recovery --- the number of bipartitions on which two trees disagree. Normalizing by the maximum RF enables comparison across tree sizes: normalized RF near $0$ is near-perfect recovery, near $1$ no better than random.
 
 We assess significance with a permutation test: the per-run $p$-value is the fraction of $1{,}000$
-random $n$-leaf trees that match the ground truth at least as well as $\widehat{\mathcal{P}}$, and we
-combine the 50 per-run $p$-values with Fisher's method ($-2\sum_i \log p_i \sim \chi^2$). We use both a
-random-tree null and a stronger label-permutation null that controls for task-level clustering; full
-construction in Appendix~\ref{app:null}.
+random $n$-leaf trees that match the ground truth at least as well as $\widehat{\mathcal{P}}$
+(full construction in Appendix~\ref{app:null}). Our primary evidence for recovery is the effect size ---
+clade recovery and the fraction of runs recovering the complete topology --- rather than a single
+pooled $p$-value.
 
 %% that's t he statistical basis for our method.
 
@@ -346,7 +340,7 @@ Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pai
 
 \paragraph{Full topology estimation.}
 \label{sec:exp:weights}
-Besides direct lineage, we test whether our method estimates the full topology. From \S\ref{sec:framework:theory}, recovery should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, the recovery metrics (clade \% recovery and refinement), and \% sig (a within-run permutation test against the label-permutation null), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}; a single global $p$-value combines the per-run $p$-values with Fisher's method. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
+Besides direct lineage, we test whether our method estimates the full topology. From \S\ref{sec:framework:theory}, recovery should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, and the recovery metrics (clade \% recovery and refinement), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}, and summarize per-run significance against a random-tree null (\% sig). The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
 
 
 \paragraph{Predicting held-out behavior.}
@@ -399,15 +393,13 @@ Table~\ref{tab:rf_by_leaves} shows Flan-T5-base, Llama-3.2-1B (full FT), and the
 Pythia-160M control all have low FN ($0.07$--$0.28$) and high clade recovery ($84$--$97\%$); the
 low-rank adapters match this on their merged weights (\S\ref{sec:framework:metric}), the Llama-3.2-1B
 qkv adapter recovering $94\%$ of clades. Most runs recover the \emph{complete} observed leaf topology exactly
-(refinement $74$--$95\%$, Table~\ref{tab:rf_by_leaves}). \textbf{This is not task clustering.} The
-label-permutation null holds the task-block structure fixed and shuffles lineage labels only among
-leaves that share a task (Appendix~\ref{app:null}); beating it means resolving lineage \emph{within} a
-task, not merely grouping all summarization leaves together. Significance against this harder null is
-gated by tree size: $0\%$ at $5$ leaves --- where too few within-task leaves exist to permute for the
-test to have power --- rising to $57$--$75\%$ at $6$--$8$ leaves, so the $\geq5$-leaf aggregate
-($35$--$50\%$) understates per-run within-task recovery on the trees large enough to test.
-Recovery is therefore consistent across architectures, scales, and full-FT vs.\ low-rank training,
-and reflects genuine lineage rather than task identity.
+(refinement $74$--$95\%$, Table~\ref{tab:rf_by_leaves}). \textbf{This is not task clustering.} The truth
+trees are multifurcating and contain within-task splits, so recovering the entire topology (refinement,
+FN$=0$) requires resolving lineage \emph{within} a task block, not merely grouping all summarization
+leaves together --- a reconstruction that only clustered tasks would leave those splits unresolved and
+could not reach FN$=0$. Against a random-tree null, $22$--$45\%$ of runs beat chance at $\alpha=0.05$
+(Table~\ref{tab:rf_by_leaves}). Recovery is therefore consistent across architectures, scales, and
+full-FT vs.\ low-rank training, and reflects genuine lineage rather than task identity.
 
 % Table 1: RF by leaf count
 \begin{table}[t]
@@ -416,11 +408,10 @@ and reflects genuine lineage rather than task identity.
   add resolving edges; we decompose RF into FN (true clades missed --- the real error) and FP
   (binary-forced edges, $=$RF$-$FN). Clade recovery $=1-\mathrm{FN}/|\text{true splits}|$; refinement
   $=$ \% of runs recovering the \emph{entire} true tree (FN$=0$); \% sig $=$ \% of runs beating the
-  label-permutation null (the harder within-run test) at $p<0.05$. Pythia-160M (matched to Flan's
+  random-tree null at $p<0.05$. Pythia-160M (matched to Flan's
   width $d=768$) and Llama-3.2-1B ($d=2048$) isolate architecture and scale from dimensional dilution;
   the two LoRA blocks ($r=8$) show low-rank adapters recover comparably to full FT when compared on
-  their merged weights (\S\ref{sec:framework:metric}). Global $p$ is Fisher's combination of the
-  per-run permutation $p$-values.}
+  their merged weights (\S\ref{sec:framework:metric}).}
 \label{tab:rf_by_leaves}
 \begin{center}
 \small
@@ -430,13 +421,13 @@ and reflects genuine lineage rather than task identity.
 Condition & $n$ & RF (SE) & FN (SE) & Clade rec. & Refinement & \% sig \\
 \midrule
 \multicolumn{7}{l}{\textit{Full fine-tuning}} \\
-Flan-T5-base ($d{=}768$, enc--dec)   & 44 & 1.93 (0.21) & 0.20 (0.08) & 90\% & 84\% & 41\% \\
-Pythia-160M ($d{=}768$, dec-only)    & 44 & 1.66 (0.18) & 0.07 (0.05) & 97\% & 95\% & 50\% \\
-Llama-3.2-1B ($d{=}2048$, dec-only)  & 40 & 2.05 (0.25) & 0.28 (0.08) & 84\% & 75\% & 35\% \\
+Flan-T5-base ($d{=}768$, enc--dec)   & 44 & 1.93 (0.21) & 0.20 (0.08) & 90\% & 84\% & 40\% \\
+Pythia-160M ($d{=}768$, dec-only)    & 44 & 1.66 (0.18) & 0.07 (0.05) & 97\% & 95\% & 43\% \\
+Llama-3.2-1B ($d{=}2048$, dec-only)  & 40 & 2.05 (0.25) & 0.28 (0.08) & 84\% & 75\% & 22\% \\
 \midrule
 \multicolumn{7}{l}{\textit{LoRA ($r{=}8$, merged weights)}} \\
-Flan-T5-base qkv (enc--dec)          & 43 & 2.12 (0.26) & 0.30 (0.09) & 82\% & 74\% & 37\% \\
-Llama-3.2-1B qkv (dec-only)          & 44 & 1.80 (0.20) & 0.14 (0.07) & 94\% & 91\% & 48\% \\
+Flan-T5-base qkv (enc--dec)          & 43 & 2.12 (0.26) & 0.30 (0.09) & 82\% & 74\% & 45\% \\
+Llama-3.2-1B qkv (dec-only)          & 44 & 1.80 (0.20) & 0.14 (0.07) & 94\% & 91\% & 40\% \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -450,7 +441,7 @@ null series: weight access, not behavior, is what enables per-run topology recov
 % Figure 2: behavioral vs whitebox vs null
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=0.82\linewidth]{\figpath/fig2_fn_multi.png}
+    \includegraphics[width=0.70\linewidth]{\figpath/fig2_fn_multi.png}
   \end{center}
   \caption{FN (true clades missed) by tree size for whitebox weight distances (cosine, blue),
     held-out behavioral distances (translation probe, semantic, red), and the random null (gray;
@@ -512,8 +503,7 @@ noisier layer norms and embeddings.
   between cosine distance and the same-branch indicator (SD over runs, $\geq 4$ leaves).
   \emph{Topology:} RF and FN (true clades missed) are polytomy-aware NJ means (SE in parentheses);
   clade recovery $=1-\mathrm{FN}/|\text{true splits}|$, refinement $=$ \% runs with $\mathrm{FN}=0$.
-  Every condition has global Fisher-combined $p<10^{-5}$. What gates recovery is analysed in
-  Fig.~\ref{fig:coherence_recovery}.}
+  What gates recovery is analysed in Fig.~\ref{fig:coherence_recovery}.}
 \label{tab:variants}
 \begin{center}
 \small
@@ -574,12 +564,16 @@ recover their informative clades similarly.)
 Estimating lineage from weights does not by itself imply that parameter-space proximity tracks
 behavioral proximity. Inspired by \citet{cloud2025subliminal}'s subliminal-learning experiment, we test
 whether models closer in weight space produce more similar outputs on a held-out task, using translation
-(on a tree that never trained on it) and HellaSwag (untrained by either model).
-Table~\ref{tab:behavior_holdout} reports a weak but significant negative correlation for HellaSwag in
-both Llama and Flan, and for translation in Llama (the sign reverses for Flan translation) --- supporting
-\citet{cloud2025subliminal} that unexpected traits can be passed to child models. Full regression
-coefficients are in Appendix~\ref{app:regression}, and the degenerate probe behavior behind the Flan
-reversal is detailed in Appendix~\ref{app:translation_probe}.
+(on a tree that never trained on it) and four probe tasks untrained by either model (HellaSwag,
+ARC-Challenge, MMLU, TruthfulQA).
+Table~\ref{tab:behavior_holdout} reports a weak but significant negative correlation across all held-out
+probes in Llama and for HellaSwag in Flan, and for translation in Llama (the sign reverses for Flan
+translation) --- supporting \citet{cloud2025subliminal} that unexpected traits can be passed to child
+models. The signal is robust to the held-out design: on the \texttt{\_notrans} tree, where translation
+is withheld from every node, all four held-out probes remain negative and significant, and if anything
+stronger than on the seen group (translation $-0.333$, ARC $-0.30$, MMLU $-0.30$, TruthfulQA $-0.28$).
+Full regression coefficients are in Appendix~\ref{app:regression}, and the degenerate probe behavior
+behind the Flan reversal is detailed in Appendix~\ref{app:translation_probe}.
 
 
 
@@ -589,8 +583,9 @@ reversal is detailed in Appendix~\ref{app:translation_probe}.
 \caption{Weight$\to$behavior bridge by model and probe (full fine-tuning). Random-effects
 (DerSimonian--Laird) pooled correlation $r$ between weight distance and behavioral similarity
 (paired per-prompt semantic distance, both $z$-scored within run, so $r$ is comparable across rows).
-``trained'' $=$ probe task in the training mix; ``held-out'' $=$ no node trained on it (HellaSwag is
-held out for every model).}
+``trained'' $=$ probe task in the training mix; ``held-out'' $=$ no node trained on it (HellaSwag,
+ARC-Challenge, MMLU, and TruthfulQA are held out for every model). $^\dagger$centroid DV pending the
+paired re-embed (paired runs $\approx0.02$--$0.03$ stronger, calibrated on HellaSwag).}
 \label{tab:behavior_holdout}
 \centering
 \small
@@ -601,6 +596,16 @@ Model & Probe (condition) & DL $r$ & 95\% CI & $p$ \\
 Llama-3.2-1B (full FT) & Translation (trained)  & $-0.294$ & $[-0.41, -0.17]$ & $<10^{-5}$ \\
                        & Translation (held-out) & $-0.333$ & $[-0.43, -0.23]$ & $<10^{-5}$ \\
                        & HellaSwag (held-out)   & $-0.204$ & $[-0.32, -0.09]$ & $9\times10^{-4}$ \\
+% TODO: swap the three centroid-DV rows below ($^\dagger$) for paired DV once
+% scripts/build_holdout_probes_paired.sh has run (torch+ST needed; the outputs
+% sandbox is proxy-blocked from PyPI/HF). Centroid vs paired gap is small: on
+% HellaSwag centroid $-0.176$ vs paired $-0.204$, so paired will be ~0.02--0.03
+% stronger. True-held-out (_notrans) centroid replications for the same probes:
+% ARC $-0.303$ [-0.40,-0.20] p=1e-8, MMLU $-0.295$ [-0.38,-0.20] p=1e-9,
+% TruthfulQA $-0.281$ [-0.39,-0.17] p=2e-6 -- all stronger than the seen group.
+                       & ARC-Challenge (held-out)$^\dagger$ & $-0.242$ & $[-0.33, -0.15]$ & $1\times10^{-6}$ \\
+                       & MMLU (held-out)$^\dagger$          & $-0.196$ & $[-0.30, -0.09]$ & $5\times10^{-4}$ \\
+                       & TruthfulQA (held-out)$^\dagger$    & $-0.217$ & $[-0.32, -0.11]$ & $1\times10^{-4}$ \\
 \midrule
 Flan-T5-base (full FT) & Translation (trained)  & $-0.260$ & $[-0.35, -0.16]$ & $<10^{-5}$ \\
                        & Translation (held-out) & $+0.113$ & $[+0.02, +0.21]$ & $0.024$ \\
@@ -623,18 +628,15 @@ aggregate (Appendix~\ref{app:blackbox}, Fig.~\ref{fig:frechet_grid}) --- and, la
 baseline, the recovered lineage looks reasonable but is highly prompt-dependent.
 
 To calibrate behavior-only estimation against a \emph{known} answer, we apply the same output-embedding
-pipeline to the documented HuggingFace families of \S\ref{sec:results:weighttree}, where the true
-topology is recorded, and score the recovered clades against it.
-\TODO{behavior-only-on-HF results: report clade recovery / \% sig vs.\ label for the documented HF
-families from outputs alone, and the weight-vs-behavior gap on identical models/truth. Data forthcoming
---- one crisp sentence: output-only recovery is weaker than weights but still recovers known clades
-above chance.}
+pipeline to the documented HuggingFace families of \S\ref{sec:results:weighttree} and score the
+recovered clades against the recorded topology. \TODO{numbers forthcoming: output-only recovery weaker
+than weights but recovers known clades above a label-shuffle null.}
 
 
 % Hero figure: cross-task Frechet phylogeny + BHV tree-space MDS
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=0.72\linewidth]{\figpath/hero_phylogeny_treespace.png}
+    \includegraphics[width=0.62\linewidth]{\figpath/hero_phylogeny_treespace.png}
   \end{center}
   \caption{\textbf{A behavioral phylogeny of frontier and open models, with its support in tree space.}
     \textbf{(a)} BHV Fr\'echet (Sturm) mean of $n=245$ per-prompt neighbor-joining trees (output-embedding
@@ -658,7 +660,7 @@ above chance.}
 We show that the model lineage can be estimated from parameters alone; the best layers --- the
 $k$-matrices, only $4\%$ of parameters --- estimate trees as well ($80$--$90{+}\%$) as the full weight
 set, this holds across encoder--decoder and decoder models and survives LoRA at low rank ($r=8$),
-and every controlled condition is significant. The weights also carry less obvious traits: on held-out
+with most trees recovering the complete topology exactly. The weights also carry less obvious traits: on held-out
 tasks, models closer in weight space produce more similar outputs (pooled DL $r\approx-0.3$ to $-0.2$)
 --- modest but direct evidence of inheritance, stronger under full fine-tuning than LoRA. Behavior-only
 lineage is informative but prompt-dependent and less robust than parameter estimates, which need no
@@ -822,29 +824,18 @@ Llama-3.1-8B (LoRA qkv)     & $414/374$ & $<10^{-5}$ & $0.96$ & $-0.93$ (37) \\
 \section{Null Distribution Construction}
 \label{app:null}
 
-We assess topology recovery against two permutation nulls, each computed per run (per tree) and then
-combined across the $50$ runs of a condition.
+We assess topology recovery against a permutation null computed per run (per tree).
 
 \paragraph{Random-tree null.} For a run with $n$ leaves we draw $1{,}000$ trees uniformly from the space
 of binary topologies on the same $n$ labels and score each against the ground-truth training tree with
 the same polytomy-aware recovery metric used for the reconstruction (Robinson--Foulds / clade
 recovery; \S\ref{sec:framework:phylo}). The per-run $p$-value is the fraction of null trees whose
 distance to the truth is at most the observed distance---the probability that a random tree matches the
-truth as well as the reconstruction does. This null asks only whether the reconstruction beats chance.
-
-\paragraph{Label-permutation null.} The random-tree null can be passed by a reconstruction that merely
-recovers coarse task-level structure (all summarization leaves in one clade, all classification leaves
-in another) without resolving lineage \emph{within} a task block. To control for this we use a stronger
-null that destroys only the within-block lineage information: holding the task-block structure fixed, we
-randomly permute the lineage labels among leaves that share a task, re-score against the truth, and take
-the fraction of permutations at least as good as observed as the $p$-value. ``\% significant vs.\
-label'' is the share of runs whose reconstruction beats this permutation at $\alpha=0.05$; it is the
-criterion for recovering within-task lineage rather than task identity alone, and is the harder test
-reported throughout.
-
-\paragraph{Combining across runs.} Treating the $50$ runs as independent trees, we pool their per-run
-$p$-values with Fisher's method, $-2\sum_{i}\ln p_i \sim \chi^2_{2k}$ under the global null of no lineage
-information, giving a single experiment-level $p$-value per condition.
+truth as well as the reconstruction does. ``\% sig'' is the share of runs whose reconstruction beats
+this null at $\alpha=0.05$. We report the recovery-metric effect sizes (clade recovery and refinement)
+as the primary evidence; because refinement counts runs that recover the \emph{entire} multifurcating
+truth---including its within-task splits---exact recovery cannot be achieved by task-level clustering
+alone.
 
 \section{Blackbox Experiment Details}
 \label{app:blackbox}
