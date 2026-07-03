@@ -52,7 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-With over a million open models on HuggingFace, most are fine-tuned descendants of a few ancestors, yet their lineage is rarely documented --- though provenance, auditing, and safe deployment all depend on it. We treat fine-tuning as an evolutionary process that leaves signal in weight space, and show that a model phylogeny can be estimated from model weights alone and scored against a known ground-truth training tree. This weight-based estimate is our core result, and two consequences follow from it. Against known ground-truth trees, most controlled trees recover the complete phylogeny exactly ($74$--$95\%$ of runs), including within-task splits that task clustering cannot produce --- a task-path metadata baseline through the same pipeline recovers far less ($42\%$ vs.\ $84\%$ exact) --- and the signal concentrates in a few layers. \emph{Because} the weight-space estimate is faithful, its two corollaries hold: weight-space proximity predicts behavioral similarity even on tasks the models never trained (a weight$\to$behavior bridge), and, having ground truth that behavior-only methods lack, we show weight access recovers documented real HuggingFace families more reliably than behavior-only estimation from the same models' outputs. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, lineage estimation is predictable: a label-free additivity proxy for the Atteson margin flags when recovery will succeed.
+With over a million open models on HuggingFace, most are fine-tuned descendants of a few ancestors, yet their lineage is rarely documented --- though provenance, auditing, and safe deployment all depend on it. We treat fine-tuning as an evolutionary process that leaves signal in weight space, and show that a model phylogeny can be estimated from model weights alone and scored against a known ground-truth training tree. This weight-based estimate is our core result, and two consequences follow from it. Against known ground-truth trees, most controlled trees recover the complete phylogeny exactly ($74$--$95\%$ of runs), including within-task splits that task clustering cannot produce --- a task-path metadata baseline through the same pipeline recovers far less ($42\%$ vs.\ $84\%$ exact) --- and the signal concentrates in a few layers. \emph{Because} the weight-space estimate is faithful, its two corollaries hold: weight-space proximity predicts behavioral similarity even on tasks the models never trained (a weight$\to$behavior bridge), and, having ground truth that behavior-only methods lack, we can calibrate behavior-only estimation directly: on documented real HuggingFace families, weight access matches the strongest behavior-only method (PhyloLM), recovering the same lineage with a larger additivity margin and no query access, and far exceeds naive output-embedding estimation. Across an encoder--decoder model and decoder-only models from 160M to 8B parameters, lineage estimation is predictable: a label-free additivity proxy for the Atteson margin flags when recovery will succeed.
 
 \end{abstract}
 
@@ -113,10 +113,13 @@ follow as corollaries of it:
     well as the full tensor).
   \item \textbf{Corollary 1 --- a weight$\to$behavior bridge.} \emph{Because} weight-space lineage is
     real, weight-space proximity predicts behavioral similarity, even on tasks the models never trained.
-  \item \textbf{Corollary 2 --- weights beat behavior-only recovery.} \emph{Because} our weight-based
-    estimate is scored against ground truth --- which behavior-only methods lack --- we can show, on the
-    same documented families, that weight access recovers lineage more reliably than estimating it from
-    the models' outputs, the regime frontier-model provenance is otherwise stuck in.
+  \item \textbf{Corollary 2 --- weights recover lineage with a larger margin and no queries.}
+    \emph{Because} our weight-based estimate is scored against ground truth --- which behavior-only
+    methods lack --- we can calibrate behavior-only estimation directly. On the same documented
+    families, weight access matches the strongest behavior-only method (PhyloLM), recovering the same
+    forks but clearing the four-point additivity margin with far more room ($\bar{A}=0.98$ vs.\ $0.84$)
+    and requiring no query access or output sampling; naive output-embedding estimation --- the regime
+    frontier-model provenance is otherwise stuck in --- recovers far less.
 \end{itemize}
 Throughout we span an encoder--decoder model and decoder-only models from 160M to 8B and full
 fine-tuning through LoRA, finding that a label-free proxy for the Atteson margin reliably indicates
@@ -532,10 +535,15 @@ recovery, FN$=0$, $p\le0.003$ against a label-shuffle null each), with near-perf
 additivity on the informative quartets ($\bar{A}=0.98$, $100\%$ quartet-split accuracy; $\bar{A}=0.86$
 over all $210$ quartets, the lower value coming from the uninformative quartets that fall inside the
 polytomous root and carry no true resolution). On the identical
-family and truth, the same figure contrasts weight-based (whitebox) recovery with behavior-only (blackbox)
-estimation from the models' translation outputs: the whitebox tree recovers all three forks, whereas the
-blackbox tree recovers only one --- a direct, ground-truth-anchored comparison of the two access levels on
-real data. The pipeline
+family and truth, the same figure contrasts weight-based (whitebox) recovery with PhyloLM
+\citep{yax2025phylolm}, the established behavior-only method, reproduced faithfully with its released
+genes and genetic distance on the same ten checkpoints: both recover all three forks, but the whitebox
+reconstruction clears the four-point additivity margin with far more room ($\bar{A}=0.98$ vs.\ $0.84$ on
+the informative quartets, both $100\%$ quartet-split accuracy) and needs no query access or output
+sampling, whereas a naive neighbor-joining tree on sentence-embedding distances between the same models'
+outputs recovers only one fork (App.~\ref{app:blackbox}). A direct, ground-truth-anchored comparison of
+access levels on real data --- weights match the best behavior-only method with a wider margin and no
+queries, while a naive behavioral estimate largely fails. The pipeline
 validated against synthetic ground truth thus reconstructs ancestry in an uncontrolled setting with
 heterogeneous checkpoints and undocumented intermediate training, recovering multiple independent
 branches rather than a single split. (Organic Flan-T5 and Llama-2-7B branches recover their informative
@@ -548,16 +556,19 @@ clades similarly.)
   \caption{\textbf{Estimating a real HuggingFace family from weights vs.\ behavior, against documented
     truth.} A real Mistral-7B-v0.1 family of ten public checkpoints. \textbf{(Left)} documented lineage.
     \textbf{(Middle)} whitebox reconstruction (cosine Fr\'echet mean of weight distances over tensors
-    common to all ten checkpoints). \textbf{(Right)} blackbox reconstruction (neighbor-joining on cosine
-    distances between the models' translation outputs, no weight access). Leaves are coloured by the
+    common to all ten checkpoints). \textbf{(Right)} PhyloLM reconstruction \citep{yax2025phylolm}
+    (neighbor-joining on the PhyloLM genetic distance between sampled output alleles, no weight access).
+    Leaves are coloured by the
     three documented SFT$\to$RLHF/DPO forks: Zephyr (blue), OpenChat-3.5$\to$Starling-alpha (red), and
     OpenChat-3.5-0106$\to$Starling-beta (green); grey leaves (base, instruct, two independent OpenHermes
-    SFTs) have no informative sibling. All panels treat every model as a leaf. The whitebox tree recovers
-    all three coloured forks as clades exactly (FN$=0$); the blackbox tree recovers only one (the
-    OpenChat-3.5/Starling-alpha pair), illustrating that behavior-only estimation is informative but far
-    less reliable than weight access. Remaining edges are binary-forced resolutions of the polytomous
-    truth (\S\ref{sec:framework:phylo}), not lineage errors. The blackbox panel here uses the translation
-    probe.}
+    SFTs) have no informative sibling. All panels treat every model as a leaf. Both the whitebox and
+    PhyloLM trees recover all three coloured forks as clades exactly (FN$=0$), but the whitebox
+    reconstruction does so with a larger four-point additivity margin ($\bar{A}=0.98$ vs.\ $0.84$ on the
+    informative quartets) and without querying the models; a naive sentence-embedding tree on the same
+    outputs recovers only one fork (the OpenChat-3.5/Starling-alpha pair; App.~\ref{app:blackbox}),
+    showing behavior-only estimation is strongly method-dependent. Remaining edges are binary-forced
+    resolutions of the polytomous truth (\S\ref{sec:framework:phylo}), not lineage errors. PhyloLM uses
+    its released \texttt{math} genes ($G{=}128$, $N{=}32$).}
   \label{fig:real-trees}
 \end{figure}
 
@@ -615,9 +626,12 @@ Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & --- & --- &
 \paragraph{Behavior-only lineage (frontier models).}
 \label{sec:results:blackbox}
 
-Behavior-alone clade recovery beats random but is far less reliable than weight-based recovery: on the
-documented Mistral family, blackbox output distances recover only one of the three forks that weight
-distances recover in full (Fig.~\ref{fig:real-trees}). With only inference access, we estimate lineage from 23 frontier
+Behavior-only clade recovery depends strongly on the method. On the documented Mistral family, the
+established PhyloLM method \citep{yax2025phylolm} --- reproduced faithfully with its released \texttt{math}
+genes and genetic distance --- recovers all three forks, matching weight-based recovery, though it clears
+the four-point additivity margin with less room ($\bar{A}=0.84$ vs.\ the whitebox $0.98$) and requires
+query access plus output sampling; a naive sentence-embedding tree on the same models recovers only one
+(Fig.~\ref{fig:real-trees}). With only inference access, we estimate lineage from 23 frontier
 and open models as a Fr\'echet tree averaged across the four probe tasks: developer families (Claude,
 GPT, Llama) emerge, but the estimate is not robust across tasks --- pairwise normalized RF among the
 four per-task trees is $0.65$--$0.95$ (mean $\approx 0.84$), so no single task reproduces the aggregate.
@@ -817,6 +831,17 @@ alone.
 
 \section{Blackbox Experiment Details}
 \label{app:blackbox}
+
+\paragraph{PhyloLM reproduction.} For the behavior-only comparison on the documented Mistral family
+(Fig.~\ref{fig:real-trees}), we reproduce PhyloLM \citep{yax2025phylolm} faithfully using its released
+\texttt{math} gene bank and its published Nei-similarity genetic distance (upstream commit
+\texttt{8c70edf}). We sample $G=128$ genes and, for each, draw $N=32$ raw completions of $4$ tokens per
+model (temperature $1$, no chat template, matching PhyloLM's design), take the $4$-character allele,
+form the per-gene allele populations, compute the Nei similarity between every pair of the ten
+checkpoints, convert to a distance ($-\log$ of the similarity), and build the tree by neighbor-joining.
+The reconstruction is scored against the same documented truth tree and with the same polytomy-aware
+scorer used for the whitebox families. The naive output-embedding baseline in the same figure instead
+uses sentence-embedding (\texttt{all-MiniLM-L6-v2}) distances between the models' translation outputs.
 
 \paragraph{Model collection.} The blackbox phylogeny is built over a collection of frontier and open
 models spanning the major developer families: OpenAI (GPT-3.5, GPT-4o / 4o-mini, GPT-4.1, o-series),
