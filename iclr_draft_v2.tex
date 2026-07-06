@@ -201,12 +201,13 @@ LLM DNA \citep{wu2026llmdna}              & behavior & \checkmark  & \ding{55}  
 \label{sec:framework}
 % -----------------------------------------------------------------------
 
-We define our terms, notation, and the statistical framework underlying our experiments.
-Like \citep{wu2026llmdna}, we use phylogenies and LLM ``DNA'' to estimate parent--child training, and
-assume, like \citep{yu2025neural} but unlike \citep{horwitz2025mother}, that all nodes derive from a
-single root. Unlike prior work, we estimate the phylogeny across all leaf nodes, not just parent--child
-pairs.  A \emph{phylogeny} $\mathcal{P}$ is a tree whose leaves are the observed models and whose internal nodes are latent common ancestors; a \emph{clade} is the set of leaves sharing one such ancestor (one branch of
-the tree), so estimating a clade means correctly grouping the models descending from a common ancestor. We form a distance matrix and apply neighbor-joining (NJ) \citep{saitou1987neighbor} to estimate the phylogeny.  
+We define our terms, notation, and statistical framework. A \emph{phylogeny} $\mathcal{P}$ is a tree
+whose leaves are the observed models and whose internal nodes are latent common ancestors; a
+\emph{clade} is the set of leaves descending from one such ancestor (one branch of the tree). We assume,
+like \citep{yu2025neural} but unlike \citep{horwitz2025mother}, that all models derive from a single
+root. Unlike prior weight-based work, which recovers parent--child or pairwise links, we estimate the
+full phylogeny over all leaves: we form a pairwise distance matrix and apply neighbor-joining (NJ)
+\citep{saitou1987neighbor} to reconstruct the tree.
 
 
 \subsection{Phylogenetic Tree Estimation}
@@ -219,10 +220,20 @@ the tree), so estimating a clade means correctly grouping the models descending 
 Assume we have a model $g(\theta)$ where $\theta$ is composed of multiple layers $\theta_\ell$. To estimate $\widehat{\mathcal{P}}$: (1) choose a set of layers $\theta_\mathcal{L}$ and a distance metric $d$;
 (2) for each layer $\ell$ compute $D_{i,j}^{(\ell)} = d(\theta^{(\ell)}_i, \theta^{(\ell)}_j)$ between models
 $i,j$; (3) assemble $\widehat{\mathbf{D}}$ as a function of the $D_{i,j}^{(\ell)}$ (e.g.\ the across-layer
-average); and (4) estimate $\widehat{\mathcal{P}} = f(\hat{\mathbf{D}})$ with $f$  as the NJ method (treating
-models as leaves, not internal nodes).
+average); and (4) estimate $\widehat{\mathcal{P}} = f(\widehat{\mathbf{D}})$ with $f$ as the NJ method.
 
-Step (3) lets different layers yield different (or multiple) estimates of $\widehat{\mathcal{P}}$, which we use to evaluate layer importance of `lineage.'  We use Robinson--Foulds (RF) distance \citep{robinson1981comparison} as a measure of partial recovery --- the number of bipartitions on which two trees disagree. RF can be decomposed into the sum of false positives (FP) and false negatives (FN).  One artifact of NJ is that it estimates binary trees whereas our ground truth phylogenies can have \textit{polytomies} or have multiple splits from a node.  As a result, RF will never equal zero for a ground truth tree with polytomies for a NJ estimated phylogeny.  We thus report FN in addition to RF as FP will contain the extra branches resluting from NJ.  In addition to RF, we also report the the clade recovery percentage, full phylogeny recovery percentage, and the standardized within-run correlation $r$ between distance and same-branch indicator.  We only report results for phylogenies with at least 4 leaves, as fewer is considered trivial.
+Step (3) lets different layers yield different estimates of $\widehat{\mathcal{P}}$, which we use to
+assess each layer's lineage signal. We score a reconstruction against the known truth with the
+Robinson--Foulds (RF) distance \citep{robinson1981comparison}, the number of bipartitions on which the
+two trees disagree, which decomposes into false positives (FP) and false negatives (FN). Because NJ
+returns strictly binary trees while our ground-truth phylogenies contain \textit{polytomies} (nodes with
+more than two children), NJ must add resolving edges, so RF is never zero even for a perfect
+reconstruction: these forced edges inflate FP without being genuine errors. We therefore treat FN --- the
+number of true clades the reconstruction misses --- as the honest error measure, and report clade
+recovery $= 1 - \mathrm{FN}/|\text{true splits}|$ and exact (full-phylogeny) recovery, the fraction of
+runs with $\mathrm{FN}=0$, alongside RF. We also report the standardized within-run correlation $r$
+between weight distance and a same-branch indicator, and analyze only phylogenies with at least 4 leaves,
+since fewer is trivial.
 
 %% that's t he statistical basis for our method.
 
