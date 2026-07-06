@@ -183,7 +183,7 @@ split.
 Method & Access & Phylogeny & Ground-truth eval & Real families \\
 \midrule
 MoTHer \citep{horwitz2025mother}          & weights  & $\sim$      & \ding{55}   & \checkmark \\
-Neural Lineage \citep{yu2025neural}       & weights  & \ding{55}   & \checkmark  & $\sim$ \\
+Neural Phylogeny \citep{yu2025neural}     & weights  & \ding{55}   & \checkmark  & $\sim$ \\
 PhyloLM \citep{yax2025phylolm}            & behavior & \checkmark  & \ding{55}   & \checkmark \\
 LLM DNA \citep{wu2026llmdna}              & behavior & \checkmark  & \ding{55}   & \checkmark \\
 \textbf{Ours}                             & \textbf{both} & \checkmark & \checkmark & \checkmark \\
@@ -204,7 +204,7 @@ LLM DNA \citep{wu2026llmdna}              & behavior & \checkmark  & \ding{55}  
 We define our terms, notation, and statistical framework. A \emph{phylogeny} $\mathcal{P}$ is a tree
 whose leaves are the observed models and whose internal nodes are latent common ancestors; a
 \emph{clade} is the set of leaves descending from one such ancestor (one branch of the tree). We assume,
-like \citep{yu2025neural} but unlike \citep{horwitz2025mother}, that all models derive from a single
+like \citet{yu2025neural} but unlike \citet{horwitz2025mother}, that all models derive from a single
 root. Unlike prior weight-based work, which recovers parent--child or pairwise links, we estimate the
 full phylogeny over all leaves: we form a pairwise distance matrix and apply neighbor-joining (NJ)
 \citep{saitou1987neighbor} to reconstruct the phylogeny.
@@ -227,13 +227,11 @@ Robinson--Foulds (RF) distance \citep{robinson1981comparison}, the number of bip
 two trees disagree, which decomposes into false positives (FP) and false negatives (FN). Because NJ
 returns strictly binary trees while our ground-truth phylogenies contain \textit{polytomies} (nodes with
 more than two children), NJ must add resolving edges. As a result, RF is never zero even for a correct binary
-reconstruction. These forced edges inflate FP without being genuine errors. We therefore treat FN,  the
-number of true clades the reconstruction misses, as a more representative metric.  Additionally, we report clade
+reconstruction. These forced edges inflate FP without being genuine errors. We therefore treat FN, the
+number of true clades the reconstruction misses, as a more representative metric. Additionally, we report clade
 recovery $= 1 - \mathrm{FN}/|\text{true splits}|$ and full-phylogeny recovery, the fraction of
 runs with $\mathrm{FN}=0$, alongside RF. We also report the standardized within-run correlation $r$
 between weight distance and a same-branch indicator, and analyze only phylogenies with at least 4 leaves, since fewer is trivial.
-
-%% that's t he statistical basis for our method.
 
 
 \subsection{Distance Metric}
@@ -246,9 +244,9 @@ similarity) throughout, for three reasons. It is bounded and scale-invariant acr
 high-magnitude layer dominates the aggregate, unlike $\ell_1$/$\ell_2$. It is the prevailing choice in
 recent provenance and fingerprinting work \citep{zeng2024huref, behavioral2026provenance,
 zhu2025independence}, keeping our distances comparable to that literature. Finally, it has a direct geometric
-reading: aligned fine-tuning updates indicate shared training history, while near-orthogonal updates carry little lineage signal. For adapter-trained models we compute distances on the \emph{merged}
-weights so every
-model, fully fine-tuned or LoRA-adapted, is compared on the same full-weight footing.
+reading: aligned fine-tuning updates indicate shared training history, while near-orthogonal updates carry little lineage signal. For adapter-trained models we compute distances on the \emph{merged} weights (the base model plus
+its accumulated low-rank update along the root-to-node path), so every model, fully fine-tuned or
+LoRA-adapted, is compared on the same full-weight footing.
 
 
 
@@ -265,17 +263,17 @@ than collapsing to a single all-layer distance, by analogy to biological phyloge
 across multiple genes encoding different information \citep{maddison1997gene}. A model with $L$ layers
 thus yields $L$ distance matrices, each of which can form its own estimate of $\widehat{\mathcal{P}}$ or
 be combined (e.g.\ via the Fr\'echet mean) into a less noisy $\widehat{\mathbf{D}}$. Beyond a
-lower-variance estimate, the layer-wise view lets us rank layers by how much lineage signal each carries
---- which layers recover the tree well on their own and which do not (\S\ref{sec:results:weighttree}).
+lower-variance estimate, the layer-wise view lets us rank layers by how much lineage signal each carries:
+which layers recover the tree well on their own and which do not (\S\ref{sec:results:weighttree}).
 
 
-\subsection{Guiding Phylogeny Estimation}
+\subsection{When Estimation Succeeds}
 \label{sec:framework:theory}
 
 Model lineage can be probed at two levels: the ordering of models (e.g.\ which pairs are parent--child
 or sit on the same branch) or the full phylogeny, the former being easier. For ordering, we pool all
 pairwise model comparisons within a run, across the $50$ runs, and test with the Mann--Whitney $U$
-statistic --- the same-branch-versus-cross-branch signal that pairwise-ancestry methods such as MoTHer
+statistic, the same-branch-versus-cross-branch signal that pairwise-ancestry methods such as MoTHer
 \citep{horwitz2025mother} and Neural Phylogeny \citep{yu2025neural} rely on. Recovering the full
 \textit{phylogeny} is harder but well studied in phylogenetics: NJ is exact when the distance matrix is
 additive, a condition model-parameter distances satisfy only approximately. Atteson's theorem makes the
@@ -384,7 +382,7 @@ cross-branch pairs throughout (one-sided Mann--Whitney $p<10^{-25}$), with rank-
 from $0.43$ (Flan LoRA, key only) to $0.96$ (Llama LoRA) and within-run Fisher $z$-averaged correlations
 from $-0.60$ to $-0.94$ --- across architectures (Flan-T5, Pythia, Llama), scales (160M--8B), and regimes
 (full FT and LoRA). This is the level at which parent--child methods like MoTHer \citep{horwitz2025mother}
-and Neural Lineage \citep{yu2025neural, yu2024neurallineage} operate;
+and Neural Phylogeny \citep{yu2025neural} operate;
 we go further to phylogeny estimation below.
 
 \paragraph{Phylogeny estimation.}
