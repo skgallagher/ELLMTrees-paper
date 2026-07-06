@@ -65,7 +65,7 @@ While over a million deep learning models are hosted on HuggingFace, most are fi
 
 While there are over one million models available on HuggingFace for deep learning and a handful of frontier
 labs constantly releasing updated versions, most models are
-fine-tuned descendants of a few ancestors.  Very few of those models transparently document their full model lineage. Benchmarks can tell us how a model performs on a task, but not how a model originated , how it differs from its sibling models, or how it may
+fine-tuned descendants of a few ancestors.  Very few of those models transparently document their full model lineage. Benchmarks can tell us how a model performs on a task, but not how a model originated, how it differs from its sibling models, or how it may
 fail. In contrast, training lineage can reveal much about model provenance, auditing, and safety~\cite{behavioral2026provenance, nikolic2026model, tensorguard2025}.
 
 We, like other prior works~\citep{horwitz2025mother, yu2025neural, wu2026llmdna}, observe that fine-tuning is a path-dependent, branching process. Each
@@ -85,28 +85,23 @@ ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights t
     \includegraphics[width=0.95\linewidth]{\figpath/fig1_paper_overview.pdf}
   \end{center}
   \caption{\textbf{Overview.} Fine-tuning leaves a path-dependent signature in weight space
-  that we read as a model lineage across three levels of access (decreasing left to right).
-  \textbf{(A)}~In controlled trees with known topology, weight distances feed neighbor-joining
-  to estimate a phylogeny $\widehat{\mathcal{P}}$, scored against the true tree
-  $\mathcal{P}^{*}$ via RF/FN and a random-tree null. \textbf{(B)}~Weight-space proximity
-  predicts behavioral similarity, even on a held-out task. \textbf{(C)}~The same pipeline on
-  model outputs estimates frontier-model families with no weight access.}
+  that we read as a model lineage across three levels of access.}
   \label{fig:overview}
 \end{figure}
 
 
 
 
-Our primary contribution is that analyzing the changes in weights between fine-tunings allows accurate phylogeny estimation when the Atteson-Margin is close to 1.  As a result of this weight-based estimates, we can further show two behavior-related consequences:
+Our primary contribution is that analyzing the changes in weights between fine-tunings allows accurate phylogeny estimation when the Atteson margin is close to 1.  As a result of these weight-based estimates, we can further show two behavior-related consequences:
 \begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
   \item \textbf{Primary: phylogeny estimation against ground truth.} Guided by the geometry of
     fine-tuning updates, our metric and summary-statistic choices estimate the model phylogeny from
-    weights alone: most controlled experiments estimate the complete phylogeny exactly ($74$--$95\%$ of
-    runs) We evaluate against known ground-truth phylogenies and show that as few as 4\% of model parameters can be used to accurately estimate the known phylogenies.  We finally show that our weight-based method accurately recovers all the splits in a small but real Llama phylogeny.
+    weights alone: most controlled experiments estimate the phylogeny ($74$--$95\%$ of all clades within
+    runs). We evaluate against known ground-truth phylogenies and show that as few as 4\% of model parameters can be used to accurately estimate the known phylogenies.  We finally show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
   \item \textbf{Weight$\to$behavior bridge.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
   \item \textbf{Weights recover lineage with a larger margin and no queries.}
     \emph{Because} our weight-based estimate is scored against ground truth, which behavior-only
-    methods currently lack, we can calibrate behavior-only estimation directly.  We show in some circumstances, weight-based phylogeny estimation outperforms behavior-based estimation. On the same documented, real
+    methods currently lack, we can calibrate behavior-only estimation directly.  We show that in some circumstances, weight-based phylogeny estimation outperforms behavior-based estimation. On the same documented, real
     families, weight access matches the strongest behavior-only method (PhyloLM ~\cite{yax2025phylolm}), recovering the same
     forks but with a larger additivity margin ($\bar{A}=0.98$ vs.\ $0.84$)
     and requiring no query access or output sampling.
