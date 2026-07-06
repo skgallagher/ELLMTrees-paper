@@ -52,7 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted on HuggingFace, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we treat fine-tuning as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} can be estimated from model weights alone and scored against a known ground-truth phylogeny with 72-94\% clade recovery.  We also show where the evolutionary signal is most prominent in a few architecture dependent layers such as the attention matrices.  We are able to show that we can accurately estimate the phylogeny using only 4\% of the total parameters, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is guided by a known mathematical concept from phylogenetics : the Atteson Margin. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models significantly predicts behavioral similarity on held-out tasks including tasks about truthfulness, knowledge, reasoning, and common sense.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. Our method not only estimates the phylogeny accurately but also helps score the success of the the behavior-based method.  
+While over a million deep learning models are hosted on HuggingFace, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we treat fine-tuning as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering the complete tree exactly in 72--94\% of runs (82--96\% of clades).  We also show where the evolutionary signal is most prominent in a few architecture dependent layers such as the attention matrices.  We are able to show that we can accurately estimate the phylogeny using only 4\% of the total parameters, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is guided by a known mathematical concept from phylogenetics : the Atteson Margin. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models significantly predicts behavioral similarity on held-out tasks including tasks about truthfulness, knowledge, reasoning, and common sense.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. Our method not only estimates the phylogeny accurately but also helps score the success of the the behavior-based method.  
 
 \end{abstract}
 
@@ -85,7 +85,7 @@ ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights t
     \includegraphics[width=0.95\linewidth]{\figpath/fig1_paper_overview.pdf}
   \end{center}
   \caption{\textbf{Overview.} Fine-tuning leaves a path-dependent signature in weight space
-  that we read as a model lineage across three levels of access.}
+  that we read as a model phylogeny.}
   \label{fig:overview}
 \end{figure}
 
@@ -96,8 +96,8 @@ Our primary contribution is that analyzing the changes in weights between fine-t
 \begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
   \item \textbf{Primary: phylogeny estimation against ground truth.} Guided by the geometry of
     fine-tuning updates, our metric and summary-statistic choices estimate the model phylogeny from
-    weights alone: most controlled experiments estimate the phylogeny ($74$--$95\%$ of all clades within
-    runs). We evaluate against known ground-truth phylogenies and show that as few as 4\% of model parameters can be used to accurately estimate the known phylogenies.  We finally show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
+    weights alone: most controlled experiments recover the complete phylogeny exactly ($72$--$94\%$ of
+    runs; $82$--$96\%$ of clades). We evaluate against known ground-truth phylogenies and show that as few as 4\% of model parameters can be used to accurately estimate the known phylogenies.  We finally show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
   \item \textbf{Weight$\to$behavior bridge.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
   \item \textbf{Weights recover lineage with a larger margin and no queries.}
     \emph{Because} our weight-based estimate is scored against ground truth, which behavior-only
