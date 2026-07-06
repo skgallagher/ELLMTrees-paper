@@ -333,7 +333,7 @@ We next estimate how strongly whitebox weight distance predicts behavioral simil
 
 \paragraph{Comparison to behavior-only estimation.}
 \label{sec:exp:blackbox}
-Sometimes weights are unavailable and provenance must be inferred from outputs alone; prior work estimates lineage from behavior in exactly this setting~\citep{wu2026llmdna, yax2025phylolm}. Because our documented HuggingFace family (\S\ref{sec:exp:trees}) has a known topology, we can score behavior-only estimation against ground truth rather than leaving it unsupervised. On that family we run the behavior-based PhyloLM method~\citep{yax2025phylolm}, using its released genes and genetic distance on the same checkpoints, alongside a naive neighbor-joining tree on sentence-embedding distances between the same models' outputs, and compare both against our weight-based reconstruction on the identical ground truth.
+Sometimes weights are unavailable and provenance must be inferred from outputs alone; prior work estimates lineage from behavior in exactly this setting~\citep{wu2026llmdna, yax2025phylolm}. Because our documented HuggingFace family (\S\ref{sec:exp:trees}) has a known topology, we can score behavior-only estimation against ground truth rather than leaving it unsupervised. On that family we run the behavior-based PhyloLM method~\citep{yax2025phylolm}, using its released genes and genetic distance on the same checkpoints, alongside a naive neighbor-joining tree on sentence-embedding distances between the same models' outputs, and compare both against our weight-based reconstruction on the identical ground truth. We also compare PhyloLM to a subset of our controlled experiments.
 
 
 % -----------------------------------------------------------------------
