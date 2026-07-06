@@ -136,9 +136,9 @@ lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghosts
 DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. None, however,
 estimates a full phylogeny and evaluates it against a known ground-truth tree.
 
-Other works examine \emph{why} lineage carries. Models fine-tuned from a shared initialization stay
+Other works examine \emph{why} lineage is detectable in models. Models fine-tuned from a shared initialization stay
 within a single low-error basin and are robust to SGD noise
-\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance proxies
+\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance can proxy
 genealogical distance; task vectors \citep{ilharco2023editing} are near-orthogonal across tasks, so
 distinct lineages contribute independent directions. LoRA \citep{hu2022lora} and intrinsic-dimensionality
 results \citep{aghajanyan2021intrinsic} explain why small-rank updates suffice and why rank matters.
