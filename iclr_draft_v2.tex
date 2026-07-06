@@ -121,13 +121,14 @@ recovery.
 \label{sec:related}
 % ----------------------------------------------------------------------
 
-LLM lineage studies take three broad forms --- \emph{model-parameter}, \emph{weight--behavior}, and
-\emph{response-output} --- driven by applications in provenance and IP
+LLM lineage studies take three broad forms --- \emph{model parameters/weights}, \emph{weight--behavior},
+and \emph{behavior only} --- driven by applications in provenance and IP
 \citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
 \citep{cloud2025subliminal}, trait inheritance \citep{cloud2025subliminal, agents2026same}, and data
-auditing \citep{zhu2025independence}.
+auditing \citep{zhu2025independence}. Table~\ref{tab:related} contrasts the closest methods along the
+axes that matter for lineage estimation.
 
-\textbf{Model parameters.} Several works trace parameter changes from fine-tuning or RLHF back to parent models. MoTHer
+\textbf{Model parameters/weights.} Several works trace parameter changes from fine-tuning or RLHF back to parent models. MoTHer
 \citep{horwitz2025mother} recovers family trees from weight similarity via a directed minimum spanning
 tree; \citet{yu2025neural} recover parent--child and grandparent--child lineage with both a
 learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct
@@ -142,28 +143,30 @@ genealogical distance; task vectors \citep{ilharco2023editing} are near-orthogon
 distinct lineages contribute independent directions. LoRA \citep{hu2022lora} and intrinsic-dimensionality
 results \citep{aghajanyan2021intrinsic} explain why small-rank updates suffice and why rank matters.
 
-\textbf{Model parameters $\leftrightarrow$ response output.} A second group links parameter changes to
+\textbf{Model parameters/weights $\leftrightarrow$ behavior.} A second group links parameter changes to
 behavior. \citet{cloud2025subliminal} show child models inherit ``subliminal'' traits even when every
 reference to the trait is filtered from training text, and prove a parent's preference is preserved
 under a large enough training signal given a shared initialization. REEF \citep{zhang2025reef} compares
-internal representations (via CKA) to decide lineage, and gradient-response fingerprints
+internal representations (via centered kernel alignment, CKA~\citep{kornblith2019similarity}) to decide lineage, and gradient-response fingerprints
 \citep{tensorguard2025} classify families from how parameters react to probes. These establish that
 parameter closeness tracks behavioral similarity, but only pairwise, not as a full phylogeny.
 
-\textbf{Response output.} Blackbox studies need only API access or benchmark outputs
+\textbf{Behavior only.} Blackbox studies need only API access or benchmark outputs
 \citep{yax2025phylolm, wu2026llmdna}. PhyloLM \citep{yax2025phylolm} builds LLM phylogenies from output
 similarity and predicts benchmark performance; LLM DNA \citep{wu2026llmdna} defines a functional
 ``DNA'' representation carrying lineage; both reconstruct phylogenies over hundreds of models. Other
 output-only methods test pairwise provenance from next-token distributions \citep{nikolic2026model} or
-output independence \citep{zhu2025independence}. This line is typically unsupervised and prompt-dependent,
-with no ground-truth topology to score against.
+output independence \citep{zhu2025independence}. Because it reads only outputs, this line needs no shared
+architecture and can compare models across families and sizes --- an advantage weight-based methods lack.
+It is, however, typically unsupervised and prompt-dependent, with no ground-truth topology to score
+against.
 
-Our work fills this gap by bridging parameter-based and behavioral lineage while (1) determining where
-the model phylogeny can be estimated and (2) evaluating against ground-truth trees. Mirroring
-\citet{cloud2025subliminal}, our estimation proposition is: when model-distance signal outweighs training
-noise, the lineage can be estimated with high probability. Table~\ref{tab:related} places us against the
-closest prior methods: our experiments estimate a full phylogeny, evaluate it against a known
-ground-truth tree, and validate on documented model families --- from both weights and behavior.
+Our work fills this gap: we bridge parameter- and behavior-based lineage, determine where the phylogeny
+can be estimated, and evaluate against ground-truth trees. This makes explicit an analogy to
+\citet{cloud2025subliminal}, whose guarantee that a parent's preference survives ``a large enough training
+signal'' becomes, in our phylogenetic setting, the Atteson-margin condition: when the fine-tuning
+displacement outweighs the non-additivity error (margin $>1$), neighbor-joining provably recovers the
+split.
 
 \begin{table}[t]
 \caption{Where our method sits relative to the closest lineage-estimation work. \emph{Access:} does the
