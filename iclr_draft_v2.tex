@@ -209,13 +209,7 @@ root. Unlike prior weight-based work, which recovers parent--child or pairwise l
 full phylogeny over all leaves: we form a pairwise distance matrix and apply neighbor-joining (NJ)
 \citep{saitou1987neighbor} to reconstruct the phylogeny.
 
-\subsection{Phylogeny Estimation}
-\label{sec:framework:phylo}
-% We frame fine-tuning lineage recovery as a phylogenetics problem.
-% Pairwise weight distances → NJ tree → RF vs ground truth → permutation p.
-% Why NJ > directed MST (MoTHer): statistically principled, known properties.
-% Cite: Saitou & Nei 1987 (NJ), Robinson & Foulds 1981 (RF).
-
+\textbf{Phylogeny estimation.}\label{sec:framework:phylo}
 Assume we have a model $g(\theta)$ where $\theta$ is composed of multiple layers $\theta_\ell$. To estimate $\widehat{\mathcal{P}}$: (1) choose a set of layers $\theta_\mathcal{L}$ and a distance metric $d$;
 (2) for each layer $\ell$ compute $D_{i,j}^{(\ell)} = d(\theta^{(\ell)}_i, \theta^{(\ell)}_j)$ between models
 $i,j$; (3) assemble $\widehat{\mathbf{D}}$ as a function of the $D_{i,j}^{(\ell)}$ (e.g.\ the across-layer
@@ -234,9 +228,7 @@ runs with $\mathrm{FN}=0$, alongside RF. We also report the standardized within-
 between weight distance and a same-branch indicator, and analyze only phylogenies with at least 4 leaves, since fewer is trivial.
 
 
-\subsection{Distance Metric}
-\label{sec:framework:metric}
-
+\textbf{Distance metric.}\label{sec:framework:metric}
 We flatten each weight tensor to a vector and compare models with vector distances rather than matrix
 norms, for portability across architectures, considering cosine, correlation, $\ell_1$, and $\ell_2$
 (the last used in MoTHer~\citep{horwitz2025mother}). We adopt cosine distance ($1$ minus cosine
@@ -252,12 +244,7 @@ LoRA-adapted, is compared on the same full-weight footing.
 
 
 
-\subsection{Per Layer Estimated Phylogenies}
-\label{sec:framework:layers}
-% Each weight tensor → its own NJ tree.
-% Distribution of per-layer RF distances is the data; consensus tree is summary.
-% More statistically principled than any competitor — flag explicitly.
-
+\textbf{Per-layer estimated phylogenies.}
 We treat per-layer distance matrices as independent estimators rather
 than collapsing to a single all-layer distance, by analogy to biological phylogenies that must cohere
 across multiple genes encoding different information \citep{maddison1997gene}. A model with $L$ layers
@@ -267,23 +254,18 @@ lower-variance estimate, the layer-wise view lets us rank layers by how much lin
 which layers recover the tree well on their own and which do not (\S\ref{sec:results:weighttree}).
 
 
-\subsection{When Estimation Succeeds}
-\label{sec:framework:theory}
-
+\textbf{When estimation succeeds.}\label{sec:framework:theory}
 Model lineage can be probed at two levels: the ordering of models (e.g.\ which pairs are parent--child
 or sit on the same branch) or the full phylogeny, the former being easier. For ordering, we pool all
 pairwise model comparisons within a run, across the $50$ runs, and test with the Mann--Whitney $U$
 statistic, the same-branch-versus-cross-branch signal that pairwise-ancestry methods such as MoTHer
 \citep{horwitz2025mother} and Neural Phylogeny \citep{yu2025neural} rely on. Recovering the full
 \textit{phylogeny} is harder but well studied in phylogenetics: NJ is exact when the distance matrix is
-additive, a condition model-parameter distances satisfy only approximately. Atteson's theorem makes the
-tolerance precise.
-\begin{theorem}[\citealp{atteson1999performance}]\label{thm:atteson}
-Let $D_{\mathrm{add}}$ be the additive metric of the true topology with internal edge lengths
-$\{L_s\}$, and $D$ the observed distance matrix. If
-$\;\lVert D-D_{\mathrm{add}}\rVert_\infty < \tfrac12\min_s L_s$, then neighbor-joining applied to $D$
-returns the true topology.
-\end{theorem}
+additive, a condition model-parameter distances satisfy only approximately. \textit{Atteson's theorem}
+\citep{atteson1999performance} makes the tolerance precise: \textit{if the observed matrix $D$ deviates
+from the additive metric $D_{\mathrm{add}}$ of the true topology by less than half the smallest internal
+edge length, $\lVert D-D_{\mathrm{add}}\rVert_\infty < \tfrac12\min_s L_s$ (with internal edge lengths
+$\{L_s\}$), then neighbor-joining applied to $D$ returns the true topology.}
 Writing the bottleneck margin $m=\min_s m_s$ with $m_s=L_s/(2\lVert D-D_{\mathrm{add}}\rVert_\infty)$, any
 $m>1$ \emph{guarantees} exact recovery. The condition is sufficient but conservative, set by the single
 worst edge under a worst-case ($\ell_\infty$) error, so in practice NJ recovers most splits well before
@@ -294,7 +276,7 @@ fine-tuning updates are near-orthogonal (\S\ref{sec:framework:metric}). The marg
 lengths, which we do not have. We therefore adopt a label-free proxy computed from $D$ alone, based on
 the classical four-point condition for tree metrics \citep{buneman1971recovery}.
 
-\paragraph{Four-point additivity ($A$).} For each quartet of leaves the three pairwise-distance sums, sorted
+\textit{Four-point additivity} ($A$). For each quartet of leaves the three pairwise-distance sums, sorted
 $s_1\ge s_2\ge s_3$, satisfy $s_1=s_2$ under an additive metric \citep{buneman1971recovery}. We average
 the resolved fraction over the $Q$ quartets:
 \[
