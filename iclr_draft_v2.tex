@@ -346,7 +346,8 @@ Sometimes weights are unavailable and provenance must be inferred from outputs a
 \paragraph{Direct lineage.}
 
 Direct ancestry is recovered under every condition. The same-vs.-cross-branch ordering test
-(Appendix~\ref{app:direct}, Table~\ref{tab:direct}) finds same-branch pairs significantly closer than
+(Table~\ref{tab:variants}, ordering column; full statistics in Appendix~\ref{app:direct},
+Table~\ref{tab:direct}) finds same-branch pairs significantly closer than
 cross-branch pairs throughout (one-sided Mann--Whitney $p<10^{-25}$), with rank-biserial correlations
 from $0.43$ (Flan LoRA, key only) to $0.96$ (Llama LoRA) and within-run Fisher $z$-averaged correlations
 from $-0.60$ to $-0.94$ --- across architectures (Flan-T5, Pythia, Llama), scales (160M--8B), and regimes
@@ -389,16 +390,16 @@ within-task splits that weights resolve, nearly doubling exact recovery.
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lrrrrr}
 \toprule
-Condition & $n$ & RF (SE) & FN (SE) & Clade rec. (SE) & Exact rec. (SE) \\
+Condition & $n$ & Clade rec. (SE) & Exact rec. (SE) & RF (SE) & FN (SE) \\
 \midrule
 \multicolumn{6}{l}{\textit{Full fine-tuning}} \\
-Flan-T5-base ($d{=}768$, enc--dec)   & 44 & 1.93 (0.21) & 0.20 (0.08) & 90\% (4\%) & 84\% (6\%) \\
-Pythia-160M ($d{=}768$, dec-only)    & 44 & 1.66 (0.18) & 0.07 (0.05) & 97\% (2\%) & 95\% (3\%) \\
-Llama-3.2-1B ($d{=}2048$, dec-only)  & 40 & 2.05 (0.25) & 0.28 (0.08) & 84\% (5\%) & 75\% (7\%) \\
+Flan-T5-base ($d{=}768$, enc--dec)   & 44 & \textbf{90\%} (4\%) & \textbf{84\%} (6\%) & 1.93 (0.21) & 0.20 (0.08) \\
+Pythia-160M ($d{=}768$, dec-only)    & 44 & \textbf{97\%} (2\%) & \textbf{95\%} (3\%) & 1.66 (0.18) & 0.07 (0.05) \\
+Llama-3.2-1B ($d{=}2048$, dec-only)  & 40 & \textbf{84\%} (5\%) & \textbf{75\%} (7\%) & 2.05 (0.25) & 0.28 (0.08) \\
 \midrule
 \multicolumn{6}{l}{\textit{LoRA ($r{=}8$, merged weights)}} \\
-Flan-T5-base qkv (enc--dec)          & 43 & 2.12 (0.26) & 0.30 (0.09) & 82\% (5\%) & 74\% (7\%) \\
-Llama-3.2-1B qkv (dec-only)          & 44 & 1.80 (0.20) & 0.14 (0.07) & 94\% (3\%) & 91\% (4\%) \\
+Flan-T5-base qkv (enc--dec)          & 43 & \textbf{82\%} (5\%) & \textbf{74\%} (7\%) & 2.12 (0.26) & 0.30 (0.09) \\
+Llama-3.2-1B qkv (dec-only)          & 44 & \textbf{94\%} (3\%) & \textbf{91\%} (4\%) & 1.80 (0.20) & 0.14 (0.07) \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -452,8 +453,8 @@ noisier layer norms and embeddings.
 % Table 2: training-regime variants (Flan-T5 + Llama-3.2-1B)
 \begin{table}[t]
 \caption{Lineage signal and recovery by training regime (cosine; \textsc{trained\_only=1} for LoRA,
-  Llama LoRA distances on merged weights). \emph{Ordering:} Fisher-$z$ $r$ is the within-run correlation
-  between cosine distance and the same-branch indicator (SD over runs, $\geq 4$ leaves).
+  Llama LoRA distances on merged weights). \emph{Ordering:} within-run $r$ is the point-biserial correlation
+  between cosine distance and the same-branch indicator, Fisher-$z$ averaged over runs (SD over runs, $\geq 4$ leaves).
   \emph{Phylogeny:} RF and FN (true clades missed) are polytomy-aware NJ means (SE in parentheses);
   clade recovery $=1-\mathrm{FN}/|\text{true splits}|$, exact recovery $=$ \% runs with $\mathrm{FN}=0$.
   SEs are over runs; for exact recovery, the SE is the binomial standard error.
@@ -464,21 +465,21 @@ noisier layer norms and embeddings.
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lrrrrrr}
 \toprule
-Variant & $n$ & Fisher-$z$ $r$ (SD) & RF (SE) & FN (SE) & Clade rec. (SE) & Exact rec. (SE) \\
+Variant & $n$ & Within-run $r$ (SD) & Clade rec. (SE) & Exact rec. (SE) & RF (SE) & FN (SE) \\
 \midrule
 \multicolumn{7}{l}{\textbf{Encoder--decoder: Flan-T5-base} ($d=768$)} \\
 \multicolumn{7}{l}{\quad\textit{LoRA adapter scope}} \\
-\quad k\_only          & 47 & $-0.597$ (0.33) & 2.11 (0.25) & 0.34 (0.09) & 82\% (5\%) & 72\% (7\%) \\
-\quad qkv              & 46 & $-0.670$ (0.25) & 1.98 (0.25) & 0.28 (0.08) & 83\% (5\%) & 76\% (6\%) \\
-\quad full\_attn       & 42 & $-0.671$ (0.25) & 1.83 (0.25) & 0.21 (0.07) & 86\% (5\%) & 81\% (6\%) \\
-\quad full\_ft\_approx & 40 & $-0.687$ (0.24) & 1.85 (0.25) & 0.23 (0.08) & 88\% (4\%) & 82\% (6\%) \\
+\quad k\_only          & 47 & $-0.597$ (0.33) & \textbf{82\%} (5\%) & \textbf{72\%} (7\%) & 2.11 (0.25) & 0.34 (0.09) \\
+\quad qkv              & 46 & $-0.670$ (0.25) & \textbf{83\%} (5\%) & \textbf{76\%} (6\%) & 1.98 (0.25) & 0.28 (0.08) \\
+\quad full\_attn       & 42 & $-0.671$ (0.25) & \textbf{86\%} (5\%) & \textbf{81\%} (6\%) & 1.83 (0.25) & 0.21 (0.07) \\
+\quad full\_ft\_approx & 40 & $-0.687$ (0.24) & \textbf{88\%} (4\%) & \textbf{82\%} (6\%) & 1.85 (0.25) & 0.23 (0.08) \\
 \multicolumn{7}{l}{\quad\textit{Full fine-tuning}} \\
-\quad Tree sample      & 47 & $-0.802$ (0.23) & 1.81 (0.21) & 0.19 (0.07) & 90\% (4\%) & 85\% (5\%) \\
+\quad Tree sample      & 47 & $-0.802$ (0.23) & \textbf{90\%} (4\%) & \textbf{85\%} (5\%) & 1.81 (0.21) & 0.19 (0.07) \\
 \midrule
 \multicolumn{7}{l}{\textbf{Decoder-only: Llama-3.2-1B} ($d=2048$)} \\
-\quad LoRA qkv ($r{=}8$)  & 47 & $-0.943$ (0.13) & 1.68 (0.20) & 0.13 (0.07) & 94\% (3\%) & 91\% (4\%) \\
-\quad LoRA qkv ($r{=}64$) & 47 & $-0.960$ (0.11) & 1.60 (0.19) & 0.09 (0.05) & 96\% (2\%) & 94\% (3\%) \\
-\quad full FT             & 44 & $-0.690$ (0.33) & 1.86 (0.24) & 0.25 (0.07) & 85\% (4\%) & 77\% (6\%) \\
+\quad LoRA qkv ($r{=}8$)  & 47 & $-0.943$ (0.13) & \textbf{94\%} (3\%) & \textbf{91\%} (4\%) & 1.68 (0.20) & 0.13 (0.07) \\
+\quad LoRA qkv ($r{=}64$) & 47 & $-0.960$ (0.11) & \textbf{96\%} (2\%) & \textbf{94\%} (3\%) & 1.60 (0.19) & 0.09 (0.05) \\
+\quad full FT             & 44 & $-0.690$ (0.33) & \textbf{85\%} (4\%) & \textbf{77\%} (6\%) & 1.86 (0.24) & 0.25 (0.07) \\
 \bottomrule
 \end{tabular}
 \end{center}
