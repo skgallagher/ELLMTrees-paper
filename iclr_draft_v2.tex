@@ -245,11 +245,9 @@ norms, for portability across architectures, considering cosine, correlation, $\
 similarity) throughout, for three reasons. It is bounded and scale-invariant across layers, so no single
 high-magnitude layer dominates the aggregate, unlike $\ell_1$/$\ell_2$. It is the prevailing choice in
 recent provenance and fingerprinting work \citep{zeng2024huref, behavioral2026provenance,
-zhu2025independence}, keeping our distances comparable to that literature. And it has a direct geometric
-reading: aligned fine-tuning updates indicate shared training history, while near-orthogonal updates ---
-typical of unrelated tasks or data --- carry little lineage signal, the regime where recovery is hardest
-(\S\ref{sec:framework:theory}). For adapter-trained models we compute distances on the \emph{merged}
-weights --- the base model plus its accumulated low-rank update along the root-to-node path --- so every
+zhu2025independence}, keeping our distances comparable to that literature. Finally, it has a direct geometric
+reading: aligned fine-tuning updates indicate shared training history, while near-orthogonal updates carry little lineage signal. For adapter-trained models we compute distances on the \emph{merged}
+weights so every
 model, fully fine-tuned or LoRA-adapted, is compared on the same full-weight footing.
 
 
