@@ -40,8 +40,8 @@
       text width=15.6cm,align=center,inner sep=5pt,
       font=\sffamily\small\bfseries,text=ink] (banner) at (7.9,5.55)
   {Fine-tuning leaves a path-dependent signature in weight space ---
-   a model \emph{genealogy} that we validate against known trees, link to behavior,
-   and recover from frontier models with no weight access.};
+   a model \emph{phylogeny} that we estimate and compare to known phylogenies $\mathcal{P}$,
+   link to behavior, and read more reliably from weights than from behavior alone.};
 
 % ===================== PANEL A: controlled whitebox =====================
 \begin{scope}
@@ -70,13 +70,17 @@
   \foreach \p in {ea,eb}{\node[circle,fill=estc,inner sep=0pt,minimum size=1.5mm] at (\p){};}
   \foreach \p in {ea1,ea2,eb1,eb2}{\node[mdl,draw=estc] at (\p){};}
 
+  % derive: recovered tree is built FROM model weights (true -> recovered)
+  \draw[->,line width=1.0pt,draw=flow] (1.80,3.12)--(3.45,3.12);
+  \node[font=\sffamily\scriptsize,text=flow] at (2.62,3.33) {weights $\to$ NJ};
   % compare arrow + RF tag
   \draw[<->,line width=1.0pt,draw=flow] (2.05,2.42)--(3.25,2.42);
   \node[font=\sffamily\scriptsize,text=ink] at (2.65,2.70) {RF\,/\,FN};
+  \node[font=\sffamily\scriptsize,text=ink] at (2.65,2.14) {clade recovery};
   \node[draw=okc,rounded corners=2pt,line width=0.7pt,fill=okc!12,
         font=\sffamily\scriptsize,text=okc,inner sep=2pt] at (2.65,1.30)
         {$\checkmark$ better than random tree};
-  \node[scap,anchor=north] at (2.65,0.95) {weights $\to$ neighbor-joining,\\scored against the tree we built};
+  \node[scap,anchor=north] at (2.65,0.95) {neighbor-joining estimate,\\scored against known truth};
 \end{scope}
 
 % arrow A->B
@@ -86,6 +90,7 @@
 \begin{scope}
   \node[panel,minimum width=4.55cm,minimum height=4.5cm] (PB) at (8.45,2.2){};
   \node[ptitle,anchor=north] at (PB.north) {\,B.\ Weights predict behavior};
+  \node[font=\sffamily\scriptsize,text=truthc] at (8.45,3.92) {DerSimonian--Laird $\bar r<0$};
 
   % scatter axes
   \begin{scope}[shift={(6.85,1.55)}]
@@ -99,43 +104,32 @@
     }
     \draw[truthc,line width=1.1pt,dashed] (0.20,1.78)--(2.85,0.52);
   \end{scope}
-  \node[scap,anchor=north] at (8.45,1.12) {closer in weights $\Rightarrow$ more\\similar outputs --- even on a\\held-out task ($r<0$, within run)};
+  \node[scap,anchor=north] at (8.45,1.12) {closer in weights $\Rightarrow$ more\\similar outputs --- even on a\\held-out task (within run)};
 \end{scope}
 
 % arrow B->C
 \draw[flowarrow] (10.75,2.2)--(11.45,2.2);
 
-% ===================== PANEL C: frontier blackbox =====================
+% ===================== PANEL C: margin gates recovery, weights >= behavior =====================
 \begin{scope}
   \node[panel,minimum width=4.95cm,minimum height=4.5cm] (PC) at (13.55,2.2){};
-  \node[ptitle,anchor=north] at (PC.north) {\,C.\ Frontier phylogeny \textit{(no weights)}};
+  \node[ptitle,anchor=north] at (PC.north) {\,C.\ Margin gates recovery};
 
-  % behavioral cladogram clustering families
-  \coordinate (root) at (11.55,2.35);
-  \coordinate (n1) at (12.25,3.10);   % top group
-  \coordinate (n2) at (12.25,1.55);   % bottom group
-  \coordinate (n1a) at (13.05,3.45);
-  \coordinate (n1b) at (13.05,2.75);
-  \coordinate (n2a) at (13.05,1.90);
-  \coordinate (n2b) at (13.05,1.15);
-  \draw[flow,line width=1.0pt] (root)--(n1) (root)--(n2)
-        (n1)--(n1a) (n1)--(n1b) (n2)--(n2a) (n2)--(n2b);
-  % leaf clades (two tips each), colored by family
-  \def\leaf#1#2#3{\draw[#3,line width=1.0pt] (#1)--($(#1)+(0.55,0.16)$) (#1)--($(#1)+(0.55,-0.16)$);
-        \node[mdl,draw=#3] at ($(#1)+(0.62,0.16)$){}; \node[mdl,draw=#3] at ($(#1)+(0.62,-0.16)$){};
-        \node[font=\sffamily\scriptsize,text=#3,anchor=west] at ($(#1)+(0.86,0)$){#2};}
-  \leaf{n1a}{Claude}{fClaude}
-  \leaf{n1b}{GPT}{fGPT}
-  \leaf{n2a}{Gemini}{fGemini}
-  % open-weight tip split into Llama and DeepSeek (distinct colors)
-  \draw[fOpen,line width=1.0pt] (n2b)--($(n2b)+(0.55,0.16)$);
-  \draw[fDeepSeek,line width=1.0pt] (n2b)--($(n2b)+(0.55,-0.16)$);
-  \node[mdl,draw=fOpen] at ($(n2b)+(0.62,0.16)$){};
-  \node[mdl,draw=fDeepSeek] at ($(n2b)+(0.62,-0.16)$){};
-  \node[font=\sffamily\scriptsize,text=fOpen,anchor=west] at ($(n2b)+(0.86,0.16)$){Llama};
-  \node[font=\sffamily\scriptsize,text=fDeepSeek,anchor=west] at ($(n2b)+(0.86,-0.16)$){DeepSeek};
-  \node[circle,fill=flow,inner sep=0pt,minimum size=1.8mm] at (root){};
-  \node[scap,anchor=north] at (13.55,0.78) {same NJ pipeline on model\\outputs recovers known\\frontier families};
+  \begin{scope}[shift={(11.95,1.20)}]
+    % axes
+    \draw[->,line width=0.8pt,draw=flow] (0,0)--(3.05,0);
+    \draw[->,line width=0.8pt,draw=flow] (0,0)--(0,2.10);
+    \node[font=\sffamily\scriptsize,text=flow,anchor=north] at (1.55,-0.07) {Atteson margin};
+    \node[font=\sffamily\scriptsize,text=flow,rotate=90,anchor=south] at (-0.12,1.05) {clade recovery};
+    % weight-based recovery (upper): rises fast, high plateau
+    \draw[estc,line width=1.4pt] (0.15,1.18) .. controls (0.9,1.86) and (1.7,1.94) .. (2.90,1.98);
+    % behavior-based recovery (lower): starts near chance floor, converges at high margin
+    \draw[flow,line width=1.4pt,dashed] (0.15,0.35) .. controls (1.25,0.48) and (2.05,1.42) .. (2.90,1.88);
+    % curve labels, kept clear of the curves
+    \node[font=\sffamily\scriptsize,text=estc,anchor=west] at (0.20,1.98) {weights};
+    \node[font=\sffamily\scriptsize,text=flow,anchor=west] at (0.72,0.20) {behavior};
+  \end{scope}
+  \node[scap,anchor=north] at (13.55,0.78) {recovery tracks the\\Atteson margin};
 \end{scope}
 
 % ===================== BOTTOM ACCESS AXIS =====================
@@ -145,7 +139,7 @@
 \node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (8.45,-0.30)
   {weight\,$\to$\,behavior link};
 \node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (13.7,-0.30)
-  {outputs only,\\real frontier models};
+  {margin gates recovery};
 
 \end{tikzpicture}
 \end{document}
