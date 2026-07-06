@@ -121,13 +121,13 @@ recovery.
 \label{sec:related}
 % ----------------------------------------------------------------------
 
-LLM lineage studies take three broad forms --- \emph{model-parameter}, \emph{weight--behavior}, and
-\emph{response-output} --- driven by applications in provenance and IP
+LLM lineage studies take three broad forms --- \emph{model-parameter/weight}, \emph{weight--behavior}, and
+\emph{behavior} --- driven by applications in provenance and IP
 \citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
 \citep{cloud2025subliminal}, trait inheritance \citep{cloud2025subliminal, agents2026same}, and data
 auditing \citep{zhu2025independence}.
 
-\textbf{Model parameters.} Several works trace parameter changes from fine-tuning or RLHF back to parent models. MoTHer
+\textbf{Model parameters/weights.} Several works trace parameter changes from fine-tuning or RLHF back to parent models. MoTHer
 \citep{horwitz2025mother} recovers family trees from weight similarity via a directed minimum spanning
 tree; \citet{yu2025neural} recover parent--child and grandparent--child lineage with both a
 learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct
@@ -135,9 +135,9 @@ lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghosts
 DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. None, however,
 estimates a full phylogeny and evaluates it against a known ground-truth tree.
 
-Other works examine \emph{why} lineage carries. Models fine-tuned from a shared initialization stay
+Other works examine \emph{why} lineage is detectable in models. Models fine-tuned from a shared initialization stay
 within a single low-error basin and are robust to SGD noise
-\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance proxies
+\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance can proxy
 genealogical distance; task vectors \citep{ilharco2023editing} are near-orthogonal across tasks, so
 distinct lineages contribute independent directions. LoRA \citep{hu2022lora} and intrinsic-dimensionality
 results \citep{aghajanyan2021intrinsic} explain why small-rank updates suffice and why rank matters.
