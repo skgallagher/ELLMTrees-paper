@@ -296,10 +296,9 @@ all-quartet mean. We relate $A$ and the oracle margin to recovery in \S\ref{sec:
 \section{Experiments}
 \label{sec:experiments}
 % -----------------------------------------------------------------------
-We structure our experiments around three questions: whether the model lineage can be
-estimated from weight changes, whether those changes predict downstream behavior, and
-whether family structure is visible from behavioral outputs alone in
-frontier models without weight access.
+We structure our experiments around three questions: whether the model lineage or phylogeny can be
+estimated from weight changes, whether those changes predict downstream held-out behavior, and
+how behavior-based phylogeny differs from weight-based.
 
 \paragraph{Controlled and real training trees.}
 \label{sec:exp:trees}
@@ -308,26 +307,26 @@ frontier models without weight access.
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
 % Controlled design enables RF evaluation — all competitors lack this.
 
-To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 8 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair, giving us the full parameters of each leaf. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage (e.g.\ parent--child relationships) and phylogeny recovery.
+To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 8 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair, giving us the full parameters of each leaf. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage  and phylogeny estimation.
 
 We vary the root model, task types, and trained layers. We examine an encoder--decoder model
 (Flan-T5-base, 250M) and decoder-only models (Pythia-160M, Llama-3.2-1B, and the more frontier-scale
-Llama-3.1-8B), fine-tuning on Q\&A, classification, translation, and summarization. For Flan-T5 we run
+Llama-3.1-8B), fine-tuning on Q\&A, classification, translation, and summarization. For Flan-T5 and LLama-3.2-1B, we run
 full fine-tuning and four LoRA \citep{hu2022lora} scopes (key only; q/k/v; all four attention
-projections; all projections); the decoder-only models use the same training-tree instructions. We also
-validate on two real model lineages from HuggingFace.
+projections; all projections). For each base model, we use the same training instructions. We also
+validate our method on two real model lineages from HuggingFace.
 
 \paragraph{Direct lineage.}
-Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pairs or correct ordering; ours does too, at the branch level (which models group on a branch). For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run point-biserial correlation (Fisher $z$-averaged across runs) between weight distance and the same-branch indicator.
+Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pairs or correct ordering. We also do this at the branch level. For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run point-biserial correlation (Fisher $z$-averaged across runs) between weight distance and the same-branch indicator.
 
 \paragraph{Phylogeny estimation.}
 \label{sec:exp:weights}
-Besides direct lineage, we test whether our method estimates the phylogeny. From \S\ref{sec:framework:theory}, recovery should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, and recovery metrics (clade recovery and exact phylogeny recovery), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}; permutation tests against a random-tree null are reported as secondary diagnostics in Appendix~\ref{app:null}. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
+Besides direct lineage, we test whether our method estimates the phylogeny. From \S\ref{sec:framework:theory}, accurate estimation should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, and recovery metrics (clade recovery and exact phylogeny recovery), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
 
 
 \paragraph{Predicting held-out behavior.}
 \label{sec:exp:behavioral}
-We next estimate how strongly whitebox weight distance predicts behavioral similarity on \textit{independent, held-out} probe tasks. We generate a new set of training trees in which translation is held out --- no child model is fine-tuned on translation --- then probe each leaf on translation and embed its text output with a small sentence-transformer (\texttt{all-MiniLM-L6-v2}, $384$-d), repeating each prompt three times per model. We report the random-effects DerSimonian--Laird \citep{dersimonianlaird1986} pooled correlation $r$ between weight distance and output-embedding similarity, on the paired per-prompt semantic distance with both quantities $z$-scored within run (placing all models and architectures on one scale). We also probe HellaSwag, which to our knowledge neither Flan nor Llama trained on.
+We next estimate how strongly whitebox weight distance predicts behavioral similarity on \textit{independent, held-out} probe tasks. We generate a new set of training trees in which translation is held out. We then probe each leaf on translation and embed its text output with a small sentence-transformer (\texttt{all-MiniLM-L6-v2}, $384$-d), repeating each prompt three times per model. We report the random-effects DerSimonian--Laird \citep{dersimonianlaird1986} pooled correlation $r$ between weight distance and output-embedding similarity, on the paired per-prompt semantic distance with both quantities $z$-scored within run (placing all models and architectures on one scale). We also probe HellaSwag, ARC-C, MMLU, and TruthfulQA which to our knowledge neither Flan nor Llama trained on.
 
 % We then estimate $r$ from the following mixed effects regression:
 % \begin{equation}\label{eq:reg}
@@ -346,7 +345,7 @@ We next estimate how strongly whitebox weight distance predicts behavioral simil
 % Single-task confounded by formatting (verbosity, markdown).
 % Translation cleanest — language crossing decouples embedding from source content.
 
-Sometimes weights are unavailable and provenance must be inferred from outputs alone. Prior work shows frontier families cluster in behavioral embedding space~\citep{wu2026llmdna, yax2025phylolm}. We extend this by probing 23 frontier and local models (GPT, Claude, Gemini, and open-weight families including Llama and Mistral) across four task types --- summarization, QA, classification, and translation --- with the same neighbor-joining pipeline applied to pairwise sentence-embedding distances between outputs, aggregating the per-prompt trees within and across tasks via the Billera--Holmes--Vogtmann (BHV) Fr\'echet (Sturm) mean in tree space~\citep{billera2001geometry, willis2019confidence} (App.~\ref{app:blackbox}). As in \cite{yax2025phylolm}, this is unsupervised.
+Sometimes weights are unavailable and provenance must be inferred from outputs alone. Prior work shows frontier families cluster in behavioral embedding space~\citep{wu2026llmdna, yax2025phylolm}. We compare our weight-based method to the behavior-based phylogeny estimation in \cite{yax2025phylolm}.
 
 
 % -----------------------------------------------------------------------
