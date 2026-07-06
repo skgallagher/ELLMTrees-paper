@@ -97,28 +97,19 @@ ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights t
 
 
 
-Our central contribution is that fine-tuning lineage is legible in the weights; two further results
-follow as corollaries of it:
+Our primary contribution is that analyzing the changes in weights between fine-tunings allows accurate phylogeny estimation when the Atteson-Margin is close to 1.  As a result of this weight-based estimates, we can further show two behavior-related consequences:
 \begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
-  \item \textbf{Core: phylogeny recovery against ground truth.} Guided by the geometry of
+  \item \textbf{Primary: phylogeny estimation against ground truth.} Guided by the geometry of
     fine-tuning updates, our metric and summary-statistic choices estimate the model phylogeny from
-    weights alone: most controlled trees recover the complete phylogeny exactly ($74$--$95\%$ of
-    runs), including the within-task splits that task clustering alone cannot produce --- a metadata-only
-    baseline through the identical pipeline recovers far less ($42\%$ vs.\ $84\%$ exact), so the signal is
-    not coarse task grouping. We evaluate against a
-    known ground-truth phylogeny, validate the same pipeline on documented real-world
-    HuggingFace families, and by treating layers as `genes' identify which \emph{carry} the signal (e.g.\
-    in an encoder--decoder model the key projections alone, $4\%$ of parameters, estimate lineage as
-    well as the full tensor).
-  \item \textbf{Corollary 1 --- a weight$\to$behavior bridge.} \emph{Because} weight-space lineage is
-    real, weight-space proximity predicts behavioral similarity, even on tasks the models never trained.
-  \item \textbf{Corollary 2 --- weights recover lineage with a larger margin and no queries.}
-    \emph{Because} our weight-based estimate is scored against ground truth --- which behavior-only
-    methods lack --- we can calibrate behavior-only estimation directly. On the same documented
-    families, weight access matches the strongest behavior-only method (PhyloLM), recovering the same
-    forks but clearing the four-point additivity margin with far more room ($\bar{A}=0.98$ vs.\ $0.84$)
-    and requiring no query access or output sampling; naive output-embedding estimation --- the regime
-    frontier-model provenance is otherwise stuck in --- recovers far less.
+    weights alone: most controlled experiments estimate the complete phylogeny exactly ($74$--$95\%$ of
+    runs) We evaluate against known ground-truth phylogenies and show that as few as 4\% of model parameters can be used to accurately estimate the known phylogenies.  We finally show that our weight-based method accurately recovers all the splits in a small but real Llama phylogeny.
+  \item \textbf{Weight$\to$behavior bridge.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
+  \item \textbf{Weights recover lineage with a larger margin and no queries.}
+    \emph{Because} our weight-based estimate is scored against ground truth, which behavior-only
+    methods currently lack, we can calibrate behavior-only estimation directly.  We show in some circumstances, weight-based phylogeny estimation outperforms behavior-based estimation. On the same documented, real
+    families, weight access matches the strongest behavior-only method (PhyloLM ~\cite{yax2025phylolm}), recovering the same
+    forks but with a larger additivity margin ($\bar{A}=0.98$ vs.\ $0.84$)
+    and requiring no query access or output sampling.
 \end{itemize}
 Throughout we span an encoder--decoder model and decoder-only models from 160M to 8B and full
 fine-tuning through LoRA, finding that a label-free proxy for the Atteson margin reliably indicates
