@@ -207,10 +207,9 @@ whose leaves are the observed models and whose internal nodes are latent common 
 like \citep{yu2025neural} but unlike \citep{horwitz2025mother}, that all models derive from a single
 root. Unlike prior weight-based work, which recovers parent--child or pairwise links, we estimate the
 full phylogeny over all leaves: we form a pairwise distance matrix and apply neighbor-joining (NJ)
-\citep{saitou1987neighbor} to reconstruct the tree.
+\citep{saitou1987neighbor} to reconstruct the phylogeny.
 
-
-\subsection{Phylogenetic Tree Estimation}
+\subsection{Phylogeny Estimation}
 \label{sec:framework:phylo}
 % We frame fine-tuning lineage recovery as a phylogenetics problem.
 % Pairwise weight distances → NJ tree → RF vs ground truth → permutation p.
@@ -227,13 +226,12 @@ assess each layer's lineage signal. We score a reconstruction against the known 
 Robinson--Foulds (RF) distance \citep{robinson1981comparison}, the number of bipartitions on which the
 two trees disagree, which decomposes into false positives (FP) and false negatives (FN). Because NJ
 returns strictly binary trees while our ground-truth phylogenies contain \textit{polytomies} (nodes with
-more than two children), NJ must add resolving edges, so RF is never zero even for a perfect
-reconstruction: these forced edges inflate FP without being genuine errors. We therefore treat FN --- the
-number of true clades the reconstruction misses --- as the honest error measure, and report clade
-recovery $= 1 - \mathrm{FN}/|\text{true splits}|$ and exact (full-phylogeny) recovery, the fraction of
+more than two children), NJ must add resolving edges. As a result, RF is never zero even for a correct binary
+reconstruction. These forced edges inflate FP without being genuine errors. We therefore treat FN,  the
+number of true clades the reconstruction misses, as a more representative metric.  Additionally, we report clade
+recovery $= 1 - \mathrm{FN}/|\text{true splits}|$ and full-phylogeny recovery, the fraction of
 runs with $\mathrm{FN}=0$, alongside RF. We also report the standardized within-run correlation $r$
-between weight distance and a same-branch indicator, and analyze only phylogenies with at least 4 leaves,
-since fewer is trivial.
+between weight distance and a same-branch indicator, and analyze only phylogenies with at least 4 leaves, since fewer is trivial.
 
 %% that's t he statistical basis for our method.
 
