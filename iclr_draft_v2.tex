@@ -260,12 +260,13 @@ model, fully fine-tuned or LoRA-adapted, is compared on the same full-weight foo
 % Distribution of per-layer RF distances is the data; consensus tree is summary.
 % More statistically principled than any competitor — flag explicitly.
 
-We treat per-layer distance matrices as independent estimates rather
+We treat per-layer distance matrices as independent estimators rather
 than collapsing to a single all-layer distance, by analogy to biological phylogenies that must cohere
 across multiple genes encoding different information \citep{maddison1997gene}. A model with $L$ layers
-thus yields $L$ distance matrices, which can each form an estimate of $\widehat{\mathcal{P}}$ or be combined (e.g.\ Frechet mean) into a less noisy $\hat{\mathbf{D}}$.
-Beyond a lower-variance estimate, the layer-wise view identifies the most and least important layers by
-which change most or least across runs.
+thus yields $L$ distance matrices, each of which can form its own estimate of $\widehat{\mathcal{P}}$ or
+be combined (e.g.\ via the Fr\'echet mean) into a less noisy $\widehat{\mathbf{D}}$. Beyond a
+lower-variance estimate, the layer-wise view lets us rank layers by how much lineage signal each carries
+--- which layers recover the tree well on their own and which do not (\S\ref{sec:results:weighttree}).
 
 
 \subsection{Guiding Phylogeny Estimation}
