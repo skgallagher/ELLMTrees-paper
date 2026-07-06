@@ -307,11 +307,11 @@ how behavior-based phylogeny differs from weight-based.
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
 % Controlled design enables RF evaluation — all competitors lack this.
 
-To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 8 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair, giving us the full parameters of each leaf. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage  and phylogeny estimation.
+To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 8 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair, giving us the full parameters of each leaf. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage and phylogeny estimation.
 
 We vary the root model, task types, and trained layers. We examine an encoder--decoder model
 (Flan-T5-base, 250M) and decoder-only models (Pythia-160M, Llama-3.2-1B, and the more frontier-scale
-Llama-3.1-8B), fine-tuning on Q\&A, classification, translation, and summarization. For Flan-T5 and LLama-3.2-1B, we run
+Llama-3.1-8B), fine-tuning on Q\&A, classification, translation, and summarization. For Flan-T5 and Llama-3.2-1B, we run
 full fine-tuning and four LoRA \citep{hu2022lora} scopes (key only; q/k/v; all four attention
 projections; all projections). For each base model, we use the same training instructions. We also
 validate our method on two real model lineages from HuggingFace.
@@ -328,24 +328,12 @@ Besides direct lineage, we test whether our method estimates the phylogeny. From
 \label{sec:exp:behavioral}
 We next estimate how strongly whitebox weight distance predicts behavioral similarity on \textit{independent, held-out} probe tasks. We generate a new set of training trees in which translation is held out. We then probe each leaf on translation and embed its text output with a small sentence-transformer (\texttt{all-MiniLM-L6-v2}, $384$-d), repeating each prompt three times per model. We report the random-effects DerSimonian--Laird \citep{dersimonianlaird1986} pooled correlation $r$ between weight distance and output-embedding similarity, on the paired per-prompt semantic distance with both quantities $z$-scored within run (placing all models and architectures on one scale). We also probe HellaSwag, ARC-C, MMLU, and TruthfulQA which to our knowledge neither Flan nor Llama trained on.
 
-% We then estimate $r$ from the following mixed effects regression:
-% \begin{equation}\label{eq:reg}
-% d_{\ell_2}(y_{i,b,p}, y_{j,b,p}) \sim r \times d_{cos}\left (\theta_{i,b}, \theta_{j,b} \right )  + \beta_0|b
-% \end{equation}
-% where $d_{cos}$ is cosine distance, $d_{\ell_2}$ is euclidean distance,  $\theta_{i,b}$ are model parameters from model $i$ and training tree $b$, $y_{i,b,p}$ are the output embeddings from model $i$ from prompt $p$ on training tree $b$, and $\beta_0|b$ is the random intercept per training tree.  The subscripts are to emphasize that we standardize cosine distance for each training and standardize embeddings distance for each training tree and prompt.  The reason for this standardization is to put the model parameters and responses on the same scale.  (CHECK).  We report $r$, its 95\% confidence interval, and $p$-value.
-
-% NOTE: der-simonian..  What is the equation?
 
 
 
-\paragraph{Behavior-only lineage (frontier models).}
+\paragraph{Comparison to behavior-only estimation.}
 \label{sec:exp:blackbox}
-% GPT, Claude, Gemini, Llama probed via output embeddings across 4 tasks.
-% Family structure recoverable when aggregating tasks.
-% Single-task confounded by formatting (verbosity, markdown).
-% Translation cleanest — language crossing decouples embedding from source content.
-
-Sometimes weights are unavailable and provenance must be inferred from outputs alone. Prior work shows frontier families cluster in behavioral embedding space~\citep{wu2026llmdna, yax2025phylolm}. We compare our weight-based method to the behavior-based phylogeny estimation in \cite{yax2025phylolm}.
+Sometimes weights are unavailable and provenance must be inferred from outputs alone; prior work estimates lineage from behavior in exactly this setting~\citep{wu2026llmdna, yax2025phylolm}. Because our documented HuggingFace family (\S\ref{sec:exp:trees}) has a known topology, we can score behavior-only estimation against ground truth rather than leaving it unsupervised. On that family we run the behavior-based PhyloLM method~\citep{yax2025phylolm}, using its released genes and genetic distance on the same checkpoints, alongside a naive neighbor-joining tree on sentence-embedding distances between the same models' outputs, and compare both against our weight-based reconstruction on the identical ground truth.
 
 
 % -----------------------------------------------------------------------
