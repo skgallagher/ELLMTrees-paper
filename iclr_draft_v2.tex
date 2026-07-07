@@ -395,16 +395,15 @@ Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} wit
 We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to use $\approx$4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App [FILL IN]).  The signal in the encoder-decoder seems to be stronger in the $k$ matrices whereas the decoder-only seems to be more diffuse across the $k$-matrices, possibly indicating that encoders are important in passing lineage signal.
 
 Finally, we see that the oracle Atteson margin $m$ and additivity proxy $A$ both reliably guide phylogeny (specifically clade recovery) estimation.  In Figure~\ref{fig:coherence_recovery}, see both $m$ and $A$ reported across LoRA settings, datasets, layers, and
-models. We can see the diffuse signal of lineage in Llama in the orange points.  They have both low margins and additivities and low clade recovery.  It is only when we use the Frechet mean to average these layers together do we have recovery over $80\%$ (purple circles).  We see that while Atteson margin (vertical line at 1) is a hard-boundary of sufficiency in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.6$ and few points in the middle range.
+models. We see that the norm layers seem to have the worst recovery.  They have both low margins and additivities and low clade recovery.  We see that while Atteson margin (vertical line at 1) is a hard-boundary of sufficiency in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.55$ and few points in the middle range.
 
 \begin{figure}[t]
   \begin{center}
     \includegraphics[width=0.78\linewidth]{\figpath/fig4_coherence_atteson.png}
   \end{center}
-  \caption{\textbf{What gates phylogeny recovery.} \textbf{(A)} Clade recovery against the oracle
+  \caption{\textbf{What guides clade recovery.} \textbf{(A)} Clade recovery against the oracle
     bottleneck Atteson margin (min.\ fitted internal edge length over twice the non-additivity
-    error); NJ is guaranteed to recover a split once the margin exceeds $1$ (dashed line).
-    \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
+    error). \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
     no ground-truth tree. Small points are individual Llama-1B layers or q/k/v adapter matrices;
     large symbols are whole-run summaries, Flan LayerTrace subsets, organic HF validation, and
     layer-family centroids.}
@@ -454,7 +453,7 @@ Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & --- & --- &
 \end{table}
 
 
-\paragraph{Behavior-only lineage (frontier models).}
+\paragraph{Comparing to Behavior-Only Lineage.}
 \label{sec:results:blackbox}
 
 Behavior-only clade recovery depends strongly on the method. On the documented Mistral family, the
