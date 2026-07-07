@@ -416,26 +416,23 @@ models. We see that the norm layers seem to have the worst recovery.  They have 
 
 While estimating phylogeny from weights is useful for safety and provenance, it can be of even more use if similarity in weights indicates similarity in behavior. Inspired by \citet{cloud2025subliminal}'s subliminal-learning experiment, we test
 whether models closer in weight space produce more similar outputs on held-out tasks, using translation
-(on a tree that never trained on it) along with four probe tasks untrained (we presume) by either model (HellaSwag,
-ARC-Challenge, MMLU, TruthfulQA).
-Table~\ref{tab:behavior_holdout} reports a consistent, significant negative correlation (Dersimonian-Laird) across all held-out
+(on a tree that never trained on it) along with four probe tasks that, to our knowledge, neither model
+was trained on (HellaSwag, ARC-Challenge, MMLU, TruthfulQA).
+Table~\ref{tab:behavior_holdout} reports a consistent, significant negative correlation (DerSimonian--Laird) across all held-out
 probes in Llama and for HellaSwag in Flan.  Our results support that unexpected traits can be passed to child
-models.   Flan occasionally has the opposite effect (i.e. closer in weight spaces means further in behavior space).  We believe that the reason for this is, at least in part, due to catastrophic forgetting.  Flan, a smaller and less robust model, often defaults to the last task it was trained on, regardless of the prompt given.
+models.   Flan occasionally has the opposite effect (i.e. closer in weight space means further in behavior space).  We believe that the reason for this is, at least in part, due to catastrophic forgetting.  Flan, a smaller and less robust model, often defaults to the last task it was trained on, regardless of the prompt given.
 
 
 
 \begin{table}[t]
-\caption{Weight$\to$behavior bridge by model and probe (full fine-tuning). Random-effects
-(DerSimonian--Laird) pooled correlation $r$ between weight distance and behavioral similarity (paired
-per-prompt semantic distance, both $z$-scored within run, so $r$ is comparable across cells). ``Held-out''
-probes had no node trained on them; translation is reported both when it is in the training mix and when
-it is withheld from every node. Negative $r$ (closer in weight space $\Rightarrow$ more similar behavior)
-supports the bridge. $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$. Every reported cell uses the paired
-per-prompt DV. $^\ddagger$degenerate Flan probe (translation reversal, App.~\ref{app:translation_probe});
-reported for completeness, not interpreted as evidence for or against the bridge. Flan's
-multiple-choice held-out probes (ARC-C, MMLU, TruthfulQA) collapse onto trained-task label vocabulary on
-single-task-per-leaf trees (App.~\ref{app:translation_probe}) and so are not reported (---). Full
-per-condition CIs and coefficients in App.~\ref{app:regression}.}
+\caption{Weight$\to$behavior bridge by model and probe (full fine-tuning). Each cell is the
+random-effects (DerSimonian--Laird) pooled correlation $r$ between weight distance and behavioral
+similarity (paired per-prompt semantic DV, $z$-scored within run), with heterogeneity $I^2$ (\%) in
+parentheses. Held-out probes had no node trained on them; translation is shown both in the training mix
+and withheld from every node. Negative $r$ supports the bridge (closer weights $\Rightarrow$ more
+similar behavior). $^\ddagger$degenerate Flan probe (App.~\ref{app:translation_probe}); Flan
+multiple-choice probes (ARC-C, MMLU, TruthfulQA) collapse onto trained-task label vocabulary and are not
+reported (---). Per-cell 95\% CIs in App.~\ref{app:regression}.}
 \label{tab:behavior_holdout}
 \centering
 \small
@@ -446,8 +443,8 @@ per-condition CIs and coefficients in App.~\ref{app:regression}.}
 \cmidrule(lr){2-3}
 Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
-Llama-3.2-1B & $-0.29^{***}$ & $-0.33^{***}$ & $-0.20^{***}$ & $-0.26^{***}$ & $-0.25^{***}$ & $-0.33^{***}$ \\
-Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & --- & --- & --- \\
+Llama-3.2-1B & $-0.29$ (62) & $-0.33$ (52) & $-0.20$ (52) & $-0.26$ (43) & $-0.25$ (55) & $-0.33$ (58) \\
+Flan-T5-base & $-0.26$ (39) & $+0.11^{\ddagger}$ (35) & $-0.29$ (25) & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
