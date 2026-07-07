@@ -52,7 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted on HuggingFace, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we treat fine-tuning as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering the complete tree exactly in 72--94\% of runs (82--96\% of clades).  We also show where the evolutionary signal is most prominent in a few architecture dependent layers such as the attention matrices.  We are able to show that we can accurately estimate the phylogeny using only 4\% of the total parameters, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is guided by a known mathematical concept from phylogenetics : the Atteson Margin. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models significantly predicts behavioral similarity on held-out tasks including tasks about truthfulness, knowledge, reasoning, and common sense.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. Our method not only estimates the phylogeny accurately but also helps score the success of the the behavior-based method.  
+While over a million deep learning models are hosted on HuggingFace, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we treat fine-tuning as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering the complete tree exactly in 72--94\% of runs (82--96\% of clades).  We also show where the evolutionary signal is most prominent in a few architecture dependent layers such as the attention matrices.  We are able to show that we can accurately estimate the phylogeny using only 4\% of the total parameters, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is guided by a known mathematical concept from phylogenetics: the Atteson margin. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models significantly predicts behavioral similarity on held-out tasks including tasks about truthfulness, knowledge, reasoning, and common sense.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. Our method not only estimates the phylogeny accurately but also helps score the success of the behavior-based method.
 
 \end{abstract}
 
@@ -321,7 +321,7 @@ Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pai
 
 \paragraph{Phylogeny estimation.}
 \label{sec:exp:weights}
-Besides direct lineage, we test whether our method estimates the phylogeny. From \S\ref{sec:framework:theory}, accurate estimation should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, and recovery metrics (clade recovery and exact phylogeny recovery), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.  Additionally, we report the most important layers for estimating the phylogeny.
+Besides direct lineage, we test whether our method estimates the phylogeny. From \S\ref{sec:framework:theory}, accurate estimation should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, and recovery metrics (clade recovery and exact phylogeny recovery), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
 
 
 \paragraph{Predicting held-out behavior.}
@@ -333,7 +333,7 @@ We next estimate how strongly whitebox weight distance predicts behavioral simil
 
 \paragraph{Comparison to behavior-only estimation.}
 \label{sec:exp:blackbox}
-Sometimes weights are unavailable and provenance must be inferred from outputs alone; prior work estimates lineage from behavior in exactly this setting~\citep{wu2026llmdna, yax2025phylolm}. Because our documented HuggingFace family (\S\ref{sec:exp:trees}) has a known topology, we can score behavior-only estimation against ground truth rather than leaving it unsupervised. On that family we run the behavior-based PhyloLM method~\citep{yax2025phylolm}, using its released genes and genetic distance on the same checkpoints, alongside a naive neighbor-joining tree on sentence-embedding distances between the same models' outputs, and compare both against our weight-based reconstruction on the identical ground truth. We also compare PhyloLM to a subset of our controlled experiments.
+Sometimes weights are unavailable and provenance must be inferred from outputs alone; prior work estimates lineage from behavior in exactly this setting~\citep{wu2026llmdna, yax2025phylolm}. Because our documented HuggingFace family (\S\ref{sec:exp:trees}) has a known topology, we can score behavior-only estimation against ground truth rather than leaving it unsupervised. On that family we run the behavior-based PhyloLM method~\citep{yax2025phylolm}, using its released genes and genetic distance on the same checkpoints, alongside a naive neighbor-joining tree on sentence-embedding distances between the same models' outputs, and compare both against our weight-based reconstruction on the identical ground truth (details in App.~\ref{app:blackbox}). We also compare PhyloLM to a subset of our controlled experiments.
 
 
 % -----------------------------------------------------------------------
@@ -394,8 +394,8 @@ Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} wit
 
 We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to use $\approx$4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App.~\ref{app:layertrace}).  The signal in the encoder-decoder seems to be stronger in the $k$ matrices whereas the decoder-only seems to be more diffuse across the $k$-matrices, possibly indicating that encoders are important in passing lineage signal.
 
-Finally, we see that the oracle Atteson margin $m$ and additivity proxy $A$ both reliably guide phylogeny (specifically clade recovery) estimation.  In Figure~\ref{fig:coherence_recovery}, see both $m$ and $A$ reported across LoRA settings, datasets, layers, and
-models. We see that the norm layers seem to have the worst recovery.  They have both low margins and additivities and low clade recovery.  We see that while Atteson margin (vertical line at 1) is a hard boundary of sufficiency in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.55$ and few points in the middle range.
+Finally, we see that the oracle Atteson margin $m$ and additivity proxy $A$ both reliably guide phylogeny (specifically clade recovery) estimation.  In Figure~\ref{fig:coherence_recovery}, we see both $m$ and $A$ reported across LoRA settings, datasets, layers, and
+models. We see that the norm layers seem to have the worst recovery.  They have both low margins and additivities and low clade recovery.  We see that while the Atteson margin (vertical line at 1) is a hard boundary of sufficiency in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.55$ and few points in the middle range.
 
 \begin{figure}[t]
   \begin{center}
@@ -594,22 +594,6 @@ somewhat more signal.
     cross-attention, so the localization is not an encoder--decoder artifact.}
   \label{fig:layertrace_grid}
 \end{figure}
-
-\section{Null Distribution Construction}
-\label{app:null}
-
-We assess phylogeny recovery against a permutation null computed per run (per tree).
-
-\paragraph{Random-tree null.} For a run with $n$ leaves we draw $1{,}000$ trees uniformly from the space
-of binary topologies on the same $n$ labels and score each against the ground-truth training tree with
-the same polytomy-aware recovery metric used for the reconstruction (Robinson--Foulds / clade
-recovery; \S\ref{sec:framework:phylo}). The per-run $p$-value is the fraction of null trees whose
-distance to the truth is at most the observed distance---the probability that a random tree matches the
-truth as well as the reconstruction does. ``\% sig'' is the share of runs whose reconstruction beats
-this null at $\alpha=0.05$. We report the recovery-metric effect sizes (clade recovery and exact recovery)
-as the primary evidence; because exact recovery counts runs that recover the \emph{entire} multifurcating
-truth---including its within-task splits---exact recovery cannot be achieved by task-level clustering
-alone.
 
 \section{Blackbox Experiment Details}
 \label{app:blackbox}
