@@ -1,7 +1,8 @@
 # Handoff — ICLR draft v2 (`iclr_draft_v2.tex`)
 
-_Last writing session: 2026-07-06 (§3 + §4 pass). Repo: `ELLMTrees-paper`._
-_**Next session: §5 Results — first job is finishing the 23-model removal (see item 1 below).**_
+_Last writing session: 2026-07-07 (§5 Results + §6 Discussion pass — COMPLETE). Repo: `ELLMTrees-paper`._
+_**Next session: draft is complete through all sections. Only open item is the 3 Flan MC probe cells in
+Table 3 (Ghidorah jobs pending) — see "Open items (2026-07-07)" below.**_
 
 ## Working file
 **`iclr_draft_v2.tex`** is the live draft (NOT `iclr_draft.tex` — that's the older v1 trim;
@@ -32,6 +33,76 @@ git add <resolved files> && git commit --no-edit && git push
 ```
 Lead every git block with `gitfix` (clears the recurring `.git/index.lock`). Don't `git add -A` —
 `paper.tex`, `.DS_Store`, some PNGs, and untracked `outputs/`/`results/` are left alone on purpose.
+
+## Session 2026-07-07 — §5 Results + §6 Discussion pass (COMPLETE)
+
+Paragraph-by-paragraph + table-by-table through §5 and §6. Draft now **17pp**, compiles clean (no
+undefined refs). Cowork sandbox made the edits; Shannon pushed each from her Mac. Sandbox needed
+`scipy`/`dendropy`/`biopython` via `pip install --target=/tmp/pylibs` (PyPI works; `/sessions` disk is
+100% full so install to `/tmp`; run figure scripts with `PYTHONPATH=/tmp/pylibs MPLCONFIGDIR=/tmp/mpl`).
+
+**Recovery table restructure.**
+- **Deleted old Table 1 `tab:rf_by_leaves`** (by-architecture) — recovery now lives only in `tab:variants`.
+  Repointed its orphaned refs (task-baseline app) to `tab:variants`; bumped one cited Flan full-FT exact
+  84→85% to match that row. This is why table *numbers shifted*: `tab:variants` is now **Table 2**,
+  `tab:behavior_holdout` is now **Table 3**.
+- **`tab:variants` rebuilt:** ordering columns = **rank-biserial (SE)** + **within-run r (SE)** (was SD);
+  RF/FN merged to one `RF (SE); FN (SE)` column; caption notes a red convention for non-sig ordering
+  cells (none fire). All numbers recomputed from per-run CSVs, reproduce prior values.
+  ⚠️ **Llama qkv r8 ordering must use `runs_llama1b_base_qkv_branch_structure.csv` (the `runs_`-PREFIXED
+  file = cumulative, r=−0.94). The UNPREFIXED `llama1b_base_qkv_branch_structure.csv` is stale increment
+  (r=−0.16) — do not use.**
+- **Dropped appendix `tab:direct`** (folded into `tab:variants`).
+
+**Fig `fig:coherence_recovery` (`fig4_coherence_atteson.png`) regenerated on CUMULATIVE data.**
+The paper copy was the stale "Layer summaries" version with the Llama q/k/v adapter cluster pinned at
+margin≈0.03 / clade≈25% = the **increment artifact** (debunked dead zone), contradicting Table 2's 94%.
+Edited `ELLMTrees/scripts/make_fig4_atteson_layers.py` to **drop the r64 adapter-matrix scatter** (local
+r64 per-layer cube is Jun-23 INCREMENT, mean layer dist 0.79) + its 2 legend entries; kept Llama full-FT
+per-layer points (valid cumulative) + Flan subsets + group points + organic. Reran →
+`results/aggregate/recovery_rescore/fig4_atteson_layermeans.png` → copied to
+`figures/fig4_coherence_atteson.png`. Margin prose rewritten around norm/embed being the weak layers.
+⚠️ **No cumulative Llama-qkv per-layer cube is local** (r8 never pulled; r64 is increment). To restore the
+single-adapter points, recompute an r8/r64 `--cumulative` cube on the cluster + pull.
+
+**New appendix `app:withintask`:** single-task groups recover clade **59–87%** (Flan full-FT, one task
+type per tree; `recovery_rescore/per_run_cosine.csv`, groups `runs_*_only`). Corrected an in-text
+"80–90+%" → "59–87%".
+
+**Behavior bridge `tab:behavior_holdout` (Table 3):** cells = **DL r with 95% CI stacked** (`\shortstack`);
+corner labeled **"DL r [95% CI]"**; p-value stars/legend dropped. **I² moved to new appendix table
+`tab:behavior_het`** (r, 95% CI, I², k). All 9 cells recomputed locally from
+`regression_<group>_<probe>_semantic_paired_practical.csv` — reproduce the table exactly. Flan reversal
+(+0.11‡) = catastrophic forgetting, verified vs `app:translation_probe`.
+⚠️ **3 Flan MC cells still `---`** (ARC-C/MMLU/TruthfulQA): only degenerate `no_translation_v2` versions
+exist; `branching_v3` versions NOT collected. **Ghidorah jobs 33822 (arc), 33826 (mmlu), 33827
+(truthfulqa)** launched this session. When done: pull → `python scripts/build_paired_semantic.py --group
+results/runs_branching_v3` → the 3-probe regression loop → send CSVs to Cowork → it computes r+I² and
+fills cells (expected to collapse — single-task-per-leaf).
+
+**Behavior-only §5 — frontier DROPPED (Shannon: "RIP").** Cut the 23-model frontier from §5 AND the
+appendix (`app:blackbox` Model-collection/Prompts/Embedding/Aggregation paragraphs + `fig:blackbox_hero`
++ `fig:frechet_grid`); moved `billera2001geometry`+`willis2019confidence` (cited only there) to the §3
+Fréchet-mean line; kept the PhyloLM-reproduction paragraph. Centered on **PhyloLM** + added the
+**controlled comparison** (diary 2026-07-03): weights vs PhyloLM clade — held-out full-FT **95% vs 57%**,
+r=8 LoRA **94% vs 35%** (PhyloLM at random-tree floor); Mistral = tie (Ā 0.98 vs 0.84). Regenerated the
+**Mistral hero figure** (`hf_mistral_hero_3panel.png`) with short leaf labels + fontsize 13 via
+`ELLMTrees/codex/plot_hf_zoo_tree_vs_truth.py` (one-line label change: `label.split("__")[-1]`).
+
+**Full pass fixes:** stale fig caption ("q/k/v adapter matrices" → "full-FT layers"), removed broken
+`app:robustness` ref, Discussion exact-recovery 79→72–94%, typos; Discussion smoothing + added the
+additivity-proxy sentence ("Because the additivity proxy A requires no ground-truth tree…").
+
+**Code changed in the `ELLMTrees` (experiments) repo — push separately from the paper repo:**
+`scripts/make_fig4_atteson_layers.py`, `codex/plot_hf_zoo_tree_vs_truth.py`.
+
+## Open items (2026-07-07)
+1. **3 Flan MC probe cells** (Table 3) — Ghidorah jobs 33822/33826/33827; workflow above. **Only real
+   open writing item.**
+2. **More controlled PhyloLM groups next week** (Shannon) — lora_qkv/k_only/r-sweep/pythia per
+   `ELLMTrees/codex/HANDOFF_phylolm_controlled.md`; could grow into a whitebox-vs-PhyloLM table in §5/App F.
+3. **Optional:** restore Llama q/k/v single-adapter points in `fig:coherence_recovery` (needs a cumulative
+   r8/r64 per-layer cube from the cluster).
 
 ## Session 2026-07-06 (later) — §3 Framework + §4 Experiments pass
 
