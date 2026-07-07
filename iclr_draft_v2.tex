@@ -249,7 +249,7 @@ We treat per-layer distance matrices as independent estimators rather
 than collapsing to a single all-layer distance, by analogy to biological phylogenies that must cohere
 across multiple genes encoding different information \citep{maddison1997gene}. A model with $L$ layers
 thus yields $L$ distance matrices, each of which can form its own estimate of $\widehat{\mathcal{P}}$ or
-be combined (e.g.\ via the Fr\'echet mean) into a less noisy $\widehat{\mathbf{D}}$. Beyond a
+be combined (e.g.\ via the Fr\'echet mean~\citep{billera2001geometry, willis2019confidence}) into a less noisy $\widehat{\mathbf{D}}$. Beyond a
 lower-variance estimate, the layer-wise view lets us rank layers by how much lineage signal each carries:
 which layers recover the tree well on their own and which do not (\S\ref{sec:results:weighttree}).
 
@@ -454,24 +454,20 @@ Flan-T5-base & \shortstack{$-0.26$\\{\scriptsize$[-.35,-.16]$}} & \shortstack{$+
 \paragraph{Comparing to Behavior-Only Lineage.}
 \label{sec:results:blackbox}
 
-Behavior-only clade recovery depends strongly on the method. On the documented Mistral family, the
-established PhyloLM method \citep{yax2025phylolm} --- reproduced faithfully with its released \texttt{math}
-genes and genetic distance --- recovers all three forks, matching weight-based recovery, though it clears
-the four-point additivity margin with less room ($\bar{A}=0.84$ vs.\ the whitebox $0.98$) and requires
-query access plus output sampling; a naive sentence-embedding tree on the same models recovers only one
-(Fig.~\ref{fig:real-trees}). With only inference access, we estimate lineage from 23 frontier
-and open models as a Fr\'echet tree averaged across the four probe tasks: developer families (Claude,
-GPT, Llama) emerge, but the estimate is not robust across tasks --- pairwise normalized RF among the
-four per-task trees is $0.65$--$0.95$ (mean $\approx 0.84$), so no single task reproduces the aggregate.
-Lacking a ground-truth baseline, the recovered lineage looks reasonable but is highly prompt-dependent
-(full phylogeny and per-task trees in Appendix~\ref{app:blackbox},
-Figs.~\ref{fig:blackbox_hero}--\ref{fig:frechet_grid}).
+When weights are unavailable, lineage must be inferred from behavior alone. We compare our weight-based
+reconstruction to PhyloLM~\citep{yax2025phylolm}, the strongest behavior-only method, scored against the
+same ground truth. On the real Mistral family (Fig.~\ref{fig:real-trees}), PhyloLM recovers all three
+forks, matching our weight-based tree, but it clears the four-point additivity margin with far less room
+($\bar{A}=0.84$ vs.\ our $0.98$) and needs query access and output sampling. A naive sentence-embedding
+tree on the same outputs recovers only one fork, so behavior-only recovery is strongly method-dependent.
 
-To calibrate behavior-only estimation against a \emph{known} answer, we also apply the same
-output-embedding pipeline to documented HuggingFace families of \S\ref{sec:results:weighttree} and
-score recovered clades against the recorded topology. We treat this as a secondary calibration for the
-frontier-model analysis rather than as primary evidence, since the controlled and documented-weight
-experiments provide the ground-truth evaluation.
+The Mistral forks are large RLHF/DPO jumps that move behavior a lot, an easy case for behavior-only
+estimation. Our controlled trees are the harder test: in the LoRA and low-update regimes fine-tuning
+barely shifts behavior, yet weight distance still recovers the topology. Running PhyloLM on these same
+trees against the same ground truth, behavior-only recovery falls well below weight-based recovery: on
+the held-out full-FT trees PhyloLM recovers $57\%$ of clades versus $95\%$ for weights, and on the
+$r{=}8$ LoRA trees only $35\%$ versus $94\%$, no better than a random tree. Weights recover lineage
+exactly where behavior barely moves, the regime where weight access matters most.
 
 \begin{figure}[t]
   \begin{center}
@@ -661,59 +657,6 @@ The reconstruction is scored against the same documented truth tree and with the
 scorer used for the whitebox families. The naive output-embedding baseline in the same figure instead
 uses sentence-embedding (\texttt{all-MiniLM-L6-v2}) distances between the models' translation outputs.
 
-\paragraph{Model collection.} The blackbox phylogeny is built over a collection of frontier and open
-models spanning the major developer families: OpenAI (GPT-3.5, GPT-4o / 4o-mini, GPT-4.1, o-series),
-Anthropic (Claude 3 / 3.5 / 4 Sonnet and Haiku), Google (Gemini 1.5 / 2.0 / 2.5, Gemma), Meta (Llama 2
-and 3), Mistral, DeepSeek, and Microsoft Phi. Proprietary models are queried through their providers'
-APIs; open-weight models are run locally from HuggingFace checkpoints. The analyses in
-\S\ref{sec:results} use the $23$ models that returned valid responses on all four task
-families, so that every per-task tree is built over a common leaf set.
-
-\paragraph{Prompts and decoding.} Each model answers a shared bank of $315$ prompts drawn from four task
-families---summarization, question answering, classification, and translation. Prompts are issued with
-identical text to every model and decoded greedily (temperature $0$, or the provider's nearest
-deterministic setting) so that differences in output reflect the model, not sampling noise. Of the
-$315$ prompts, $245$ were answered by all $23$ common models and are used for the cross-task aggregate.
-
-\paragraph{Embedding and distances.} Each response is embedded with the
-\texttt{all-MiniLM-L6-v2} sentence-transformer ($384$-dimensional, mean-pooled), giving a vector per
-(model, prompt). For each prompt we form the pairwise cosine-distance matrix over models and build a
-neighbor-joining tree, yielding one tree per prompt. This per-prompt construction decouples the
-embedding from any single source text and is what makes translation a clean probe (the language change
-separates output style from source content).
-
-\paragraph{Aggregation.} Per-prompt trees are summarized with the Billera--Holmes--Vogtmann (BHV)
-Fr\'echet (Sturm) mean in tree space~\citep{billera2001geometry, willis2019confidence}, both within
-each task family and across all four (Fig.~\ref{fig:blackbox_hero}, Fig.~\ref{fig:frechet_grid}). We report the aggregate as a cladogram
-because the Fr\'echet mean's internal edges are short relative to total edge length, so topology is more
-informative than scaled branch length.
-
-\begin{figure}[h]
-  \begin{center}
-    \includegraphics[width=0.72\linewidth]{\figpath/hero_phylogeny_treespace.png}
-  \end{center}
-  \caption{\textbf{A behavioral phylogeny of frontier and open models, with its support in tree space.}
-    \textbf{(a)} BHV Fr\'echet (Sturm) mean of $n=245$ per-prompt neighbor-joining trees (output-embedding
-    distances over the 245/315 prompts all 23 models answered, four task families), coloured by
-    developer and rendered as a cladogram (internal edges $\sim$3\% of total length). Claude Sonnet and
-    Haiku form the most stable clade; the GPT family and Llama pair are also recovered. \textbf{(b)} The
-    17 per-dataset trees embedded in BHV tree space (classical MDS of geodesic distances). Trees group
-    by task---summarization tightest, translation the outlier---and the Fr\'echet mean ($\star$) lies at
-    the centre.}
-  \label{fig:blackbox_hero}
-\end{figure}
-
-\begin{figure}[h]
-  \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/frechet_grid_tasks.png}
-  \end{center}
-  \caption{\textbf{Per-task behavioral phylogenies (BHV Fr\'echet means).} The cross-task aggregate
-    (top-left) and the four per-task Fr\'echet trees (summarization, QA, classification, translation),
-    each over the 23 models common to all tasks and rendered as cladograms. Topologies differ
-    substantially across tasks (pairwise normalized Robinson--Foulds $0.65$--$0.95$), which motivates
-    the multi-task aggregation reported in \S\ref{sec:results}.}
-  \label{fig:frechet_grid}
-\end{figure}
 
 \section{Behavioral Regression: Full Results}
 \label{app:regression}
