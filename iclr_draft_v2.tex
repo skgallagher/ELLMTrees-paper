@@ -427,12 +427,12 @@ models.   Flan occasionally has the opposite effect (i.e. closer in weight space
 \begin{table}[t]
 \caption{Weight$\to$behavior bridge by model and probe (full fine-tuning). Each cell is the
 random-effects (DerSimonian--Laird) pooled correlation $r$ between weight distance and behavioral
-similarity (paired per-prompt semantic DV, $z$-scored within run), with heterogeneity $I^2$ (\%) in
-parentheses. Held-out probes had no node trained on them; translation is shown both in the training mix
+similarity (paired per-prompt semantic DV, $z$-scored within run), with the $95\%$ CI in brackets.
+Held-out probes had no node trained on them; translation is shown both in the training mix
 and withheld from every node. Negative $r$ supports the bridge (closer weights $\Rightarrow$ more
 similar behavior). $^\ddagger$degenerate Flan probe (App.~\ref{app:translation_probe}); Flan
 multiple-choice probes (ARC-C, MMLU, TruthfulQA) collapse onto trained-task label vocabulary and are not
-reported (---). Per-cell 95\% CIs in App.~\ref{app:regression}.}
+reported (---). Per-cell heterogeneity ($I^2$) in App.~\ref{app:regression}.}
 \label{tab:behavior_holdout}
 \centering
 \small
@@ -443,8 +443,9 @@ reported (---). Per-cell 95\% CIs in App.~\ref{app:regression}.}
 \cmidrule(lr){2-3}
 Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
-Llama-3.2-1B & $-0.29$ (62) & $-0.33$ (52) & $-0.20$ (52) & $-0.26$ (43) & $-0.25$ (55) & $-0.33$ (58) \\
-Flan-T5-base & $-0.26$ (39) & $+0.11^{\ddagger}$ (35) & $-0.29$ (25) & --- & --- & --- \\
+Llama-3.2-1B & \shortstack{$-0.29$\\{\scriptsize$[-.41,-.17]$}} & \shortstack{$-0.33$\\{\scriptsize$[-.43,-.23]$}} & \shortstack{$-0.20$\\{\scriptsize$[-.32,-.08]$}} & \shortstack{$-0.26$\\{\scriptsize$[-.36,-.15]$}} & \shortstack{$-0.25$\\{\scriptsize$[-.36,-.13]$}} & \shortstack{$-0.33$\\{\scriptsize$[-.44,-.21]$}} \\
+\addlinespace
+Flan-T5-base & \shortstack{$-0.26$\\{\scriptsize$[-.35,-.16]$}} & \shortstack{$+0.11^{\ddagger}$\\{\scriptsize$[+.02,+.21]$}} & \shortstack{$-0.29$\\{\scriptsize$[-.37,-.21]$}} & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -781,6 +782,37 @@ magnitude---DL random-effects $r=-0.161$ ($95\%$ CI $[-0.28,-0.04]$, $p=0.011$),
 $r=-0.21$, one-stage mixed model with a random slope $r=-0.136$---with genuine between-run heterogeneity
 ($I^2\approx54\%$) that is not explained by leaf count. We report the DL random-effects estimate; the within-run partial
 associations underlying it are shown per condition in Fig.~\ref{fig:regression_diagnostics}.
+
+\paragraph{Per-cell heterogeneity.} Table~\ref{tab:behavior_het} gives, for every cell of the main-text
+bridge (Table~\ref{tab:behavior_holdout}, paired per-prompt DV), the DL pooled $r$ with its $95\%$ CI,
+the Higgins $I^2$, and the number of runs $k$. Heterogeneity is moderate throughout ($I^2$ $25$--$62\%$):
+between-run variation is real but every held-out cell's CI still excludes zero, so the bridge direction
+is consistent across runs rather than driven by a few.
+
+\begin{table}[h]
+\caption{Per-cell heterogeneity for the weight$\to$behavior bridge (Table~\ref{tab:behavior_holdout};
+  paired per-prompt DV, full fine-tuning). DL random-effects pooled $r$ with $95\%$ CI, Higgins $I^2$,
+  and number of runs $k$. $^\ddagger$degenerate Flan probe (App.~\ref{app:translation_probe}).}
+\label{tab:behavior_het}
+\begin{center}
+\small
+\begin{tabular}{llrrr}
+\toprule
+Model & Probe & $r$ [95\% CI] & $I^2$ & $k$ \\
+\midrule
+Llama-3.2-1B & Translation (trained)              & $-0.29$ [$-0.41,-0.17$] & 62\% & 50 \\
+Llama-3.2-1B & Translation (held-out)             & $-0.33$ [$-0.43,-0.23$] & 52\% & 49 \\
+Llama-3.2-1B & HellaSwag (held-out)               & $-0.20$ [$-0.32,-0.08$] & 52\% & 49 \\
+Llama-3.2-1B & ARC-C (held-out)                   & $-0.26$ [$-0.36,-0.15$] & 43\% & 50 \\
+Llama-3.2-1B & MMLU (held-out)                    & $-0.25$ [$-0.36,-0.13$] & 55\% & 50 \\
+Llama-3.2-1B & TruthfulQA (held-out)              & $-0.33$ [$-0.44,-0.21$] & 58\% & 50 \\
+Flan-T5-base & Translation (trained)              & $-0.26$ [$-0.35,-0.16$] & 39\% & 50 \\
+Flan-T5-base & Translation (held-out)$^\ddagger$  & $+0.11$ [$+0.02,+0.21$] & 35\% & 50 \\
+Flan-T5-base & HellaSwag (held-out)               & $-0.29$ [$-0.37,-0.21$] & 25\% & 50 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
 
 
 \section{Translation Probe Outputs for TaskHoldout Models}
