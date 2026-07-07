@@ -264,10 +264,10 @@ statistic, the same-branch-versus-cross-branch signal that pairwise-ancestry met
 additive, a condition model-parameter distances satisfy only approximately. Atteson's theorem makes the
 tolerance precise.
 \begin{theorem}[\citealp{atteson1999performance}]\label{thm:atteson}
-Let $D_{\mathrm{add}}$ be the additive metric of the true topology with internal edge lengths
-$\{L_s\}$, and $D$ the observed distance matrix. If
-$\;\lVert D-D_{\mathrm{add}}\rVert_\infty < \tfrac12\min_s L_s$, then neighbor-joining applied to $D$
-returns the true topology.
+Let $D_{\mathrm{add}}$ be the additive metric of the true topology with edge lengths
+$\{L_s\}$ (internal and pendant edges), and $D$ the observed distance matrix. If
+$\;\lVert D-D_{\mathrm{add}}\rVert_\infty < \tfrac12\min_s L_s$, the minimum taken over all tree edges,
+then neighbor-joining applied to $D$ returns the true topology.
 \end{theorem}
 Writing the bottleneck margin $m=\min_s m_s$ with $m_s=L_s/(2\lVert D-D_{\mathrm{add}}\rVert_\infty)$, any
 $m>1$ \emph{guarantees} exact recovery. The condition is sufficient but conservative, set by the single
@@ -277,10 +277,10 @@ perfect recovery every time. Geometrically, the margin shrinks under cosine dist
 fine-tuning updates are near-orthogonal (\S\ref{sec:framework:metric}). The margin $m$ is an
 \emph{oracle} quantity: forming $D_{\mathrm{add}}$ and the edge lengths $L_s$ requires the true branch
 lengths, which we do not have. We therefore adopt a label-free proxy computed from $D$ alone, based on
-the classical four-point condition for tree metrics \citep{buneman1971recovery}.
+the classical four-point condition for tree metrics \citep{sempleSteel2003phylogenetics}.
 
 \textit{Four-point additivity} ($A$). For each quartet of leaves the three pairwise-distance sums, sorted
-$s_1\ge s_2\ge s_3$, satisfy $s_1=s_2$ under an additive metric \citep{buneman1971recovery}. We average
+$s_1\ge s_2\ge s_3$, satisfy $s_1=s_2$ under an additive metric \citep{sempleSteel2003phylogenetics}. We average
 the resolved fraction over the $Q$ quartets:
 \[
   A=\frac{1}{Q}\sum_{q=1}^{Q}\frac{s_2^{(q)}-s_3^{(q)}}{s_1^{(q)}-s_3^{(q)}}\in[0,1] ,
