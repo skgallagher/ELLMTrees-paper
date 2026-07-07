@@ -279,17 +279,22 @@ fine-tuning updates are near-orthogonal (\S\ref{sec:framework:metric}). The marg
 lengths, which we do not have. We therefore adopt a label-free proxy computed from $D$ alone, based on
 the classical four-point condition for tree metrics \citep{sempleSteel2003phylogenetics}.
 
-\textit{Four-point additivity} ($A$). For each quartet of leaves the three pairwise-distance sums, sorted
-$s_1\ge s_2\ge s_3$, satisfy $s_1=s_2$ under an additive metric \citep{sempleSteel2003phylogenetics}. We average
-the resolved fraction over the $Q$ quartets:
+\textit{Four-point additivity} ($A$). Non-additivity of a distance matrix is measured by the quartet
+$\delta$-score of \citet{holland2002delta}. For each quartet of leaves the three pairwise-distance sums,
+sorted $s_1\ge s_2\ge s_3$, give
 \[
-  A=\frac{1}{Q}\sum_{q=1}^{Q}\frac{s_2^{(q)}-s_3^{(q)}}{s_1^{(q)}-s_3^{(q)}}\in[0,1] ,
+  \delta_q=\frac{s_1-s_2}{s_1-s_3}\in[0,1] ,
 \]
-which is $1$ when every quartet is perfectly additive (the two largest distance sums equal) and $0$ at
-the maximally non-additive quartet (the two \emph{smallest} sums equal, the largest strictly greater),
-measuring how nearly $D$ satisfies the four-point condition NJ requires; equivalently,
-$A=1-\delta$ for the quartet $\delta$-score of \citet{holland2002delta}. Because $A$ requires no labels,
-it serves as our proxy when the true tree is unknown; for evaluation against a known tree we
+which is $0$ exactly when the four-point condition $s_1=s_2$ holds \citep{sempleSteel2003phylogenetics}
+(the additive, tree-metric case) and $1$ at the maximally non-treelike quartet (the two \emph{smallest}
+sums equal, the largest strictly greater). We report its complement, averaged over the $Q$ quartets,
+\[
+  A=\frac{1}{Q}\sum_{q=1}^{Q}\bigl(1-\delta_q\bigr)
+   =\frac{1}{Q}\sum_{q=1}^{Q}\frac{s_2^{(q)}-s_3^{(q)}}{s_1^{(q)}-s_3^{(q)}}\in[0,1] ,
+\]
+so that $A=1$ is perfectly additive and larger $A$ tracks recovery (matching the direction of the
+Atteson margin, whereas $\delta$ runs the other way). Because $A$ requires no labels,
+it serves as our proxy when the true tree is unknown. For evaluation against a known tree we
 additionally report $A$ over only the \emph{informative} quartets (those the truth resolves into two
 cherries), since quartets that fall inside a polytomy carry no split to recover and only dilute the
 all-quartet mean. We relate $A$ and the oracle margin to recovery in \S\ref{sec:results}.
@@ -398,15 +403,15 @@ Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} wit
 We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to use $\approx$4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App.~\ref{app:layertrace}).  The signal in the encoder-decoder seems to be stronger in the $k$ matrices whereas the decoder-only seems to be more diffuse across the $k$-matrices, possibly indicating that encoders are important in passing lineage signal.
 
 Finally, we see that the oracle Atteson margin $m$ and additivity proxy $A$ both reliably guide phylogeny (specifically clade recovery) estimation.  In Figure~\ref{fig:coherence_recovery}, we see both $m$ and $A$ reported across LoRA settings, datasets, layers, and
-models. We see that the norm layers seem to have the worst recovery.  They have both low margins and additivities and low clade recovery.  We see that while the Atteson margin (vertical line at 1) is a hard boundary of sufficiency in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.55$ and few points in the middle range.
+models. We see that the norm layers seem to have the worst recovery.  They have both low margins and additivities and low clade recovery.  We see that while the Atteson bound ($m>1$) is a hard sufficiency threshold in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery, with recovery often succeeding well below $m=1$.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.55$ and few points in the middle range.
 
 \begin{figure}[t]
   \begin{center}
     \includegraphics[width=0.78\linewidth]{\figpath/fig4_coherence_atteson.png}
   \end{center}
   \caption{\textbf{What guides clade recovery.} \textbf{(A)} Clade recovery against the oracle
-    bottleneck Atteson margin (min.\ fitted internal edge length over twice the non-additivity
-    error). \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
+    bottleneck Atteson margin (min.\ fitted edge length, internal or pendant, over twice the
+    non-additivity error). \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
     no ground-truth tree. Small points are individual Llama-1B full-FT layers (attention/MLP and
     norm/embed); large symbols are whole-run summaries, Flan LayerTrace subsets, organic HF
     validation, and layer-family centroids.}
