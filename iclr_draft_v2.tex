@@ -390,9 +390,9 @@ Variant & $n$ & Rank-bis. (SE) & $r$ (SE) & Clade (SE) & Exact (SE) & RF (SE); F
 
 \paragraph{Phylogeny estimation.}
 \label{sec:results:weighttree}
-Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} with respect to clade percentage recovery, exact phylogeny recovery (adjusting for NJ forced bi-partitions) and RF/FN for all phylogenies with $\ge 4$ leaves. Clade precovery ranges between 82\%-96\% and exact recovery between 72-94\%.  Again we see that we have stronger lineage seen in full fine-tuning for the encoder-decoder whereas we see stronger lineage in just the LoRA QKV training for the decoder, Llama-3.2-1B.  We see in Appendix \ref{app:} FILL IN that phylogeny estimation still holds (80-90+\%) even when we only train within a single task.
+Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} with respect to clade percentage recovery, exact phylogeny recovery (adjusting for NJ forced bi-partitions) and RF/FN for all phylogenies with $\ge 4$ leaves. Clade precovery ranges between 82\%-96\% and exact recovery between 72-94\%.  Again we see that we have stronger lineage seen in full fine-tuning for the encoder-decoder whereas we see stronger lineage in just the LoRA QKV training for the decoder, Llama-3.2-1B.  We see in Appendix~\ref{app:withintask} that phylogeny estimation still holds even when every node in a tree trains within a single task (clade recovery $59$--$87\%$, above the task-metadata baseline for three of the four tasks).
 
-We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to use $\approx$4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App [FILL IN]).  The signal in the encoder-decoder seems to be stronger in the $k$ matrices whereas the decoder-only seems to be more diffuse across the $k$-matrices, possibly indicating that encoders are important in passing lineage signal.
+We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to use $\approx$4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App.~\ref{app:layertrace}).  The signal in the encoder-decoder seems to be stronger in the $k$ matrices whereas the decoder-only seems to be more diffuse across the $k$-matrices, possibly indicating that encoders are important in passing lineage signal.
 
 Finally, we see that the oracle Atteson margin $m$ and additivity proxy $A$ both reliably guide phylogeny (specifically clade recovery) estimation.  In Figure~\ref{fig:coherence_recovery}, see both $m$ and $A$ reported across LoRA settings, datasets, layers, and
 models. We see that the norm layers seem to have the worst recovery.  They have both low margins and additivities and low clade recovery.  We see that while Atteson margin (vertical line at 1) is a hard-boundary of sufficiency in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.55$ and few points in the middle range.
@@ -897,8 +897,8 @@ weight reconstructions.
 
 On the Flan-T5-base full-FT trees (\texttt{branching\_v3}, $\geq 4$ leaves, $n=50$ runs), the task-path
 baseline recovers $61.7\%$ of clades (SE $5.4\%$) and $42.0\%$ of trees exactly (SE $7.0\%$), versus
-$90\%$ clade / $84\%$ exact for cosine weight distances on the identical runs
-(Table~\ref{tab:rf_by_leaves}). The baseline captures the coarse, cross-task grouping --- siblings often
+$90\%$ clade / $85\%$ exact for cosine weight distances on the identical runs
+(Table~\ref{tab:variants}). The baseline captures the coarse, cross-task grouping --- siblings often
 share a task-type prefix --- but is blind to within-task splits, where two leaves with identical
 task-type sequences descend from different parents; resolving those requires the weights, which nearly
 double the exact-recovery rate.
@@ -910,5 +910,42 @@ vocabulary size, and the hidden size / layer count. For the Mistral-7B-v0.1 fami
 checkpoints share the architecture ($4096$ hidden, $32$ layers) and separates the two vocabulary groups
 ($32000$ vs.\ $32002$, the latter adding control tokens), consistent with the documented fork structure.
 We treat the reference as a documented-and-verified lineage, not as unverified metadata.
+
+
+\section{Within-Task Recovery}
+\label{app:withintask}
+
+The controlled trees in the main text assign a distinct task type to each edge, so a reconstruction
+could in principle exploit task identity (App.~\ref{app:taskbaseline}). To remove task structure as a
+cue entirely, we repeat the experiment with every node in a tree fine-tuned on the \emph{same} task
+type, varying only the dataset per node (Flan-T5-base, full fine-tuning; datasets drawn without
+replacement within one of summarization, QA, classification, or translation). Because all leaves then
+share an identical task-type path, the task-metadata baseline of App.~\ref{app:taskbaseline} is at
+chance, and any recovery must come from within-task, dataset-level displacement in the weights.
+
+Table~\ref{tab:withintask} reports polytomy-aware recovery ($\geq 4$ leaves, cosine). Recovery persists
+without task diversity, though it is weaker and more task-dependent than the multi-task setting
+($82$--$96\%$ clade, Table~\ref{tab:variants}): classification, QA, and translation recover $72$--$87\%$
+of clades, all above the $61.7\%$ task-path baseline, while summarization is the weakest at $59\%$.
+Since the leaves are task-identical, this recovery cannot be attributed to task-level clustering.
+
+\begin{table}[h]
+\caption{Within-task phylogeny recovery (Flan-T5-base full fine-tuning, one task type per tree with
+  datasets varying per node; cosine, $\geq 4$ leaves). Polytomy-aware, as in
+  Table~\ref{tab:variants}; SEs over runs (binomial for exact recovery).}
+\label{tab:withintask}
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Task (all nodes) & $n$ & Clade rec. (SE) & Exact rec. (SE) & RF & FN \\
+\midrule
+Classification & 38 & \textbf{87\%} (4\%) & \textbf{79\%} (7\%) & 1.87 & 0.24 \\
+QA             & 47 & \textbf{76\%} (6\%) & \textbf{72\%} (7\%) & 2.19 & 0.38 \\
+Translation    & 47 & \textbf{72\%} (6\%) & \textbf{64\%} (7\%) & 2.23 & 0.40 \\
+Summarization  & 47 & \textbf{59\%} (6\%) & \textbf{47\%} (7\%) & 2.70 & 0.64 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}
