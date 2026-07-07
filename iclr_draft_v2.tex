@@ -454,20 +454,13 @@ Flan-T5-base & \shortstack{$-0.26$\\{\scriptsize$[-.35,-.16]$}} & \shortstack{$+
 \paragraph{Comparing to Behavior-Only Lineage.}
 \label{sec:results:blackbox}
 
-When weights are unavailable, lineage must be inferred from behavior alone. We compare our weight-based
-reconstruction to PhyloLM~\citep{yax2025phylolm}, the strongest behavior-only method, scored against the
+When weights are unavailable or different architectures need to be compared, lineage must be inferred from behavior alone. We compare our weight-based
+estimation to PhyloLM~\citep{yax2025phylolm}, scored against the
 same ground truth. On the real Mistral family (Fig.~\ref{fig:real-trees}), PhyloLM recovers all three
-forks, matching our weight-based tree, but it clears the four-point additivity margin with far less room
-($\bar{A}=0.84$ vs.\ our $0.98$) and needs query access and output sampling. A naive sentence-embedding
-tree on the same outputs recovers only one fork, so behavior-only recovery is strongly method-dependent.
+forks, matching our estimated phylogeny, but it has a smaller additivity ($\bar{A}=0.84$ vs.\ our $0.98$ on informative (non-star) quartets). A naive sentence-embedding estimated phylogeny on the same outputs recovers only one fork, so behavior-only recovery is strongly method-dependent.  We show this prompt dependency in Appendix \ref{app:robustness}.
 
-The Mistral forks are large RLHF/DPO jumps that move behavior a lot, an easy case for behavior-only
-estimation. Our controlled trees are the harder test: in the LoRA and low-update regimes fine-tuning
-barely shifts behavior, yet weight distance still recovers the topology. Running PhyloLM on these same
-trees against the same ground truth, behavior-only recovery falls well below weight-based recovery: on
-the held-out full-FT trees PhyloLM recovers $57\%$ of clades versus $95\%$ for weights, and on the
-$r{=}8$ LoRA trees only $35\%$ versus $94\%$, no better than a random tree. Weights recover lineage
-exactly where behavior barely moves, the regime where weight access matters most.
+The Mistral forks are large reinforcment learning with human feedback or direct preference optimization weight changes that move behavior a lot. Our controlled trees are a more precise test. In the LoRA and low-update regimes fine-tuning barely shifts behavior, yet weight distance can still estimate phylogenies. Running PhyloLM on these same trees against the same ground truth, behavior-only recovery falls well below weight-based recovery: on the held-out full-FT trees PhyloLM recovers $57\%$ of clades versus $95\%$ for weights, and on the
+$r{=}8$ LoRA trees only $35\%$ versus $94\%$, no better than a random phylogeny. This seems to indicate that weight-based estimation of phylogeny can be stronger than behavior-only estimation in some cases.  From the perspective that weight and behavior are intrinsically linked, this makes sense, and removing prompt dependency can be a great advantage for weight-based estimation.
 
 \begin{figure}[t]
   \begin{center}
@@ -475,19 +468,9 @@ exactly where behavior barely moves, the regime where weight access matters most
   \end{center}
   \caption{\textbf{Estimating a real HuggingFace family from weights vs.\ behavior, against documented
     truth.} A real Mistral-7B-v0.1 family of ten public checkpoints. \textbf{(Left)} documented lineage.
-    \textbf{(Middle)} whitebox reconstruction (cosine Fr\'echet mean of weight distances over tensors
-    common to all ten checkpoints). \textbf{(Right)} PhyloLM reconstruction \citep{yax2025phylolm}
-    (neighbor-joining on the PhyloLM genetic distance between sampled output alleles, no weight access).
-    Leaves are coloured by the
-    three documented SFT$\to$RLHF/DPO forks: Zephyr (blue), OpenChat-3.5$\to$Starling-alpha (red), and
-    OpenChat-3.5-0106$\to$Starling-beta (green); grey leaves (base, instruct, two independent OpenHermes
-    SFTs) have no informative sibling. All panels treat every model as a leaf. Both the whitebox and
-    PhyloLM trees recover all three coloured forks as clades exactly (FN$=0$), but the whitebox
-    reconstruction does so with a larger four-point additivity margin ($\bar{A}=0.98$ vs.\ $0.84$ on the
-    informative quartets) and without querying the models; a naive sentence-embedding tree on the same
-    outputs recovers only one fork (the OpenChat-3.5/Starling-alpha pair; App.~\ref{app:blackbox}),
-    showing behavior-only estimation is strongly method-dependent. Remaining edges are binary-forced
-    resolutions of the polytomous truth (\S\ref{sec:framework:phylo}), not lineage errors. PhyloLM uses
+    \textbf{(Middle)} our estimate (cosine Fr\'echet mean of weight distances over layers
+    common to all ten checkpoints). \textbf{(Right)} PhyloLM estimation \citep{yax2025phylolm}
+    (neighbor-joining on the PhyloLM genetic distance between sampled output alleles, no weight access).  PhyloLM uses
     its released \texttt{math} genes ($G{=}128$, $N{=}32$).}
   \label{fig:real-trees}
 \end{figure}
@@ -496,25 +479,10 @@ exactly where behavior barely moves, the regime where weight access matters most
 \label{sec:discussion}
 % -----------------------------------------------------------------------
 
-We show that the model lineage can be estimated from parameters alone; the best layers --- the
-$k$-matrices, only $4\%$ of parameters --- estimate trees as well ($80$--$90{+}\%$) as the full weight
-set, this holds across encoder--decoder and decoder models and survives LoRA at low rank ($r=8$),
-with most trees recovering the complete phylogeny exactly. The weights also carry less obvious traits: on held-out
-tasks, models closer in weight space produce more similar outputs (pooled DL $r\approx-0.3$ to $-0.2$)
---- modest but direct evidence of inheritance, stronger under full fine-tuning than LoRA. Behavior-only
-lineage is informative but prompt-dependent and less robust than parameter estimates, which need no
-prompts.
+We show that model family phylogeny can be estimated from weights alone, and that using the best layers that comprise only 4\% of the total model parameters ($k$-matrices) estimates training trees just as well as using all the layers.  We find that clade recovery works across an encoder-decoder and decoder model and even survives LoRA training at low ranks (r=8). In particular, we find that in our controlled experiments, our exact phylogeny recovery ranges from 79-94\% over all our conditions. In addition to showing that we can estimate phylogeny and direct lineage from weights, we show that the weights contain traits that perhaps were unexpected.  We show that on held-out tasks, models more similar in weight space have more similar embedding outputs (pooled DL $r \approx -0.3$-$0.2$). This is direct, albeit modest, evidence that traits are inherited from ancestor models.   Finally, we compare our weight-based estimation to a behavior-only estimation and show that they work equally well on a real case and the weight-based method can outperform the behavior-only estimation in some cases.  This shows that while behavior-only models are useful, specially when there are different architectures, they are not as robust as weight-based estimates which do not require prompts.
 
-Our results further corroborate that attention layers are critical to LLM learning, here for ancestry,
-with cross-attention a stronger lineage carrier than self-attention (to be validated on more
-architectures). Update geometry matters --- near-orthogonal updates are hard to recover, one reason
-cosine distance is central --- and full weight access gives the best recovery, though weight changes
-track behavior even on held-out tasks.
 
-Limitations: parameter-based estimation currently requires an identical architecture (so Llama cannot be
-compared to Mistral), and our controlled tree-generation is simple, partly mitigated by the real-world
-validation. Future work includes relating models across architectures (e.g.\ via
-CKA~\citep{kornblith2019similarity}) and probing the mechanism of inheritance.
+We note that our experiments and methods have limitations.  One limitation is that our methods for phylogeny estimation using weights currently only work when the underlying architecture is identical, i.e. the parameter space is the same.  This means that Llama cannot directly be compared to Mistral, for example. Another issue is that our controlled training tree generation results from a fairly simple process that may not result in the most realistic training trees.  We attempt to mitigate that with our real world example. Future directions include better relating models across different architectures such as with CKA and to further explore the mechanism of which lineage is inherited. In summary, we hope that our work illuminates the need to consider models holistically and not as a series of benchmarks.
 
 
 % -----------------------------------------------------------------------
