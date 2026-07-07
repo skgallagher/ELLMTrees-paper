@@ -390,12 +390,12 @@ Variant & $n$ & Rank-bis. (SE) & $r$ (SE) & Clade (SE) & Exact (SE) & RF (SE); F
 
 \paragraph{Phylogeny estimation.}
 \label{sec:results:weighttree}
-Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} with respect to clade percentage recovery, exact phylogeny recovery (adjusting for NJ forced bi-partitions) and RF/FN for all phylogenies with $\ge 4$ leaves. Clade precovery ranges between 82\%-96\% and exact reocvery between 72-94\%.  Again we see that we have stronger lineage seen in full fine-tuning for the encoder-decoder whereas we see stronger lineage in just the LoRA qkv training for the decoder, Llama-3.2-1B.  
+Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} with respect to clade percentage recovery, exact phylogeny recovery (adjusting for NJ forced bi-partitions) and RF/FN for all phylogenies with $\ge 4$ leaves. Clade precovery ranges between 82\%-96\% and exact recovery between 72-94\%.  Again we see that we have stronger lineage seen in full fine-tuning for the encoder-decoder whereas we see stronger lineage in just the LoRA QKV training for the decoder, Llama-3.2-1B.  We see in Appendix \ref{app:} FILL IN that phylogeny estimation still holds (80-90+\%) even when we only train within a single task.
 
-We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to check 4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App [FILL IN]).  The signal in the encoder-decoder seems to be stronger in the cross-attention layers than self attention whereas the decoder-only seems to be more diffuse across the self attention layers (as it has no cross-attention).
+We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to use $\approx$4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App [FILL IN]).  The signal in the encoder-decoder seems to be stronger in the $k$ matrices whereas the decoder-only seems to be more diffuse across the $k$-matrices, possibly indicating that encoders are important in passing lineage signal.
 
 Finally, we see that the oracle Atteson margin $m$ and additivity proxy $A$ both reliably guide phylogeny (specifically clade recovery) estimation.  In Figure~\ref{fig:coherence_recovery}, see both $m$ and $A$ reported across LoRA settings, datasets, layers, and
-models. We can see the diffuse signal of lineage in Llama in the orange points.  They have both low margins and additivities and low clade recovery.  It is only when we use the Frechet mean to average these layers together do we.
+models. We can see the diffuse signal of lineage in Llama in the orange points.  They have both low margins and additivities and low clade recovery.  It is only when we use the Frechet mean to average these layers together do we have recovery over $80\%$ (purple circles).  We see that while Atteson margin (vertical line at 1) is a hard-boundary of sufficiency in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.6$ and few points in the middle range.
 
 \begin{figure}[t]
   \begin{center}
@@ -411,86 +411,17 @@ models. We can see the diffuse signal of lineage in Llama in the orange points. 
   \label{fig:coherence_recovery}
 \end{figure}
 
-Table~\ref{tab:variants} summarizes signal and recovery across regimes: both the ordering signal and
-phylogeny recovery are stable from the narrowest LoRA scope (key only) through full fine-tuning. The
-within-run ordering correlation strengthens modestly with more trained parameters, while phylogeny
-recovery stays high throughout (clade recovery $82$--$96\%$, exact recovery $72$--$94\%$). Notably,
-Llama-3.2-1B LoRA adapters recover as well as or better than Flan full FT --- low-rank adaptation does
-not cost lineage recoverability. The stronger within-run ordering correlation for the Llama adapters
-than for Llama full FT reflects the \textsc{trained\_only} restriction: the adapter distance is read
-from the q/k/v updates alone, whereas the full-FT distance averages over all tensors, including the
-noisier layer norms and embeddings.
-
-% Table 2: training-regime variants (Flan-T5 + Llama-3.2-1B)
-
-
-Finally, we move to organic model families on HuggingFace. Figure~\ref{fig:real-trees} compares our
-reconstruction against the documented lineage for ten public Mistral-7B-v0.1 checkpoints --- base,
-instruct, and three independent SFT$\to$RLHF/DPO forks (Zephyr, and two OpenChat/Starling lines) ---
-whose relationships we take from their model cards and corroborate against each checkpoint's
-configuration (base-model field, tokenizer/vocabulary size, and hidden/layer dimensions; App.~\ref{app:taskbaseline}),
-so the reference tree is a documented-and-verified lineage rather than unverified metadata. Using cosine distances over the common tensors
-and the Fr\'echet (Sturm) mean, we recover all three informative splits exactly ($100\%$ clade
-recovery, FN$=0$, $p\le0.003$ against a label-shuffle null each), with near-perfect four-point
-additivity on the informative quartets ($\bar{A}=0.98$, $100\%$ quartet-split accuracy; $\bar{A}=0.86$
-over all $210$ quartets, the lower value coming from the uninformative quartets that fall inside the
-polytomous root and carry no true resolution). On the identical
-family and truth, the same figure contrasts weight-based (whitebox) recovery with PhyloLM
-\citep{yax2025phylolm}, the established behavior-only method, reproduced faithfully with its released
-genes and genetic distance on the same ten checkpoints: both recover all three forks, but the whitebox
-reconstruction clears the four-point additivity margin with far more room ($\bar{A}=0.98$ vs.\ $0.84$ on
-the informative quartets, both $100\%$ quartet-split accuracy) and needs no query access or output
-sampling, whereas a naive neighbor-joining tree on sentence-embedding distances between the same models'
-outputs recovers only one fork (App.~\ref{app:blackbox}). A direct, ground-truth-anchored comparison of
-access levels on real data --- weights match the best behavior-only method with a wider margin and no
-queries, while a naive behavioral estimate largely fails. The pipeline
-validated against synthetic ground truth thus reconstructs ancestry in an uncontrolled setting with
-heterogeneous checkpoints and undocumented intermediate training, recovering multiple independent
-branches rather than a single split. (Organic Flan-T5 and Llama-2-7B branches recover their informative
-clades similarly.)
-
-\begin{figure}[t]
-  \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/hf_mistral_hero_3panel.png}
-  \end{center}
-  \caption{\textbf{Estimating a real HuggingFace family from weights vs.\ behavior, against documented
-    truth.} A real Mistral-7B-v0.1 family of ten public checkpoints. \textbf{(Left)} documented lineage.
-    \textbf{(Middle)} whitebox reconstruction (cosine Fr\'echet mean of weight distances over tensors
-    common to all ten checkpoints). \textbf{(Right)} PhyloLM reconstruction \citep{yax2025phylolm}
-    (neighbor-joining on the PhyloLM genetic distance between sampled output alleles, no weight access).
-    Leaves are coloured by the
-    three documented SFT$\to$RLHF/DPO forks: Zephyr (blue), OpenChat-3.5$\to$Starling-alpha (red), and
-    OpenChat-3.5-0106$\to$Starling-beta (green); grey leaves (base, instruct, two independent OpenHermes
-    SFTs) have no informative sibling. All panels treat every model as a leaf. Both the whitebox and
-    PhyloLM trees recover all three coloured forks as clades exactly (FN$=0$), but the whitebox
-    reconstruction does so with a larger four-point additivity margin ($\bar{A}=0.98$ vs.\ $0.84$ on the
-    informative quartets) and without querying the models; a naive sentence-embedding tree on the same
-    outputs recovers only one fork (the OpenChat-3.5/Starling-alpha pair; App.~\ref{app:blackbox}),
-    showing behavior-only estimation is strongly method-dependent. Remaining edges are binary-forced
-    resolutions of the polytomous truth (\S\ref{sec:framework:phylo}), not lineage errors. PhyloLM uses
-    its released \texttt{math} genes ($G{=}128$, $N{=}32$).}
-  \label{fig:real-trees}
-\end{figure}
-
 
 \paragraph{Predicting held-out behavior.}
 \label{sec:results:behavioral}
 
-Estimating lineage from weights does not by itself imply that parameter-space proximity tracks
-behavioral proximity. Inspired by \citet{cloud2025subliminal}'s subliminal-learning experiment, we test
-whether models closer in weight space produce more similar outputs on a held-out task, using translation
-(on a tree that never trained on it) and four probe tasks untrained by either model (HellaSwag,
+While estimating phylogeny from weights is useful for safety and provenance, it can be of even more use if similarity in weights indicates similarity in behavior. Inspired by \citet{cloud2025subliminal}'s subliminal-learning experiment, we test
+whether models closer in weight space produce more similar outputs on held-out tasks, using translation
+(on a tree that never trained on it) along with four probe tasks untrained (we presume) by either model (HellaSwag,
 ARC-Challenge, MMLU, TruthfulQA).
-Table~\ref{tab:behavior_holdout} reports a weak but significant negative correlation across all held-out
-probes in Llama and for HellaSwag in Flan, and for translation in Llama (the sign reverses for Flan
-translation) --- supporting \citet{cloud2025subliminal} that unexpected traits can be passed to child
-models. The signal is robust to the held-out design: on the \texttt{\_notrans} tree, where translation
-is withheld from every node, all four held-out probes remain negative and significant, comparable to or
-stronger than on the seen group (translation $-0.333$, ARC $-0.28$, MMLU $-0.31$, TruthfulQA $-0.31$).
-Full regression coefficients are in Appendix~\ref{app:regression}, and the degenerate probe behavior
-behind the Flan reversal is detailed in Appendix~\ref{app:translation_probe}.
-
-
+Table~\ref{tab:behavior_holdout} reports a consistent, significant negative correlation (Dersimonian-Laird) across all held-out
+probes in Llama and for HellaSwag in Flan.  Our results support that unexpected traits can be passed to child
+models.   Flan occasionally has the opposite effect (i.e. closer in weight spaces means further in behavior space).  We believe that the reason for this is, at least in part, due to catastrophic forgetting.  Flan, a smaller and less robust model, often defaults to the last task it was trained on, regardless of the prompt given.
 
 
 
@@ -545,7 +476,28 @@ score recovered clades against the recorded topology. We treat this as a seconda
 frontier-model analysis rather than as primary evidence, since the controlled and documented-weight
 experiments provide the ground-truth evaluation.
 
-
+\begin{figure}[t]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/hf_mistral_hero_3panel.png}
+  \end{center}
+  \caption{\textbf{Estimating a real HuggingFace family from weights vs.\ behavior, against documented
+    truth.} A real Mistral-7B-v0.1 family of ten public checkpoints. \textbf{(Left)} documented lineage.
+    \textbf{(Middle)} whitebox reconstruction (cosine Fr\'echet mean of weight distances over tensors
+    common to all ten checkpoints). \textbf{(Right)} PhyloLM reconstruction \citep{yax2025phylolm}
+    (neighbor-joining on the PhyloLM genetic distance between sampled output alleles, no weight access).
+    Leaves are coloured by the
+    three documented SFT$\to$RLHF/DPO forks: Zephyr (blue), OpenChat-3.5$\to$Starling-alpha (red), and
+    OpenChat-3.5-0106$\to$Starling-beta (green); grey leaves (base, instruct, two independent OpenHermes
+    SFTs) have no informative sibling. All panels treat every model as a leaf. Both the whitebox and
+    PhyloLM trees recover all three coloured forks as clades exactly (FN$=0$), but the whitebox
+    reconstruction does so with a larger four-point additivity margin ($\bar{A}=0.98$ vs.\ $0.84$ on the
+    informative quartets) and without querying the models; a naive sentence-embedding tree on the same
+    outputs recovers only one fork (the OpenChat-3.5/Starling-alpha pair; App.~\ref{app:blackbox}),
+    showing behavior-only estimation is strongly method-dependent. Remaining edges are binary-forced
+    resolutions of the polytomous truth (\S\ref{sec:framework:phylo}), not lineage errors. PhyloLM uses
+    its released \texttt{math} genes ($G{=}128$, $N{=}32$).}
+  \label{fig:real-trees}
+\end{figure}
 % -----------------------------------------------------------------------
 \section{Discussion}
 \label{sec:discussion}
