@@ -261,11 +261,14 @@ pairwise model comparisons within a run, across the $50$ runs, and test with the
 statistic, the same-branch-versus-cross-branch signal that pairwise-ancestry methods such as MoTHer
 \citep{horwitz2025mother} and Neural Phylogeny \citep{yu2025neural} rely on. Recovering the full
 \textit{phylogeny} is harder but well studied in phylogenetics: NJ is exact when the distance matrix is
-additive, a condition model-parameter distances satisfy only approximately. \textit{Atteson's theorem}
-\citep{atteson1999performance} makes the tolerance precise: \textit{if the observed matrix $D$ deviates
-from the additive metric $D_{\mathrm{add}}$ of the true topology by less than half the smallest internal
-edge length, $\lVert D-D_{\mathrm{add}}\rVert_\infty < \tfrac12\min_s L_s$ (with internal edge lengths
-$\{L_s\}$), then neighbor-joining applied to $D$ returns the true topology.}
+additive, a condition model-parameter distances satisfy only approximately. Atteson's theorem makes the
+tolerance precise.
+\begin{theorem}[\citealp{atteson1999performance}]\label{thm:atteson}
+Let $D_{\mathrm{add}}$ be the additive metric of the true topology with internal edge lengths
+$\{L_s\}$, and $D$ the observed distance matrix. If
+$\;\lVert D-D_{\mathrm{add}}\rVert_\infty < \tfrac12\min_s L_s$, then neighbor-joining applied to $D$
+returns the true topology.
+\end{theorem}
 Writing the bottleneck margin $m=\min_s m_s$ with $m_s=L_s/(2\lVert D-D_{\mathrm{add}}\rVert_\infty)$, any
 $m>1$ \emph{guarantees} exact recovery. The condition is sufficient but conservative, set by the single
 worst edge under a worst-case ($\ell_\infty$) error, so in practice NJ recovers most splits well before
