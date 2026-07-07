@@ -41,7 +41,7 @@
       font=\sffamily\small\bfseries,text=ink] (banner) at (7.9,5.55)
   {Fine-tuning leaves a path-dependent signature in weight space ---
    a model \emph{phylogeny} that we estimate and compare to known phylogenies $\mathcal{P}$,
-   link to behavior, and read more reliably from weights than from behavior alone.};
+   link to behavior, and certify with a label-free additivity proxy --- for weights \emph{or} behavior.};
 
 % ===================== PANEL A: controlled whitebox =====================
 \begin{scope}
@@ -110,26 +110,28 @@
 % arrow B->C
 \draw[flowarrow] (10.75,2.2)--(11.45,2.2);
 
-% ===================== PANEL C: margin gates recovery, weights >= behavior =====================
+% ===================== PANEL C: label-free additivity flags trust, weights AND behavior =====================
 \begin{scope}
   \node[panel,minimum width=4.95cm,minimum height=4.5cm] (PC) at (13.55,2.2){};
-  \node[ptitle,anchor=north] at (PC.north) {\,C.\ Margin gates recovery};
+  \node[ptitle,anchor=north] at (PC.north) {\,C.\ Additivity flags trust};
 
   \begin{scope}[shift={(11.95,1.20)}]
     % axes
     \draw[->,line width=0.8pt,draw=flow] (0,0)--(3.05,0);
     \draw[->,line width=0.8pt,draw=flow] (0,0)--(0,2.10);
-    \node[font=\sffamily\scriptsize,text=flow,anchor=north] at (1.55,-0.07) {Atteson margin};
+    \node[font=\sffamily\scriptsize,text=flow,anchor=north] at (1.55,-0.07) {additivity $\langle A\rangle$ (no truth)};
     \node[font=\sffamily\scriptsize,text=flow,rotate=90,anchor=south] at (-0.12,1.05) {clade recovery};
-    % weight-based recovery (upper): rises fast, high plateau
-    \draw[estc,line width=1.4pt] (0.15,1.18) .. controls (0.9,1.86) and (1.7,1.94) .. (2.90,1.98);
-    % behavior-based recovery (lower): starts near chance floor, converges at high margin
-    \draw[flow,line width=1.4pt,dashed] (0.15,0.35) .. controls (1.25,0.48) and (2.05,1.42) .. (2.90,1.88);
-    % curve labels, kept clear of the curves
-    \node[font=\sffamily\scriptsize,text=estc,anchor=west] at (0.20,1.98) {weights};
-    \node[font=\sffamily\scriptsize,text=flow,anchor=west] at (0.72,0.20) {behavior};
+    % single label-free A -> recovery trend; BOTH modalities land on it
+    \draw[flow,line width=1.3pt] (0.15,0.28) .. controls (1.30,0.95) and (2.05,1.55) .. (2.90,1.92);
+    % behavior points (lower A, still on the curve)
+    \foreach \x/\y in {0.55/0.46,0.88/0.72,1.22/0.98}{
+      \fill[nullc] (\x,\y) circle (2.1pt); \draw[flow,line width=0.4pt] (\x,\y) circle (2.1pt);}
+    % weight points (high A, high recovery, on the same curve)
+    \foreach \x/\y in {2.15/1.60,2.48/1.78,2.78/1.90}{\fill[estc] (\x,\y) circle (2.1pt);}
+    \node[font=\sffamily\scriptsize,text=flow,anchor=west] at (0.30,1.34) {behavior};
+    \node[font=\sffamily\scriptsize,text=estc,anchor=east] at (2.90,1.34) {weights};
   \end{scope}
-  \node[scap,anchor=north] at (13.55,0.78) {recovery tracks the\\Atteson margin};
+  \node[scap,anchor=north] at (13.55,0.78) {label-free $A$ predicts recovery ---\\weights \emph{or} behavior};
 \end{scope}
 
 % ===================== BOTTOM ACCESS AXIS =====================
@@ -139,7 +141,7 @@
 \node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (8.45,-0.30)
   {weight\,$\to$\,behavior link};
 \node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (13.7,-0.30)
-  {margin gates recovery};
+  {trust without truth};
 
 \end{tikzpicture}
 \end{document}
