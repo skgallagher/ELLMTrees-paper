@@ -321,7 +321,7 @@ Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pai
 
 \paragraph{Phylogeny estimation.}
 \label{sec:exp:weights}
-Besides direct lineage, we test whether our method estimates the phylogeny. From \S\ref{sec:framework:theory}, accurate estimation should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, and recovery metrics (clade recovery and exact phylogeny recovery), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.
+Besides direct lineage, we test whether our method estimates the phylogeny. From \S\ref{sec:framework:theory}, accurate estimation should be possible when the distance matrix is sufficiently additive, for which the label-free four-point additivity $A$ is a practical proxy. For each tree we report RF, FN, and recovery metrics (clade recovery and exact phylogeny recovery), relating them to the oracle Atteson margin and $A$ in \S\ref{sec:results}. The additive Fr\'echet trees also let us identify which layers carry the most inherited signal, via the highest- and lowest-FN layers per architecture.  Additionally, we report the most important layers for estimating the phylogeny.
 
 
 \paragraph{Predicting held-out behavior.}
@@ -347,114 +347,8 @@ We examine the results of our controlled and real data experiments with our enco
 
 
 \paragraph{Direct lineage.}
-We first determine how direct lineage e.g. parent-child or within-branch estimation performs under different conditions.  We show the results in Table~\ref{tab:variants}
- 
+We first determine how direct lineage e.g. parent-child or within-branch estimation performs under different conditions.  We show the results in Table~\ref{tab:variants} with the Mann-Whitney rank-biserial and  within-run correlation between cosine distance and same-branch indicator.  Each Mann-Whitney U was significant for any reasonable $\alpha$ value, meaning that ordering within branch was recovered.  This is further supported by the strong, negative within-run correlation $r$ for each condition.  Interestingly, LoRA training has stronger lineage signal in the decoder regime than the encoder regime, although this could also be explained by dimension size.  Our method performs strongly in these controlled experiments, recovering same-branch pairs and hence direct lineage.
 
-Direct ancestry is recovered under every condition. The same-vs.-cross-branch ordering test
-(Table~\ref{tab:variants}, ordering columns) finds same-branch pairs significantly closer than
-cross-branch pairs throughout (one-sided Mann--Whitney $p<10^{-25}$), with rank-biserial correlations
-from $0.43$ (Flan LoRA, key only) to $0.96$ (Llama LoRA) and within-run Fisher $z$-averaged correlations
-from $-0.60$ to $-0.94$, spanning architectures (Flan-T5, Pythia, Llama), scales (160M--8B), and regimes
-(full FT and LoRA). This is the level at which parent--child methods like MoTHer \citep{horwitz2025mother}
-and Neural Phylogeny \citep{yu2025neural} operate;
-we go further to phylogeny estimation below.
-
-\paragraph{Phylogeny estimation.}
-\label{sec:results:weighttree}
-Our methods also estimate the phylogeny when the distance matrix is sufficiently additive (a high
-Atteson margin; \S\ref{sec:framework:theory}). Aggregated over all $\geq 5$-leaf trees,
-Table~\ref{tab:rf_by_leaves} shows Flan-T5-base, Llama-3.2-1B (full FT), and the decoder-only
-Pythia-160M control all have low FN ($0.07$--$0.28$) and high clade recovery ($84$--$97\%$); the
-low-rank adapters match this on their merged weights (\S\ref{sec:framework:metric}), the Llama-3.2-1B
-qkv adapter recovering $94\%$ of clades. Most runs recover the complete phylogeny exactly
-($74$--$95\%$, Table~\ref{tab:rf_by_leaves}). The truth trees are multifurcating and contain
-within-task splits, so exact recovery (FN$=0$) requires resolving lineage \emph{within} a task block,
-not merely grouping leaves by task. Recovery is therefore consistent across architectures, scales, and
-full-FT vs.\ low-rank training, and is not explained by task identity. To quantify this directly, we run
-the identical neighbor-joining pipeline on a \emph{metadata-only} distance --- the mismatch between the
-task-type sequences along each leaf's root-to-leaf path, using no weights --- as a baseline (App.~\ref{app:taskbaseline}).
-It recovers only $61.7\%$ of clades and $42\%$ of trees exactly (Flan-T5 full FT), against $90\%$/$84\%$
-for weight distances on the same runs: task-path metadata captures the coarse grouping but misses the
-within-task splits that weights resolve, nearly doubling exact recovery.
-
-% Table 1: RF by leaf count
-\begin{table}[t]
-\caption{Polytomy-aware phylogeny recovery by architecture and training regime (cosine), aggregated over
-  all $\geq 5$-leaf training trees. Truth trees are multifurcating, so any binary reconstruction must
-  add resolving edges; we decompose RF into FN (true clades missed --- the real error) and FP
-  (binary-forced edges, $=$RF$-$FN). Clade recovery $=1-\mathrm{FN}/|\text{true splits}|$; exact recovery
-  $=$ \% of runs recovering all true clades (FN$=0$). SEs are over runs; for exact recovery, the SE is
-  the binomial standard error. Pythia-160M (matched to Flan's
-  width $d=768$) and Llama-3.2-1B ($d=2048$) isolate architecture and scale from dimensional dilution;
-  the two LoRA blocks ($r=8$) show low-rank adapters recover comparably to full FT when compared on
-  their merged weights (\S\ref{sec:framework:metric}).}
-\label{tab:rf_by_leaves}
-\begin{center}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lrrrrr}
-\toprule
-Condition & $n$ & Clade rec. (SE) & Exact rec. (SE) & RF (SE) & FN (SE) \\
-\midrule
-\multicolumn{6}{l}{\textit{Full fine-tuning}} \\
-Flan-T5-base ($d{=}768$, enc--dec)   & 44 & \textbf{90\%} (4\%) & \textbf{84\%} (6\%) & 1.93 (0.21) & 0.20 (0.08) \\
-Pythia-160M ($d{=}768$, dec-only)    & 44 & \textbf{97\%} (2\%) & \textbf{95\%} (3\%) & 1.66 (0.18) & 0.07 (0.05) \\
-Llama-3.2-1B ($d{=}2048$, dec-only)  & 40 & \textbf{84\%} (5\%) & \textbf{75\%} (7\%) & 2.05 (0.25) & 0.28 (0.08) \\
-\midrule
-\multicolumn{6}{l}{\textit{LoRA ($r{=}8$, merged weights)}} \\
-Flan-T5-base qkv (enc--dec)          & 43 & \textbf{82\%} (5\%) & \textbf{74\%} (7\%) & 2.12 (0.26) & 0.30 (0.09) \\
-Llama-3.2-1B qkv (dec-only)          & 44 & \textbf{94\%} (3\%) & \textbf{91\%} (4\%) & 1.80 (0.20) & 0.14 (0.07) \\
-\bottomrule
-\end{tabular}
-\end{center}
-\end{table}
-
-Weight access, not behavior, is what enables per-run phylogeny recovery: on the same documented
-real-world family (Fig.~\ref{fig:real-trees}), whitebox weight distances recover every fork while
-behavior-only estimation from model outputs recovers far fewer.
-
-Treating layers as independent estimators (Appendix~\ref{app:layertrace},
-Fig.~\ref{fig:layertrace_grid}), attention key projections are the dominant carrier in both
-architectures: in Flan-T5 the key projection alone (fewer than $4\%$ of parameters) recovers lineage at
-least as well as the full tensor, and the decoder-only Llama mirrors this key-matrix carrier --- without
-cross-attention, so it is not an encoder--decoder artifact --- though more diffusely. Layer norms carry
-the weakest signal.
-
-Figure~\ref{fig:coherence_recovery} explores clade recovery across LoRA settings, datasets, layers, and
-models. The oracle Atteson margin (left) governs recovery reliably; because it is a sufficient condition
-applied stochastically, recovery can be high below margin $1$ and short of $100\%$ above it. Architecture
-and layer differences remain visible: single self-attention q/k/v matrices from Llama LoRA recover only
-$15$--$40\%$ of clades, versus higher recovery for Flan cross-attention q/k/v, and full-FT layers
-($>80\%$) carry more than LoRA adapters. The right panel shows the label-free proxy $A$ tracks clade
-recovery closely: because $A$ needs no ground-truth tree, it predicts \emph{when} recovery will succeed,
-giving a practitioner a confidence diagnostic for a reconstruction whose truth is unknown --- the
-setting that motivates the method.
-
-\begin{figure}[t]
-  \begin{center}
-    \includegraphics[width=0.78\linewidth]{\figpath/fig4_coherence_atteson.png}
-  \end{center}
-  \caption{\textbf{What gates phylogeny recovery.} \textbf{(A)} Clade recovery against the oracle
-    bottleneck Atteson margin (min.\ fitted internal edge length over twice the non-additivity
-    error); NJ is guaranteed to recover a split once the margin exceeds $1$ (dashed line).
-    \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
-    no ground-truth tree. Small points are individual Llama-1B layers or q/k/v adapter matrices;
-    large symbols are whole-run summaries, Flan LayerTrace subsets, organic HF validation, and
-    layer-family centroids.}
-  \label{fig:coherence_recovery}
-\end{figure}
-
-Table~\ref{tab:variants} summarizes signal and recovery across regimes: both the ordering signal and
-phylogeny recovery are stable from the narrowest LoRA scope (key only) through full fine-tuning. The
-within-run ordering correlation strengthens modestly with more trained parameters, while phylogeny
-recovery stays high throughout (clade recovery $82$--$96\%$, exact recovery $72$--$94\%$). Notably,
-Llama-3.2-1B LoRA adapters recover as well as or better than Flan full FT --- low-rank adaptation does
-not cost lineage recoverability. The stronger within-run ordering correlation for the Llama adapters
-than for Llama full FT reflects the \textsc{trained\_only} restriction: the adapter distance is read
-from the q/k/v updates alone, whereas the full-FT distance averages over all tensors, including the
-noisier layer norms and embeddings.
-
-% Table 2: training-regime variants (Flan-T5 + Llama-3.2-1B)
 \begin{table}[t]
 \caption{Lineage signal and recovery by training regime (cosine; \textsc{trained\_only=1} for LoRA,
   Llama LoRA distances on merged weights). \emph{Ordering:} rank-biserial is the Mann--Whitney effect
@@ -491,6 +385,44 @@ Variant & $n$ & Rank-bis. (SE) & $r$ (SE) & Clade (SE) & Exact (SE) & RF (SE); F
 \end{tabular}
 \end{center}
 \end{table}
+ 
+
+
+\paragraph{Phylogeny estimation.}
+\label{sec:results:weighttree}
+Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} with respect to clade percentage recovery, exact phylogeny recovery (adjusting for NJ forced bi-partitions) and RF/FN for all phylogenies with $\ge 4$ leaves. Clade precovery ranges between 82\%-96\% and exact reocvery between 72-94\%.  Again we see that we have stronger lineage seen in full fine-tuning for the encoder-decoder whereas we see stronger lineage in just the LoRA qkv training for the decoder, Llama-3.2-1B.  
+
+We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to check 4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App [FILL IN]).  The signal in the encoder-decoder seems to be stronger in the cross-attention layers than self attention whereas the decoder-only seems to be more diffuse across the self attention layers (as it has no cross-attention).
+
+Finally, we see that the oracle Atteson margin $m$ and additivity proxy $A$ both reliably guide phylogeny (specifically clade recovery) estimation.  In Figure~\ref{fig:coherence_recovery}, see both $m$ and $A$ reported across LoRA settings, datasets, layers, and
+models. We can see the diffuse signal of lineage in Llama in the orange points.  They have both low margins and additivities and low clade recovery.  It is only when we use the Frechet mean to average these layers together do we.
+
+\begin{figure}[t]
+  \begin{center}
+    \includegraphics[width=0.78\linewidth]{\figpath/fig4_coherence_atteson.png}
+  \end{center}
+  \caption{\textbf{What gates phylogeny recovery.} \textbf{(A)} Clade recovery against the oracle
+    bottleneck Atteson margin (min.\ fitted internal edge length over twice the non-additivity
+    error); NJ is guaranteed to recover a split once the margin exceeds $1$ (dashed line).
+    \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
+    no ground-truth tree. Small points are individual Llama-1B layers or q/k/v adapter matrices;
+    large symbols are whole-run summaries, Flan LayerTrace subsets, organic HF validation, and
+    layer-family centroids.}
+  \label{fig:coherence_recovery}
+\end{figure}
+
+Table~\ref{tab:variants} summarizes signal and recovery across regimes: both the ordering signal and
+phylogeny recovery are stable from the narrowest LoRA scope (key only) through full fine-tuning. The
+within-run ordering correlation strengthens modestly with more trained parameters, while phylogeny
+recovery stays high throughout (clade recovery $82$--$96\%$, exact recovery $72$--$94\%$). Notably,
+Llama-3.2-1B LoRA adapters recover as well as or better than Flan full FT --- low-rank adaptation does
+not cost lineage recoverability. The stronger within-run ordering correlation for the Llama adapters
+than for Llama full FT reflects the \textsc{trained\_only} restriction: the adapter distance is read
+from the q/k/v updates alone, whereas the full-FT distance averages over all tensors, including the
+noisier layer norms and embeddings.
+
+% Table 2: training-regime variants (Flan-T5 + Llama-3.2-1B)
+
 
 Finally, we move to organic model families on HuggingFace. Figure~\ref{fig:real-trees} compares our
 reconstruction against the documented lineage for ten public Mistral-7B-v0.1 checkpoints --- base,
