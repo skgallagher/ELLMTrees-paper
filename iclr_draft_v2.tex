@@ -390,7 +390,7 @@ Variant & $n$ & Rank-bis. (SE) & $r$ (SE) & Clade (SE) & Exact (SE) & RF (SE); F
 
 \paragraph{Phylogeny estimation.}
 \label{sec:results:weighttree}
-Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} with respect to clade percentage recovery, exact phylogeny recovery (adjusting for NJ forced bi-partitions) and RF/FN for all phylogenies with $\ge 4$ leaves. Clade precovery ranges between 82\%-96\% and exact recovery between 72-94\%.  Again we see that we have stronger lineage seen in full fine-tuning for the encoder-decoder whereas we see stronger lineage in just the LoRA QKV training for the decoder, Llama-3.2-1B.  We see in Appendix~\ref{app:withintask} that phylogeny estimation still holds even when every node in a tree trains within a single task (clade recovery $59$--$87\%$, above the task-metadata baseline for three of the four tasks).
+Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} with respect to clade percentage recovery, exact phylogeny recovery (adjusting for NJ forced bi-partitions) and RF/FN for all phylogenies with $\ge 4$ leaves. Clade recovery ranges between 82--96\% and exact recovery between 72--94\%.  Again we see that we have stronger lineage seen in full fine-tuning for the encoder-decoder whereas we see stronger lineage in just the LoRA QKV training for the decoder, Llama-3.2-1B.  We see in Appendix~\ref{app:withintask} that phylogeny estimation still holds even when every node in a tree trains within a single task (clade recovery $59$--$87\%$, above the task-metadata baseline for three of the four tasks).
 
 We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to use $\approx$4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App.~\ref{app:layertrace}).  The signal in the encoder-decoder seems to be stronger in the $k$ matrices whereas the decoder-only seems to be more diffuse across the $k$-matrices, possibly indicating that encoders are important in passing lineage signal.
 
@@ -404,9 +404,9 @@ models. We see that the norm layers seem to have the worst recovery.  They have 
   \caption{\textbf{What guides clade recovery.} \textbf{(A)} Clade recovery against the oracle
     bottleneck Atteson margin (min.\ fitted internal edge length over twice the non-additivity
     error). \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
-    no ground-truth tree. Small points are individual Llama-1B layers or q/k/v adapter matrices;
-    large symbols are whole-run summaries, Flan LayerTrace subsets, organic HF validation, and
-    layer-family centroids.}
+    no ground-truth tree. Small points are individual Llama-1B full-FT layers (attention/MLP and
+    norm/embed); large symbols are whole-run summaries, Flan LayerTrace subsets, organic HF
+    validation, and layer-family centroids.}
   \label{fig:coherence_recovery}
 \end{figure}
 
@@ -439,7 +439,7 @@ reported (---). Per-cell heterogeneity ($I^2$) in App.~\ref{app:regression}.}
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lcccccc}
 \toprule
- & \multicolumn{2}{c}{Translation} & HellaSwag & ARC-C & MMLU & TruthfulQA \\
+DL $r$ [95\% CI] & \multicolumn{2}{c}{Translation} & HellaSwag & ARC-C & MMLU & TruthfulQA \\
 \cmidrule(lr){2-3}
 Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
@@ -457,9 +457,9 @@ Flan-T5-base & \shortstack{$-0.26$\\{\scriptsize$[-.35,-.16]$}} & \shortstack{$+
 When weights are unavailable or different architectures need to be compared, lineage must be inferred from behavior alone. We compare our weight-based
 estimation to PhyloLM~\citep{yax2025phylolm}, scored against the
 same ground truth. On the real Mistral family (Fig.~\ref{fig:real-trees}), PhyloLM recovers all three
-forks, matching our estimated phylogeny, but it has a smaller additivity ($\bar{A}=0.84$ vs.\ our $0.98$ on informative (non-star) quartets). A naive sentence-embedding estimated phylogeny on the same outputs recovers only one fork, so behavior-only recovery is strongly method-dependent.  We show this prompt dependency in Appendix \ref{app:robustness}.
+forks, matching our estimated phylogeny, but it has a smaller additivity ($\bar{A}=0.84$ vs.\ our $0.98$ on informative (non-star) quartets). A naive sentence-embedding estimated phylogeny on the same outputs recovers only one fork, so behavior-only recovery is strongly method-dependent.
 
-The Mistral forks are large reinforcment learning with human feedback or direct preference optimization weight changes that move behavior a lot. Our controlled trees are a more precise test. In the LoRA and low-update regimes fine-tuning barely shifts behavior, yet weight distance can still estimate phylogenies. Running PhyloLM on these same trees against the same ground truth, behavior-only recovery falls well below weight-based recovery: on the held-out full-FT trees PhyloLM recovers $57\%$ of clades versus $95\%$ for weights, and on the
+The Mistral forks are large reinforcement-learning-from-human-feedback (RLHF) or direct-preference-optimization (DPO) weight changes that move behavior a lot. Our controlled trees are a more precise test. In the LoRA and low-update regimes fine-tuning barely shifts behavior, yet weight distance can still estimate phylogenies. Running PhyloLM on these same trees against the same ground truth, behavior-only recovery falls well below weight-based recovery: on the held-out full-FT trees PhyloLM recovers $57\%$ of clades versus $95\%$ for weights, and on the
 $r{=}8$ LoRA trees only $35\%$ versus $94\%$, no better than a random phylogeny. This seems to indicate that weight-based estimation of phylogeny can be stronger than behavior-only estimation in some cases.  From the perspective that weight and behavior are intrinsically linked, this makes sense, and removing prompt dependency can be a great advantage for weight-based estimation.
 
 \begin{figure}[t]
@@ -479,7 +479,7 @@ $r{=}8$ LoRA trees only $35\%$ versus $94\%$, no better than a random phylogeny.
 \label{sec:discussion}
 % -----------------------------------------------------------------------
 
-We show that model family phylogeny can be estimated from weights alone, and that using the best layers that comprise only 4\% of the total model parameters ($k$-matrices) estimates training trees just as well as using all the layers.  We find that clade recovery works across an encoder-decoder and decoder model and even survives LoRA training at low ranks (r=8). In particular, we find that in our controlled experiments, our exact phylogeny recovery ranges from 79-94\% over all our conditions. In addition to showing that we can estimate phylogeny and direct lineage from weights, we show that the weights contain traits that perhaps were unexpected.  We show that on held-out tasks, models more similar in weight space have more similar embedding outputs (pooled DL $r \approx -0.3$-$0.2$). This is direct, albeit modest, evidence that traits are inherited from ancestor models.   Finally, we compare our weight-based estimation to a behavior-only estimation and show that they work equally well on a real case and the weight-based method can outperform the behavior-only estimation in some cases.  This shows that while behavior-only models are useful, specially when there are different architectures, they are not as robust as weight-based estimates which do not require prompts.
+We show that model family phylogeny can be estimated from weights alone, and that using the best layers that comprise only 4\% of the total model parameters ($k$-matrices) estimates training trees just as well as using all the layers.  We find that clade recovery works across an encoder-decoder and decoder model and even survives LoRA training at low ranks (r=8). In particular, we find that in our controlled experiments, our exact phylogeny recovery ranges from 72--94\% over all our conditions. In addition to showing that we can estimate phylogeny and direct lineage from weights, we show that the weights contain traits that perhaps were unexpected.  We show that on held-out tasks, models more similar in weight space have more similar embedding outputs (pooled DL $r \approx -0.3$-$0.2$). This is direct, albeit modest, evidence that traits are inherited from ancestor models.   Finally, we compare our weight-based estimation to a behavior-only estimation and show that they work equally well on a real case and the weight-based method can outperform the behavior-only estimation in some cases.  This shows that while behavior-only models are useful, specially when there are different architectures, they are not as robust as weight-based estimates which do not require prompts.
 
 
 We note that our experiments and methods have limitations.  One limitation is that our methods for phylogeny estimation using weights currently only work when the underlying architecture is identical, i.e. the parameter space is the same.  This means that Llama cannot directly be compared to Mistral, for example. Another issue is that our controlled training tree generation results from a fairly simple process that may not result in the most realistic training trees.  We attempt to mitigate that with our real world example. Future directions include better relating models across different architectures such as with CKA and to further explore the mechanism of which lineage is inherited. In summary, we hope that our work illuminates the need to consider models holistically and not as a series of benchmarks.
