@@ -69,7 +69,7 @@ fine-tuned descendants of a few ancestors.  Very few of those models document th
 fail. Training lineage can reveal much about model provenance, auditing, and safety~\cite{behavioral2026provenance, nikolic2026model, tensorguard2025}.
 
 We, like other prior works~\citep{horwitz2025mother, yu2025neural, wu2026llmdna}, observe that fine-tuning is a path-dependent, branching process. Each
-child model inherits its parent's  updated weights, nudged towards a certain loss and/or data set. This is
+child model inherits its parent's updated weights, nudged towards a certain loss and/or data set. This is
 precisely an evolutionary process, as described in \cite{yax2025phylolm}, and the evolutionary path leaves signal in weight space. We treat a family of fine-tuned models
 as a phylogeny (i.e. an evolutionary tree~\cite{saitou1987neighbor}) and ask whether this phylogeny can be \emph{estimated} from the model parameters alone.
 
@@ -274,7 +274,7 @@ across multiple genes encoding different information \citep{maddison1997gene}. A
 thus yields $L$ distance matrices, which can each form an estimate of $\widehat{\mathcal{P}}$
 (summarized by a consensus tree) or be combined (e.g.\ averaged) into a less noisy $\hat{\mathbf{D}}$.
 Beyond a lower-variance estimate, the layer-wise view identifies the most and least important layers by
-which change most or least across runs.
+how much they change across runs.
 
 
 \subsection{Guiding Lineage Estimation}
@@ -1025,8 +1025,10 @@ where classification-trained nodes overwrite translation entirely. It is \emph{n
 of held-out probes. In the matched full-fine-tuning held-out conditions of
 Table~\ref{tab:behavior_holdout} the nodes remain capable on the held-out task, and there the
 weight$\to$behavior bridge is interpretable: negative and \emph{strengthening} for Llama-3.2-1B
-(evidence of genuine lineage transmission), and only weakly positive for Flan-T5---consistent with the
-residual task-identity confound described here rather than a clean reversal of the bridge.
+(evidence of genuine lineage transmission), and only weakly positive for held-out Flan-T5
+translation---consistent with the residual task-identity confound described here rather than a clean
+reversal of the bridge. Flan's other held-out probes (HellaSwag, ARC-Challenge, MMLU, TruthfulQA), which
+do not trigger the collapse, remain negative and significant (Table~\ref{tab:behavior_holdout}).
 
 
 \section{Behavioral Regression Diagnostics}
