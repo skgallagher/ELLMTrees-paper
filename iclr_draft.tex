@@ -191,7 +191,7 @@ ground-truth tree, and validate on documented model families --- from both weigh
 Method & Access & Phylogeny & Ground-truth eval & Real families \\
 \midrule
 MoTHer \citep{horwitz2025mother}          & weights  & $\sim$      & \ding{55}   & \checkmark \\
-Neural Lineage \citep{yu2025neural}       & weights  & \ding{55}   & \checkmark  & $\sim$ \\
+Neural Phylogeny \citep{yu2025neural}       & weights  & \ding{55}   & \checkmark  & $\sim$ \\
 PhyloLM \citep{yax2025phylolm}            & behavior & \checkmark  & \ding{55}   & \checkmark \\
 LLM DNA \citep{wu2026llmdna}              & behavior & \checkmark  & \ding{55}   & \checkmark \\
 \textbf{Ours}                             & \textbf{both} & \checkmark & \checkmark & \checkmark \\
@@ -284,8 +284,8 @@ Estimating lineage poses two questions of differing difficulty. \emph{Ordering} 
 sibling (same-branch) pairs are closer than cousin (cross-branch) pairs; pooling all $O(n^2)$
 comparisons per run across $50$ runs, the Mann--Whitney $U$ statistic (equivalently a within-run rank
 correlation) detects it even when no single pair is decisive. This is the pairwise-ancestry signal
-parent--child methods like MoTHer \citep{horwitz2025mother} and Neural Lineage
-\citep{yu2024neurallineage} rely on; we report it in \S\ref{sec:results}. \emph{Lineage} ---
+parent--child methods like MoTHer \citep{horwitz2025mother} and Neural Phylogeny
+\citep{yu2025neural} rely on; we report it in \S\ref{sec:results}. \emph{Lineage} ---
 asking neighbor-joining (NJ) to return the phylogeny --- is harder. NJ is exact under
 conditions on tree additivity, which model-parameter distances satisfy only approximately; Atteson's
 theorem makes this precise.
@@ -387,7 +387,7 @@ cross-branch pairs throughout (one-sided Mann--Whitney $p<10^{-25}$), with rank-
 from $0.43$ (Flan LoRA, key only) to $0.96$ (Llama LoRA) and within-run Fisher $z$-averaged correlations
 from $-0.60$ to $-0.94$ --- across architectures (Flan-T5, Pythia, Llama), scales (160M--8B), and regimes
 (full FT and LoRA). This is the level at which parent--child methods like MoTHer \citep{horwitz2025mother}
-and Neural Lineage \citep{yu2025neural, yu2024neurallineage} operate;
+and Neural Phylogeny \citep{yu2025neural} operate;
 we go further to phylogeny estimation below.
 
 \paragraph{Phylogeny estimation.}
@@ -956,8 +956,7 @@ values rather than an equal-weight mean, since runs vary in leaf count and noise
 condition (Llama-3.2-1B, translation probe, centroid DV), the pooling choices agree in sign and
 magnitude---DL random-effects $r=-0.161$ ($95\%$ CI $[-0.28,-0.04]$, $p=0.011$), equal-weight mean
 $r=-0.21$, one-stage mixed model with a random slope $r=-0.136$---with genuine between-run heterogeneity
-($I^2\approx54\%$) that is not explained by leaf count. We report the DL random-effects estimate; the within-run partial
-associations underlying it are shown per condition in Fig.~\ref{fig:regression_diagnostics}.
+($I^2\approx54\%$) that is not explained by leaf count. We report the DL random-effects estimate.
 
 
 \section{Translation Probe Outputs for TaskHoldout Models}
@@ -1029,32 +1028,5 @@ weight$\to$behavior bridge is interpretable: negative and \emph{strengthening} f
 translation---consistent with the residual task-identity confound described here rather than a clean
 reversal of the bridge. Flan's other held-out probes (HellaSwag, ARC-Challenge, MMLU, TruthfulQA), which
 do not trigger the collapse, remain negative and significant (Table~\ref{tab:behavior_holdout}).
-
-
-\section{Behavioral Regression Diagnostics}
-\label{app:regression_diagnostics}
-
-Figure~\ref{fig:regression_diagnostics} shows the within-run partial association
-between cosine weight distance and semantic output similarity for each fine-tuning
-condition. Points are within-run demeaned (run fixed effects removed); the red line
-is the OLS fit on the demeaned data. A negative slope indicates that model pairs
-closer in weight space produce more similar translation outputs. The effect is
-consistent in direction across all five Flan-T5 training conditions and the full-FT decoder Llama-3.2-1B
-(centroid semantic DV; translation probe), with within-run $\bar r$ ranging from $-0.16$ to $-0.45$. The
-held-out bridge, on the paired per-prompt DV and pooled by random-effects meta-analysis, is quantified
-separately in \S\ref{sec:results} (Table~\ref{tab:behavior_holdout}).
-
-\begin{figure}[h]
-  \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/regression_diagnostics_semantic.png}
-  \end{center}
-  \caption{Within-run partial association between cosine weight distance and
-    semantic output similarity (translation probe), for the five Flan-T5 fine-tuning
-    conditions and the full-FT decoder Llama-3.2-1B (bottom right). Points are
-    within-run demeaned; Fisher $z$-averaged within-run $r$ and run count shown per
-    panel. All slopes are negative, confirming that weight proximity predicts
-    behavioral similarity across training regimes and architectures.}
-  \label{fig:regression_diagnostics}
-\end{figure}
 
 \end{document}
