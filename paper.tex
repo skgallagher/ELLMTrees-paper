@@ -117,12 +117,12 @@ distributional fingerprints (GhostSpec, \citealp{ghostspec2025}; \citealp{nikoli
 \citep{zhu2025independence} do pairwise verification. \textbf{Differentiator:} all operate on organic
 collections with no known topology, so none reports an accuracy measure (RF) against a ground-truth
 training tree, and none recovers a multi-leaf tree. Spectral DeTuning
-(\TODO{add spectral-detuning bib key, Horwitz ICML 2024}) shows base weights are recoverable from
+\citep{horwitz2024spectral} shows base weights are recoverable from
 shared-LoRA variants --- direct motivation for why LoRA weight geometry encodes ancestry.
 
 \paragraph{Behavioral / output-space phylogeny.} PhyloLM \citep{yax2025phylolm} and LLM DNA
 \citep{wu2026llmdna} (also attesting-lineage and behavioral-fingerprint provenance work
-\TODO{add shang2026, behavioral-fingerprint bib keys}) show output similarity recovers family
+\citep{shang2026attesting, behavioral2026provenance}) show output similarity recovers family
 structure but require no weights and have no controlled ground truth. Our behavioral bridge is a
 controlled test of this idea --- weight proximity predicts output similarity even on a held-out task
 --- with a null control (\texttt{no\_translation\_v2}) that the organic-collection setting cannot
@@ -132,20 +132,20 @@ provide.
 shared initialization lie in a connected low-error basin \citep{wortsman2022model, frankle2020linear},
 so pairwise weight distance carries ancestry. Task arithmetic \citep{ilharco2023editing} names the
 displacement vectors $\Delta\theta$ that our subspace-angle analysis measures; LoRA \citep{hu2022lora}
-and intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why a low-rank update
-suffices and why rank ($s=r/d$) governs how much lineage is legible; subspace geometry has been tied
-to catastrophic forgetting \citep{kirkpatrick2017overcoming} \TODO{add steele2026 subspace-forgetting
-key}, complementing our near-orthogonal cross-task angles. CKA \citep{kornblith2019similarity} is the
+and intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} explain why even a low-rank update
+suffices to carry legible lineage; subspace geometry has been tied
+to catastrophic forgetting \citep{kirkpatrick2017overcoming, steele2026subspace},
+complementing our near-orthogonal cross-task angles. CKA \citep{kornblith2019similarity} is the
 expected model-similarity baseline to position our cosine weight distance against.
 
 \paragraph{Foundations we adopt.} We reconstruct trees with neighbor-joining
 \citep{saitou1987neighbor} and score them with Robinson--Foulds distance \citep{robinson1981comparison};
 the behavioral DV uses sentence-embedding similarity \citep{reimers2019sentence}.
 
-\TODO{Add missing bib entries: Spectral DeTuning (Horwitz ICML 2024), Neural Lineage (Yu \& Wang CVPR
-2024, distinct from yu2025neural), Attesting Lineage (Shang 2026), Steele 2026
-subspace forgetting, TIES-Merging, Mirzadeh LMC, CheckList (Ribeiro 2020). Also fix \texttt{grayson2024phylolm}
--> \texttt{yax2025phylolm} in \S\ref{sec:exp:blackbox}.}
+% Bib keys ready in references.bib if you want to cite them where relevant:
+%   yu2024neurallineage (CVPR 2024, distinct from yu2025neural), yadav2023ties,
+%   mirzadeh2021linear, ribeiro2020checklist. Some still have author = {TODO} placeholders
+%   (shang2026attesting, behavioral2026provenance, steele2026subspace) -- fill before camera-ready.
 
 
 % -----------------------------------------------------------------------
@@ -371,8 +371,9 @@ single-task probes miss.
   contains the \emph{entire} true tree (FN$=0$). \% sig: runs with $p<0.05$ vs.\ the
   random-tree null (identical for FN and total RF). RF matches the stored pipeline value in
   529/530 runs. Pythia-160M (decoder-only) is matched to Flan-T5-base's width ($d=768$) and
-  full fine-tuned, isolating architecture from dimensional dilution; decoder-only models that
-  are also diluted (Llama) are deferred to Appendix~\ref{app:llama}.}
+  full fine-tuned, isolating the encoder-decoder vs.\ decoder-only architecture comparison;
+  frontier-scale decoder-only Llama models (which recover comparably) are in
+  Appendix~\ref{app:llama}.}
 \label{tab:rf_by_leaves}
 \begin{center}
 \begin{tabular}{rrrrrrrr}
@@ -425,18 +426,20 @@ Leaves & $n$ & RF (SE) & FN (SE) & FP (SE) & Clade recov. & Refinement & \% sig 
 \subsection{LayerTrace: Signal Concentrates in 4\% of the Model}
 \label{sec:results:layertrace}
 
-% Figure 3: per-layer RF profile
+% Figure 3: per-layer RF profile across architectures
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/fig3_fn.png}
+    \includegraphics[width=\linewidth]{\figpath/fig3_layertrace_grid.png}
   \end{center}
-  \caption{Per-layer FN-rate (\% of true clades missed; mean $\pm$ 2\,SE, $n=44$ runs, cosine),
-    encoder and decoder shown separately. The key matrices recur once per block and miss the
-    fewest true clades: encoder \textsc{SelfAttention.k} reaches 4\% FN (vs.\ 9\% elsewhere),
-    while \textsc{LayerNorm} is the periodic maximum. In the decoder the lineage-carrying low
-    cluster is the encoder--decoder \textsc{cross-attention} (\textsc{ca.k} lowest); decoder
-    self-attention is weak --- the signal there lives in cross-attention, which a decoder-only
-    model lacks.}
+  \caption{Per-layer FN-rate (\% of true clades missed; mean $\pm$ 2\,SE, cosine, full
+    fine-tuning) for an encoder--decoder (Flan-T5-base, $d{=}768$, $n=44$) and a decoder-only model
+    (Llama-3.2-1B, $d{=}2048$, $n=47$). The same layers carry lineage in both: the attention
+    \emph{key} matrices recur once per block and miss the fewest true clades (k-matrices 10\% vs.\
+    14\% elsewhere in Flan; 13\% vs.\ 20\% in Llama), while \textsc{LayerNorm} is the periodic
+    maximum (the noise floor). In Flan the encoder \textsc{SelfAttention.k} and encoder--decoder
+    \textsc{cross-attention} keys are the lowest; the decoder-only model recovers the same
+    key-matrix carrier without any cross-attention, showing the signal localization is not an
+    encoder--decoder artifact.}
   \label{fig:layer_rf_profiles}
 \end{figure}
 
@@ -528,25 +531,17 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
     series.
   \item Diminishing returns past qkv (qkv $\approx$ full\_attn): the large gap to full FT reflects
     moving from rank-constrained to unconstrained updates, not adding more modules.
-  \item Across architectures the controlling variable is $s = r/d$ (adapter rank $\div$ model
-    width): topology recovery is monotone in $s$ (Fig.~\ref{fig:sigmoid_recovery}), from the
-    Llama-8B floor ($s\approx2\!\times\!10^{-3}$, $\sim$20\%) through Flan LoRA
-    ($s\approx10^{-2}$, $\sim$85\%) to the full-FT ceiling ($s=1$, $\sim$90\%).
+  \item Lineage recovers across architecture, scale, and adapter rank --- with no dependence on
+    $s = r/d$ (rank $\div$ width) --- once weight distances are computed on \emph{cumulative}
+    displacement from the base model rather than bare per-node adapter increments. Every Llama LoRA
+    group (Llama-8B, Llama-3.2-1B base and instruct; ranks $r\in\{2,4,8,16,32,64\}$) recovers
+    91--96\% of clades, statistically indistinguishable from Flan LoRA (83\%) and full FT (85\%)
+    (Appendix~\ref{app:llama}, Table~\ref{tab:llama_recovery}). An apparent low-rank decoder
+    ``dead zone'' in an earlier version of this analysis was a measurement artifact: adapter-only
+    checkpoints store each node's increment from its parent, and differencing increments drops the
+    shared ancestral prefix that full-weight checkpoints retain. Summing the increments along the
+    root-to-node path (cumulative displacement) restores the comparison, and the dead zone vanishes.
 \end{itemize}
-
-% PLACEHOLDER FIGURE — draft s=r/d recovery curve (annotations are working notes; replace with the
-% clean sigmoid once the Llama-1B qkv rank sweep r in {2,4,16,32} lands and fills the in-model points).
-\begin{figure}[t]
-  \begin{center}
-    \includegraphics[width=0.85\linewidth]{\figpath/sigmoid_recovery_rd.png}
-  \end{center}
-  \caption{\textcolor{red}{[PLACEHOLDER --- draft, working annotations.]} Clade recovery vs.\
-    $s = r/d$ (adapter rank over model width; log scale). Recovery is monotone in $s$: Llama-8B
-    r8 sits near the random floor, Flan LoRA r8 and full FT near the ceiling. The Llama-3.2-1B
-    rank sweep ($r\in\{2,4,16,32\}$, currently training) fills the in-model points to test whether
-    the rise is a smooth (sigmoidal) function of $s$; final figure replaces this draft.}
-  \label{fig:sigmoid_recovery}
-\end{figure}
 
 
 \subsection{Behavioral Bridge}
@@ -573,10 +568,12 @@ full weight    & 282 tensors & \multicolumn{5}{l}{FN $0.33 \pm 0.19$ (reference)
     (classification-trained nodes emit label tokens), so we treat it as a qualitative null
     (Appendix~\ref{app:translation_probe}), confirming the probe measures task-specific adaptation
     rather than base-model noise.
-  \item The bridge holds in decoder-only Llama-3.1-8B but is weaker: standardized $\beta=-0.21$
-    ($p=2\!\times\!10^{-9}$) on the standard probe and $-0.10$ ($p=0.002$) on held-out HellaSwag
-    --- weight proximity predicts behavior even on a task the model never trained on. Per-group
-    raw and semi-standardized betas in Appendix~\ref{app:regression}.
+  \item The bridge holds in decoder-only Llama-3.1-8B on the most demanding test: weight proximity
+    predicts behavior on \emph{held-out} HellaSwag, a task the model never trained on (random-effects
+    $r=-0.20$, $p=0.002$). On the seen-translation probe the coupling attenuates to a null under the
+    same cumulative weight distances ($r=-0.02$, n.s.) --- consistent with the seen-task coupling
+    being driven partly by shared training rather than inherited lineage, which the held-out probe
+    removes. Per-group estimates in Appendix~\ref{app:regression}.
 \end{itemize}
 
 
@@ -759,7 +756,10 @@ three coefficients per condition (Table~\ref{tab:regression_betas}):
   the standardized $\beta$). The standardized $\beta$ (within-run) is the comparable effect size and
   equals the within-run correlation; raw and semi-standardized $\beta$ are reported for transparency.
   \texttt{no\_translation\_v2} is a qualitative null (Appendix~\ref{app:translation_probe}) and is
-  omitted. HellaSwag is a held-out task for Llama (never trained).}
+  omitted. HellaSwag is a held-out task for Llama (never trained). Llama-8B rows use cumulative
+  weight displacement (consistent with the whitebox analysis, Appendix~\ref{app:llama}): the
+  held-out HellaSwag bridge is significant while the seen-translation coupling is null, indicating
+  the surviving signal reflects inherited lineage rather than shared-task training.}
 \label{tab:regression_betas}
 \begin{center}
 \begin{tabular}{lrrrr}
@@ -773,9 +773,9 @@ lora\_full\_attn       & $-32.0$  & $-0.027$  & $-0.12$ & $0.008$ \\
 lora\_full\_ft\_approx & $-52.2$  & $-0.031$  & $-0.14$ & $0.007$ \\
 branching\_v3 (full FT)& $-7.40$  & $-0.019$  & $-0.13$ & $0.002$ \\
 \midrule
-\multicolumn{5}{l}{\textit{Llama-3.1-8B (decoder-only)}} \\
-k\_only (translation)  & $-0.020$ & $-0.0032$ & $-0.21$ & $2\!\times\!10^{-9}$ \\
-k\_only (HellaSwag)    & $-0.048$ & $-0.0046$ & $-0.10$ & $0.002$ \\
+\multicolumn{5}{l}{\textit{Llama-3.1-8B (decoder-only; cumulative weight distance)}} \\
+k\_only (translation, seen)   & $+0.0002$ & $-0.0001$ & $-0.01$ & $0.76$ \\
+k\_only (HellaSwag, held-out) & $-0.012$  & $-0.0028$ & $-0.16$ & $0.003$ \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -793,57 +793,66 @@ k\_only (HellaSwag)    & $-0.048$ & $-0.0046$ & $-0.10$ & $0.002$ \\
 
 \TODO{Fill robustness appendix.}
 
-\section{Decoder-Only at Scale: Llama and the Search for a Recovering Rank}
+\section{Decoder-Only at Scale: Llama}
 \label{app:llama}
 
-We include decoder-only Llama models (3.1-8B, 3.2-1B-Instruct) as a robustness check at frontier
-scale. All groups are cloned from the \texttt{branching\_v3} topologies (identical trees, so RF is
-directly comparable to Table~\ref{tab:rf_by_leaves}) and fine-tuned with LoRA at rank $r=8$;
-analysis uses \textsc{trained\_only=1} and \texttt{--min-leaves 4}.
+We include decoder-only Llama models (3.1-8B, 3.2-1B base and Instruct) as a robustness check at
+frontier scale. All groups are cloned from the \texttt{branching\_v3} topologies (identical trees, so
+RF is directly comparable to Table~\ref{tab:rf_by_leaves}) and fine-tuned with LoRA; analysis uses
+\textsc{trained\_only=1} and \texttt{--min-leaves 4}.
 
-The headline is a \emph{dissociation}: the pairwise ordering signal survives the
-encoder-decoder$\rightarrow$decoder-only switch, but full topology recovery does not.
-Table~\ref{tab:llama_recovery} shows every Llama group beats the random null on the ordering test
-(rank-biserial $r\approx0.20$--$0.25$, all Mann-Whitney $p<10^{-6}$), yet clade recovery sits at
-$20$--$32\%$ and \emph{no} group ever beats the label permutation ($0\%$ significant
-vs.\ label)---i.e.\ it recovers task-level clustering, not within-task lineage. Contrast the
-encoder-decoder Flan-T5 full FT ($\approx90\%$ clade recovery, Table~\ref{tab:rf_by_leaves}) and
-Flan LoRA qkv ($\approx83\%$).
+Lineage recovers as well in decoder-only Llama as in encoder-decoder Flan
+(Table~\ref{tab:llama_recovery}): every group recovers $90$--$96\%$ of clades, beats the label
+permutation on $38$--$47\%$ of runs, and separates same- from cross-branch pairs almost perfectly
+(rank-biserial $r\approx0.96$, all Mann-Whitney $p<10^{-100}$). This holds across scale (1B and 8B),
+across base vs.\ instruction-tuned initializations, and across adapter rank ($r\in\{2,4,8,16,32,64\}$,
+i.e.\ $s=r/d$ spanning $10^{-3}$ to $1.6\!\times\!10^{-2}$): recovery is flat-high throughout, with
+no dependence on $s$. The decoder-only architecture is innocent, and so is low adapter rank.
 
+% Cumulative-displacement numbers (cosine, polytomy-aware); see appendix paragraph below for the
+% measurement correction. Reproduce: scripts/rescore_recovery.py + analyze_branch_structure.py.
 \begin{table}[h]
-\caption{Llama topology recovery and ordering signal at $r=8$ (cosine, polytomy-aware). $s=r/d$ is
-  the per-matrix rank fraction ($d$ = model width). Clade recovery and FN are reconstruction means;
-  \% sig vs.\ label is the permutation test that controls for task-level clustering; rank-biserial
-  $r$ is the same-vs-cross branch ordering effect (all $p<10^{-6}$). Ordering signal is present
-  everywhere; topology recovery is not, and it rises weakly with $s$.}
+\caption{Llama topology recovery and ordering signal (cosine, polytomy-aware), measured on
+  \emph{cumulative} weight displacement from base. $s=r/d$ is the per-matrix rank fraction ($d$ =
+  model width). Clade recovery and FN are reconstruction means; \% sig vs.\ label is the permutation
+  test that controls for task-level clustering; rank-biserial $r$ is the same-vs-cross branch
+  ordering effect (all $p<10^{-100}$). Both topology recovery and ordering signal are strong
+  everywhere and do not depend on $s$.}
 \label{tab:llama_recovery}
 \begin{center}
 \begin{tabular}{llrrrrr}
 \toprule
 Model & Variant & $s=r/d$ & Clade rec. & FN & \% sig vs.\ label & rank-bis.\ $r$ \\
 \midrule
-Llama-3.1-8B ($d{=}4096$)        & k\_only          & $2.0\!\times\!10^{-3}$ & 20\% & 1.42 & 0\% & 0.220 \\
-                                 & qkv              & $2.0\!\times\!10^{-3}$ & 25\% & 1.33 & 0\% & 0.245 \\
+Llama-3.1-8B ($d{=}4096$)        & k\_only          & $2.0\!\times\!10^{-3}$ & 91.8\% & 0.15 & 44.7\% & 0.960 \\
+                                 & qkv              & $2.0\!\times\!10^{-3}$ & 91.8\% & 0.15 & 46.8\% & 0.961 \\
 \midrule
-Llama-3.2-1B-Inst.\ ($d{=}2048$) & k\_only          & $3.9\!\times\!10^{-3}$ & 26\% & 1.34 & 0\% & 0.195 \\
-                                 & qkv              & $3.9\!\times\!10^{-3}$ & 29\% & 1.26 & 0\% & 0.247 \\
-                                 & full\_ft\_approx & $3.9\!\times\!10^{-3}$ & 32\% & 1.23 & 0\% & 0.254 \\
+Llama-3.2-1B base ($d{=}2048$)   & qkv ($r{=}8$)    & $3.9\!\times\!10^{-3}$ & 94.3\% & 0.13 & 44.7\% & 0.964 \\
+                                 & qkv ($r{=}64$)   & $3.1\!\times\!10^{-2}$ & 96.5\% & 0.09 & 44.7\% & 0.970 \\
+\midrule
+Llama-3.2-1B-Inst.\ ($d{=}2048$) & k\_only          & $3.9\!\times\!10^{-3}$ & 90.4\% & 0.19 & 38.3\% & 0.956 \\
+                                 & qkv ($r{=}8$)    & $3.9\!\times\!10^{-3}$ & 92.2\% & 0.17 & 42.6\% & 0.963 \\
+                                 & qkv ($r{=}2$)    & $9.8\!\times\!10^{-4}$ & 91.5\% & 0.19 & 38.3\% & 0.965 \\
+                                 & qkv ($r{=}32$)   & $1.6\!\times\!10^{-2}$ & 93.3\% & 0.15 & 44.7\% & 0.964 \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{table}
 
-The mechanism is dimensional dilution: at fixed rank, the weight update occupies a vanishing
-fraction of the ambient space, so per-matrix updates become near-orthogonal (qkv cosine distance
-mean $0.943$, jammed at the ceiling) and the metric geometry that NJ needs collapses, even as the
-\emph{rank order} of distances stays informative. This makes $s=r/d$, not decoder-ness per se, the
-controlling variable: halving $d$ from 8B to 1B (doubling $s$) lifts clade recovery from
-$\sim$20\% to $\sim$30\%. Accordingly we use the Llama family not as a recovery result but as a
-probe for the rank $r$ at which recovery returns. We are running a qkv rank sweep on
-Llama-3.2-1B-Instruct ($r\in\{2,4,8,16,32\}$, i.e.\ $s$ from $1.0\!\times\!10^{-3}$ to
-$1.6\!\times\!10^{-2}$, spanning Flan's $\approx1.0\!\times\!10^{-2}$); the prediction is that
-clade recovery and \%-sig-vs-label cross zero near the Flan operating point. \TODO{Add the
-rank-sweep recovery curve once the sweep (Wright jobs 147499--147698) lands.}
+\paragraph{A measurement correction.} An earlier version of this analysis reported a low-rank
+decoder ``dead zone'' (clade recovery $20$--$32\%$, $0\%$ significant vs.\ label) and attributed it
+to dimensional dilution---a fixed-rank update occupying a vanishing fraction of a large ambient
+space, driving per-matrix updates near-orthogonal (we measured a qkv cosine distance of $0.943$,
+apparently jammed at the ceiling). This was an artifact of how adapter-only checkpoints are stored.
+Each LoRA node saves only its \emph{increment} $B_iA_i$ from its parent, whereas full-weight
+checkpoints (Flan, full FT) store cumulative weights; differencing bare increments discards the
+shared ancestral prefix that the cumulative weights retain, so the two were not comparable and the
+increment distances were dominated by per-node noise. Summing the increments along the root-to-node
+path---the cumulative displacement from base---restores the comparison. Under this consistent
+measurement the $0.943$ ``jammed'' geometry resolves into coherent tree-like distances, and clade
+recovery rises to $\sim$$90$--$96\%$ for every group in Table~\ref{tab:llama_recovery}. The dead
+zone, the $s=r/d$ dilution mechanism, and the predicted rank threshold do not exist; lineage is
+legible in low-rank decoder adapters just as it is in full fine-tuning.
 
 
 \section{Translation Probe Outputs for TaskHoldout Models}

@@ -563,9 +563,9 @@ whether models closer in weight space produce more similar outputs on a held-out
 (on a tree that never trained on it) and four probe tasks untrained by either model (HellaSwag,
 ARC-Challenge, MMLU, TruthfulQA).
 Table~\ref{tab:behavior_holdout} reports a weak but significant negative correlation across all held-out
-probes in Llama and for HellaSwag in Flan, and for translation in Llama (the sign reverses for Flan
-translation) --- supporting \citet{cloud2025subliminal} that unexpected traits can be passed to child
-models. The signal is robust to the held-out design: on the \texttt{\_notrans} tree, where translation
+probes in Llama, and across HellaSwag, ARC-Challenge, MMLU, and TruthfulQA in Flan, and for translation
+in Llama (the sign reverses only for held-out Flan translation) --- supporting \citet{cloud2025subliminal}
+that unexpected traits can be passed to child models. The signal is robust to the held-out design: on the \texttt{\_notrans} tree, where translation
 is withheld from every node, all four held-out probes remain negative and significant, comparable to or
 stronger than on the seen group (translation $-0.333$, ARC $-0.28$, MMLU $-0.31$, TruthfulQA $-0.31$).
 Full regression coefficients are in Appendix~\ref{app:regression}, and the degenerate probe behavior
@@ -584,8 +584,9 @@ it is withheld from every node. Negative $r$ (closer in weight space $\Rightarro
 supports the bridge. $^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$. Every reported cell uses the paired
 per-prompt DV. $^\ddagger$degenerate Flan probe (translation reversal, App.~\ref{app:translation_probe});
 reported for completeness, not interpreted as evidence for or against the bridge. Flan's
-multiple-choice held-out probes (ARC-C, MMLU, TruthfulQA) collapse onto trained-task label vocabulary on
-single-task-per-leaf trees (App.~\ref{app:translation_probe}) and so are not reported (---). Full
+multiple-choice held-out probes (ARC-C, MMLU, TruthfulQA) are reported on the multi-task-per-leaf tree,
+where generations do not collapse onto trained-task label vocabulary; on single-task-per-leaf trees they
+degenerate and are not comparable (App.~\ref{app:translation_probe}). Full
 per-condition CIs and coefficients in App.~\ref{app:regression}.}
 \label{tab:behavior_holdout}
 \centering
@@ -598,7 +599,7 @@ per-condition CIs and coefficients in App.~\ref{app:regression}.}
 Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
 Llama-3.2-1B & $-0.29^{***}$ & $-0.33^{***}$ & $-0.22^{***}$ & $-0.26^{***}$ & $-0.25^{***}$ & $-0.33^{***}$ \\
-Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & --- & --- & --- \\
+Flan-T5-base & $-0.26^{***}$ & $+0.11^{*\ddagger}$ & $-0.29^{***}$ & $-0.34^{***}$ & $-0.30^{***}$ & $-0.33^{***}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -920,6 +921,32 @@ continuity with the per-condition effect sizes. The Llama rows here are the 8B d
 additional scale point; the headline held-out bridge in Table~\ref{tab:behavior_holdout} rests on the
 full-FT Llama-3.2-1B and Flan-T5 models. The two agree where they overlap --- held-out HellaSwag is
 negative and significant for the 8B decoder here ($-0.16$) as for the 1B in the main text ($-0.20$).
+
+Table~\ref{tab:flan_holdout_ci} gives the full paired-DV statistics behind the Flan multiple-choice
+held-out cells of Table~\ref{tab:behavior_holdout} (random-effects DerSimonian--Laird pooled $r$ with
+95\% CI, $p$, heterogeneity $I^2$, and number of runs; branching\_v3, multi-task-per-leaf tree). All
+three are strong, tightly bounded, and significant, with the healthy same-task~$>$~cross-task ordering
+(e.g.\ ARC-Challenge same-task $-0.38$ vs.\ cross-task $-0.26$), i.e.\ not the label-vocabulary collapse
+seen on single-task-per-leaf trees (Appendix~\ref{app:translation_probe}).
+
+\begin{table}[h]
+\caption{Flan-T5-base held-out multiple-choice probes on the multi-task-per-leaf tree (branching\_v3),
+  paired per-prompt semantic DV, both quantities $z$-scored within run. Random-effects
+  (DerSimonian--Laird) pooled correlation $r$ between weight distance and behavioral similarity; these
+  are the numbers rounded into Table~\ref{tab:behavior_holdout}.}
+\label{tab:flan_holdout_ci}
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+Probe & DL $r$ & 95\% CI & $p$ & $I^2$ / runs \\
+\midrule
+ARC-Challenge & $-0.339$ & $[-0.419, -0.254]$ & $2\!\times\!10^{-13}$ & $29\%$ / $50$ \\
+MMLU          & $-0.297$ & $[-0.387, -0.202]$ & $3\!\times\!10^{-9}$  & $38\%$ / $50$ \\
+TruthfulQA    & $-0.331$ & $[-0.425, -0.230]$ & $8\!\times\!10^{-10}$ & $43\%$ / $47$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
 
 \paragraph{Pooling estimator.} Because each run has its own tree and hence its own weight-space scale, a
 raw pooled slope is not meaningful across runs; we therefore standardize within run (equivalently, treat

@@ -403,7 +403,7 @@ Our methods also estimate the phylogeny as shown in Table \ref{tab:variants} wit
 We also see that in the full fine-tuning regime, QKV attention matrices and especially the key matrix can estimate the phylogeny just as well as using all the layers, indicating that the strongest lineage signals are passed through these layers.  This also indicates that we only need to use $\approx$4\% of the parameters to estimate model phylogeny.  We do note that this layer importance seems to differ by architecture (see App.~\ref{app:layertrace}).  The signal in the encoder-decoder seems to be stronger in the $k$ matrices whereas the decoder-only seems to be more diffuse across the $k$-matrices, possibly indicating that encoders are important in passing lineage signal.
 
 Finally, we see that the oracle Atteson margin $m$ and additivity proxy $A$ both reliably guide phylogeny (specifically clade recovery) estimation.  In Figure~\ref{fig:coherence_recovery}, we see both $m$ and $A$ reported across LoRA settings, datasets, layers, and
-models. We see that the norm layers seem to have the worst recovery.  They have both low margins and additivities and low clade recovery.  We see that while the Atteson bound ($m>1$) is a hard sufficiency threshold in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery, with recovery often succeeding well below $m=1$.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.55$ and few points in the middle range.
+models. We see that the norm layers seem to have the worst recovery.  They have both low margins and additivities and low clade recovery.  We see that while the Atteson bound ($m>1$) is a hard sufficiency threshold in theory, our noisy estimates of the distance matrices show a more gradual relationship between $m$ and clade recovery, with recovery often succeeding well below $m=1$.  The far-left organic point is the extreme case: real model zoos contain near-duplicate checkpoints whose near-zero pendant edges drive the all-edge bottleneck toward zero, yet the clade lineage still recovers fully, so we plot it as out-of-distribution validation but exclude it from the reported rank correlations.  Alternatively, $A$ seems to have a near linear relationship, although we note that we have no $A$ values less than $0.55$ and few points in the middle range.
 
 \begin{figure}[t]
   \begin{center}
@@ -438,9 +438,11 @@ random-effects (DerSimonian--Laird) pooled correlation $r$ between weight distan
 similarity (paired per-prompt semantic DV, $z$-scored within run), with the $95\%$ CI in brackets.
 Held-out probes had no node trained on them; translation is shown both in the training mix
 and withheld from every node. Negative $r$ supports the bridge (closer weights $\Rightarrow$ more
-similar behavior). $^\ddagger$degenerate Flan probe (App.~\ref{app:translation_probe}); Flan
-multiple-choice probes (ARC-C, MMLU, TruthfulQA) collapse onto trained-task label vocabulary and are not
-reported (---). Per-cell heterogeneity ($I^2$) in App.~\ref{app:regression}.}
+similar behavior). $^\ddagger$degenerate Flan probe: outputs are repetitive or collapse onto trained-task label
+vocabulary (rouge-L vs.\ reference $\approx 0$ for all nodes), so a negative $r$ reflects shared
+degenerate output style within a lineage rather than held-out competence (examples in
+App.~\ref{app:translation_probe}); the Flan multiple-choice cells (ARC-C, MMLU, TruthfulQA) use the
+centroid semantic DV. Per-cell heterogeneity ($I^2$) in App.~\ref{app:regression}.}
 \label{tab:behavior_holdout}
 \centering
 \small
@@ -453,7 +455,7 @@ Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
 Llama-3.2-1B & \shortstack{$-0.29$\\{\scriptsize$[-.41,-.17]$}} & \shortstack{$-0.33$\\{\scriptsize$[-.43,-.23]$}} & \shortstack{$-0.20$\\{\scriptsize$[-.32,-.08]$}} & \shortstack{$-0.26$\\{\scriptsize$[-.36,-.15]$}} & \shortstack{$-0.25$\\{\scriptsize$[-.36,-.13]$}} & \shortstack{$-0.33$\\{\scriptsize$[-.44,-.21]$}} \\
 \addlinespace
-Flan-T5-base & \shortstack{$-0.26$\\{\scriptsize$[-.35,-.16]$}} & \shortstack{$+0.11^{\ddagger}$\\{\scriptsize$[+.02,+.21]$}} & \shortstack{$-0.29$\\{\scriptsize$[-.37,-.21]$}} & --- & --- & --- \\
+Flan-T5-base & \shortstack{$-0.26$\\{\scriptsize$[-.35,-.16]$}} & \shortstack{$+0.11^{\ddagger}$\\{\scriptsize$[+.02,+.21]$}} & \shortstack{$-0.29$\\{\scriptsize$[-.37,-.21]$}} & \shortstack{$-0.24^{\ddagger}$\\{\scriptsize$[-.34,-.14]$}} & \shortstack{$-0.24^{\ddagger}$\\{\scriptsize$[-.34,-.14]$}} & \shortstack{$-0.25^{\ddagger}$\\{\scriptsize$[-.34,-.14]$}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -468,7 +470,7 @@ same ground truth. On the real Mistral family (Fig.~\ref{fig:real-trees}), Phylo
 forks, matching our estimated phylogeny, but it has a smaller additivity ($\bar{A}=0.84$ vs.\ our $0.98$ on informative (non-star) quartets). A naive sentence-embedding estimated phylogeny on the same outputs recovers only one fork, so behavior-only recovery is strongly method-dependent.
 
 The Mistral forks are large reinforcement-learning-from-human-feedback (RLHF) or direct-preference-optimization (DPO) weight changes that move behavior a lot. Our controlled trees are a more precise test. In the LoRA and low-update regimes fine-tuning barely shifts behavior, yet weight distance can still estimate phylogenies. Running PhyloLM on these same trees against the same ground truth, behavior-only recovery falls well below weight-based recovery: on the held-out full-FT trees PhyloLM recovers $57\%$ of clades versus $95\%$ for weights, and on the
-$r{=}8$ LoRA trees only $35\%$ versus $94\%$, no better than a random phylogeny. This seems to indicate that weight-based estimation of phylogeny can be stronger than behavior-only estimation in some cases.  From the perspective that weight and behavior are intrinsically linked, this makes sense, and removing prompt dependency can be a great advantage for weight-based estimation.
+$r{=}8$ LoRA trees only $35\%$ versus $94\%$, no better than a random phylogeny (full per-group comparison across all five metrics in App.~\ref{app:phylolm}). This seems to indicate that weight-based estimation of phylogeny can be stronger than behavior-only estimation in some cases.  From the perspective that weight and behavior are intrinsically linked, this makes sense, and removing prompt dependency can be a great advantage for weight-based estimation.
 
 \begin{figure}[t]
   \begin{center}
@@ -876,6 +878,54 @@ Classification & 38 & \textbf{87\%} (4\%) & \textbf{79\%} (7\%) & 1.87 & 0.24 \\
 QA             & 47 & \textbf{76\%} (6\%) & \textbf{72\%} (7\%) & 2.19 & 0.38 \\
 Translation    & 47 & \textbf{72\%} (6\%) & \textbf{64\%} (7\%) & 2.23 & 0.40 \\
 Summarization  & 47 & \textbf{59\%} (6\%) & \textbf{47\%} (7\%) & 2.70 & 0.64 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Behavior-Only Recovery on the Controlled Trees (PhyloLM)}
+\label{app:phylolm}
+
+We complement the organic-family comparison (Fig.~\ref{fig:real-trees},
+Sec.~\ref{sec:results:blackbox}) by running the behavior-only baseline PhyloLM~\citep{yax2025phylolm}
+on our controlled trees, where the ground-truth topology is known. PhyloLM is a decoder-only method
+(it queries each model with a fixed pool of prompts and compares the generated continuations), so we
+apply it only to the causal groups; the encoder--decoder Flan-T5 groups are out of scope. For each
+group we score the behavior-only estimate against the \emph{same} truth trees, with the \emph{same}
+polytomy-aware pipeline used for the weight-based estimates, so the two columns are directly
+comparable. Table~\ref{tab:phylolm} reports both.
+
+Behavior-only recovery falls well below weight-based recovery on every group, and the gap is largest
+exactly where fine-tuning moves behavior the least. On the $r{=}8$/$r{=}64$ LoRA trees PhyloLM
+recovers only $29$--$35\%$ of clades (versus $92$--$96\%$ from weights), essentially the rate of a
+random phylogeny; on the full-fine-tuned trees it climbs to $52$--$57\%$ but still trails weights by
+$28$--$38$ points. The additivity $A$ and oracle Atteson margin tell the same story: behavior-only
+distance matrices are both less additive ($A\approx 0.58$--$0.62$ vs.\ $0.88$--$0.93$) and less safely
+resolvable (margin $0.30$--$0.71$ vs.\ $1.1$--$20.9$). This sharpens the comparison in
+Sec.~\ref{sec:results:blackbox}: weights and behavior tie only when updates are large and distinctive
+(the organic RLHF/DPO forks); on small or held-out updates, weight distance recovers lineage that
+behavior alone cannot.
+
+\begin{table}[h]
+\caption{Behavior-only (PhyloLM) vs.\ weight-based recovery on the causal controlled trees (cosine,
+  $\geq 4$ leaves, $n=47$ runs per group; identical polytomy-aware scorer). \emph{Clade} is clade
+  recovery; \emph{Exact} is the fraction of runs with $\mathrm{FN}=0$; $A$ is mean four-point
+  additivity over truth-informative quartets; \emph{margin} is the oracle Atteson bottleneck. Weight
+  clade recovery is repeated from Table~\ref{tab:variants} / by-group scoring for reference.}
+\label{tab:phylolm}
+\centering
+\small
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & Weight & \multicolumn{5}{c}{PhyloLM (behavior-only)} \\
+\cmidrule(lr){2-2}\cmidrule(lr){3-7}
+Group (causal) & Clade & Clade (SE) & Exact (SE) & RF (SE); FN (SE) & $A$ (SE) & margin (SE) \\
+\midrule
+LoRA qkv ($r{=}8$)      & 94\% & 35\% (6\%) & 28\% (7\%) & 3.85 (0.30); 1.21 (0.14) & 0.62 (0.02) & 0.71 (0.42) \\
+LoRA qkv ($r{=}64$)     & 96\% & 34\% (6\%) & 23\% (6\%) & 3.89 (0.29); 1.23 (0.13) & 0.58 (0.02) & 0.45 (0.23) \\
+Instruct qkv ($r{=}8$)  & 92\% & 29\% (6\%) & 21\% (6\%) & 4.11 (0.29); 1.34 (0.13) & 0.61 (0.02) & 0.44 (0.31) \\
+Full FT                 & 85\% & 52\% (6\%) & 40\% (7\%) & 3.09 (0.30); 0.83 (0.12) & 0.60 (0.02) & 0.30 (0.07) \\
+Full FT, held-out (\_notrans) & 95\% & 57\% (6\%) & 40\% (7\%) & 2.91 (0.26); 0.74 (0.11) & 0.60 (0.02) & 0.46 (0.15) \\
 \bottomrule
 \end{tabular}
 \end{table}
