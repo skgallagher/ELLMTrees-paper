@@ -53,9 +53,9 @@
 % -----------------------------------------------------------------------
 \begin{abstract}
 While over a million deep learning models are hosted online, most are fine-tuned descendants from a
-small set of ancestors, yet their lineage is only sometimes documented fully. We construct controlled
-model families whose training topology is known and show that a model \textit{phylogeny} can be estimated
-from weights alone, recovering every true clade in 72--94\% of runs (82--97\% mean clade recovery).
+small set of ancestors. However, model lineage is only sometimes documented fully. We construct controlled
+model families whose training topology is known and show that a model \textit{phylogeny} (evolutionary tree) can be estimated
+from weights alone, recovering every true clade (branch) in 72--94\% of runs (82--97\% mean clade recovery).
 This ground-truth benchmark lets us evaluate behavior-only lineage estimation directly: on identical
 rank-8 LoRA trees, weight distances recover 94\% of clades while PhyloLM recovers 35\%; on full-fine-tuned
 trees with translation held out, the comparison is 95\% versus 56\%. Both methods recover all three
