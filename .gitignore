@@ -19,3 +19,36 @@
 tmp*.tmp
 paper.pdf
 refs_notes/
+
+# Local manuscript builds and review scratch
+_*.tex
+_*.pdf
+_*.png
+tmp/
+*.inspect.ndjson
+.__wtest*
+figures/.__wtest*
+iclr_draft_v*.pdf
+iclr_draft_v*_numbers_*.tex
+paper_v*.pdf
+
+# Local mirrors of analysis artifacts; canonical copies live in ELLMTrees
+outputs/
+results/
+
+# Local reviewer/handoff notes that are not manuscript sources
+CLAUDE_*.md
+REVIEW_*.md
+HANDOFF_iclr_draft.md
+
+# Accidental zero-byte shell artifacts
+GitHub
+Pull
+
+# Unused local figure experiments (not referenced by manuscript sources)
+figures/fig1_overview.tex
+figures/fig1_overview_slide.png
+figures/fig4_heatmap_main.png
+figures/fig4_trees_appendix.png
+figures/fig_layertrace_llama1b_base_full_ft.png
+figures/frechet_crosstask.png
