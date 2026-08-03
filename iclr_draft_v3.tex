@@ -169,8 +169,9 @@ neighbor-joining provably recovers the tree when distance error is less than hal
 \begin{table}[t]
 \caption{Comparison with the closest lineage-estimation methods.
   \emph{Access} indicates whether a method uses model weights, model outputs
-  (behavior), or both. \emph{Full tree} indicates whether the method estimates
-  an entire model tree or phylogeny rather than isolated relationships. \emph{Known-lineage eval} indicates
+  (behavior), or both. \emph{Latent ancestors} indicates whether the method reconstructs a
+  leaf topology from terminal checkpoints without requiring root or intermediate checkpoints to be
+  observed. \emph{Known-lineage eval} indicates
   evaluation against known training relationships. \emph{Real checkpoints}
   indicates experiments using documented real-world model checkpoints.}
 \label{tab:related}
@@ -179,10 +180,10 @@ neighbor-joining provably recovers the tree when distance error is less than hal
 \setlength{\tabcolsep}{6pt}
 \begin{tabular}{lcccc}
 \toprule
-Method & Access & Full tree & Known-lineage eval & Real checkpoints \\
+Method & Access & \shortstack{Latent\\ancestors} & \shortstack{Known-lineage\\eval} & \shortstack{Real\\checkpoints} \\
 \midrule
 MoTHer \citep{horwitz2025mother}
-  & weights  & \checkmark & \checkmark & \checkmark \\
+  & weights  & \ding{55}  & \checkmark & \checkmark \\
 Neural Phylogeny \citep{yu2025neural}
   & weights  & \ding{55}   & \checkmark & \checkmark \\
 PhyloLM \citep{yax2025phylolm}
