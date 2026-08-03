@@ -39,9 +39,9 @@
 \node[draw=bannerline,fill=bannerfill,rounded corners=4pt,line width=0.8pt,
       text width=15.6cm,align=center,inner sep=5pt,
       font=\sffamily\small\bfseries,text=ink] (banner) at (7.9,5.55)
-  {Fine-tuning leaves a path-dependent signature in weight space ---
-   a model \emph{phylogeny} that we estimate and compare to known phylogenies $\mathcal{P}$,
-   link to behavior, and certify with a label-free additivity proxy --- for weights \emph{or} behavior.};
+  {Fine-tuning leaves path-dependent structure in model weights. We estimate the resulting model
+   \emph{phylogeny}, score it against known training trees, and test whether weight proximity predicts
+   behavioral similarity. We evaluate four-point additivity as a label-free diagnostic of clade recovery.};
 
 % ===================== PANEL A: controlled whitebox =====================
 \begin{scope}
@@ -90,7 +90,7 @@
 \begin{scope}
   \node[panel,minimum width=4.55cm,minimum height=4.5cm] (PB) at (8.45,2.2){};
   \node[ptitle,anchor=north] at (PB.north) {\,B.\ Weights predict behavior};
-  \node[font=\sffamily\scriptsize,text=truthc] at (8.45,3.92) {DerSimonian--Laird $\bar r<0$};
+  \node[font=\sffamily\scriptsize,text=truthc] at (8.45,3.92) {random-effects pooled $r_{\mathrm{DL}}<0$};
 
   % scatter axes
   \begin{scope}[shift={(6.85,1.55)}]
@@ -104,7 +104,7 @@
     }
     \draw[truthc,line width=1.1pt,dashed] (0.20,1.78)--(2.85,0.52);
   \end{scope}
-  \node[scap,anchor=north] at (8.45,1.12) {closer in weights $\Rightarrow$ more\\similar outputs --- even on a\\held-out task (within run)};
+  \node[scap,anchor=north] at (8.45,1.12) {closer in weights $\Rightarrow$ more\\similar outputs. This also holds on a\\held-out task (within run)};
 \end{scope}
 
 % arrow B->C
@@ -113,7 +113,7 @@
 % ===================== PANEL C: label-free additivity flags trust, weights AND behavior =====================
 \begin{scope}
   \node[panel,minimum width=4.95cm,minimum height=4.5cm] (PC) at (13.55,2.2){};
-  \node[ptitle,anchor=north] at (PC.north) {\,C.\ Additivity flags trust};
+  \node[ptitle,anchor=north] at (PC.north) {\,C.\ Additivity and recovery};
 
   \begin{scope}[shift={(11.95,1.20)}]
     % axes
@@ -131,7 +131,7 @@
     \node[font=\sffamily\scriptsize,text=flow,anchor=west] at (0.30,1.34) {behavior};
     \node[font=\sffamily\scriptsize,text=estc,anchor=east] at (2.90,1.34) {weights};
   \end{scope}
-  \node[scap,anchor=north] at (13.55,0.78) {label-free $A$ predicts recovery ---\\weights \emph{or} behavior};
+  \node[scap,anchor=north] at (13.55,0.78) {compare label-free $A$ with\\clade recovery for weights or behavior};
 \end{scope}
 
 % ===================== BOTTOM ACCESS AXIS =====================
@@ -141,7 +141,7 @@
 \node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (8.45,-0.30)
   {weight\,$\to$\,behavior link};
 \node[font=\sffamily\scriptsize\itshape,text=flow,anchor=north,align=center] at (13.7,-0.30)
-  {trust without truth};
+  {diagnostic without known truth};
 
 \end{tikzpicture}
 \end{document}
