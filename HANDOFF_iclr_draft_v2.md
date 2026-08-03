@@ -1,5 +1,9 @@
 # Handoff — ICLR draft v2 (`iclr_draft_v2.tex`)
 
+> **Historical document.** The current submission file and settled ICLR 2027 decisions are documented
+> in [`HANDOFF_iclr_draft_v4.md`](HANDOFF_iclr_draft_v4.md). Do not treat the v2 open items or page
+> counts below as the current submission state.
+
 _Last writing session: 2026-07-07 (§5 Results + §6 Discussion pass — COMPLETE). Repo: `ELLMTrees-paper`._
 _**Next session: draft is complete through all sections. Only open item is the 3 Flan MC probe cells in
 Table 3 (Ghidorah jobs pending) — see "Open items (2026-07-07)" below.**_

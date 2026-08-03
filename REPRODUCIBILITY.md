@@ -1,4 +1,9 @@
-# Reproducibility — `iclr_draft.tex`
+# Reproducibility — historical source map
+
+> **Submission status:** the current paper is `iclr_draft_v4.tex`; see
+> [`HANDOFF_iclr_draft_v4.md`](HANDOFF_iclr_draft_v4.md) for the ICLR 2027 build, page-limit, area,
+> and submission decisions. Some table numbers and removed experiments below describe earlier drafts
+> and are retained only as a provenance record.
 
 Every figure and table in the submission → the command that produces it → the expected
 number. All generators live in the **experiment repo** (`../ELLMTrees/`); figures are
