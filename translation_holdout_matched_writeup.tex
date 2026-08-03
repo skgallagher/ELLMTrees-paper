@@ -1,0 +1,48 @@
+% Matched translation-held-out write-up.
+% Ready to merge into iclr_draft_v3.tex only after Wright job 162327 and its
+% white-box, behavior, and statistical audits pass. The currently rendered
+% Llama translation-held-out table cell is a legacy value and must not be
+% attributed to this matched rerun.
+
+% Main-text methods paragraph
+For the Llama translation-held-out condition, we use a matched intervention on
+the same 50 training-tree topologies as the full-fine-tuning condition. We hold
+the base model, trainer, stopping rule, topology, node order, and every original
+non-translation task--dataset assignment fixed. Of the 641 training nodes, 479
+retain their original assignments exactly. The remaining 162 nodes are precisely
+those originally assigned a translation dataset; we replace each of these,
+without replacement within its tree, with an otherwise unused summarization,
+classification, or question-answering dataset. Replacement draws are
+deterministic within tree from the original assignment seed. Thus no node in the
+matched condition trains on translation, while the tree structure and all
+non-translation training interventions remain unchanged. We then evaluate the
+retained leaf models on translation using the same three-draw paired semantic
+similarity and random-effects $r_{\mathrm{DL}}$ pipeline as the other behavioral
+probes.
+
+% Short version for the Table 3 caption
+The Llama translation-held-out cell uses the same 50 topologies and preserves
+all 479 original non-translation assignments; only the 162 nodes originally
+assigned translation are deterministically reassigned to unused non-translation
+datasets within the same tree.
+
+% Appendix provenance and audit paragraph
+The matched assignment derivation starts from the accepted production manifests
+and compares each derived runner row against its production counterpart. The
+audit requires identical tree id, node id, parent id, depth, root-to-node path,
+trainer configuration, base-model revision, and fine-tuning method. A row may
+change task family or dataset only if its production task family was
+\texttt{translation}. Within every tree, replacement datasets must remain unique,
+and the final manifests must contain no translation assignment. Before launch,
+the independent runner audit found 50/50 identical topologies, 479/479 preserved
+non-translation rows, 162/162 translation-only replacements, zero other row
+changes, zero duplicate datasets, and zero overlapping output directories. The
+production array uses one L40, four CPUs, and 64~GB per tree with an eight-task
+concurrency cap.
+
+% Result sentence template; fill only from the audited compact statistics.
+% On the matched translation-held-out condition, weight distance predicted
+% translation similarity with $r_{\mathrm{DL}}=RESULT$ [95\% CI: RESULT, RESULT]
+% across $k=RESULT$ usable trees. Immediate-EOS outputs accounted for RESULT\%
+% of completions; the empty-excluding sensitivity gave
+% $r_{\mathrm{DL}}=RESULT$ [RESULT, RESULT].
