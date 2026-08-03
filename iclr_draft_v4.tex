@@ -964,14 +964,10 @@ initial training-task sequence are placed closer. We apply neighbor-joining to t
 the reconstruction against the same ground-truth trees with the same polytomy-aware metric as the
 weight reconstructions.
 
-On the exact Flan-T5-base full-FT recovery sample (\texttt{branching\_v3}, $\geq 4$ leaves with at
-least one nontrivial truth split, $n=47$ runs), the task-path baseline recovers $65.6\%$ of clades
-(SE $5.2\%$) and $44.7\%$ of trees exactly (SE $7.3\%$), versus $90.4\%$ clade / $85.1\%$ exact for
-cosine weight distances on those same 47 runs
-(Table~\ref{tab:variants}). The baseline captures the coarse, cross-task grouping (siblings often
-share a task-type prefix) but is blind to within-task splits, where two leaves with identical
-task-type sequences descend from different parents; resolving those requires the weights, which nearly
-double the exact-recovery rate.
+Many leaves share identical task paths, so this metadata distance contains extensive ties and its NJ
+reconstruction depends on tie handling. We therefore use it only as a qualitative diagnostic and do
+not report a quantitative task-path benchmark. The within-task design below provides the stricter
+task-control: every task-path distance is exactly zero, so task metadata has no discriminating power.
 
 \paragraph{Verifying the organic reference lineages.} For the real HuggingFace families
 (\S\ref{sec:results:weighttree}), the documented reference tree is taken from the checkpoints' model cards and
@@ -996,7 +992,7 @@ dataset-level displacement in the weights.
 
 Table~\ref{tab:withintask} reports polytomy-aware recovery ($\geq 4$ leaves, cosine). Recovery persists
 without task diversity, though it is weaker and more task-dependent than the multi-task setting
-($82$--$97\%$ clade, Table~\ref{tab:variants}): classification, QA, and translation recover $72$--$87\%$
+($88$--$97\%$ clade, Table~\ref{tab:variants}): classification, QA, and translation recover $72$--$87\%$
 of clades, while summarization is the weakest at $59\%$.
 Since the leaves are task-identical, this recovery shows that lineage signal can still be estimated even within similar task settings.
 
