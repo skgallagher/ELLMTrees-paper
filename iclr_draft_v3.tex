@@ -328,7 +328,8 @@ query/key/value/output; all attention and feed-forward projections). For each ba
 validate our method on two real model lineages from HuggingFace.
 
 \paragraph{Direct lineage.}
-Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pairs or correct ordering. We also do this at the branch level. For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run branch correlation $r_{\mathrm{branch}}$ (Fisher $z$-averaged across runs~\citep{fisher1921probable}) between weight distance and the same-branch indicator.
+Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pairs or correct ordering. We also do this at the branch level. For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run branch correlation $r_{\mathrm{branch}}$ (Fisher $z$-averaged across runs~\citep{fisher1921probable}) between weight d
+istance and the same-branch indicator.
 
 \paragraph{Phylogeny estimation.}
 \label{sec:exp:weights}
