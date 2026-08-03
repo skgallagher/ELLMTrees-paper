@@ -52,7 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 72--94\% of runs.  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. Our method not only estimates the phylogeny accurately but also helps score the success of the behavior-based method.
+While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 72--94\% of runs.  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. On controlled rank-8 LoRA and translation-held-out full-fine-tuning trees, weights recover 94\% and 95\% of clades versus PhyloLM's 35\% and 56\%, while both methods recover all three documented splits in the real Mistral family.
 
 \end{abstract}
 
@@ -98,7 +98,7 @@ Our primary contribution is that analyzing weight changes between fine-tunings a
     weights alone. Our controlled experiments recover all true clades in $72$--$94\%$ of runs
     ($82$--$97\%$ clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 3\% of the scalar weights can accurately estimate the known phylogenies. Treating layers as gene-like estimators also yields a separate phylogeny from each layer and localizes where lineage signal is carried. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
   \item \textbf{Weight-behavior bridge.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
-  \item \textbf{A ground-truth benchmark exposes when behavior-only lineage fails.}
+  \item \textbf{Controlled ground truth exposes when behavior-only lineage fails.}
     On the same controlled trees, weights recover 94\% of clades versus 35\% for
     PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and 95\% versus 56\% under full fine-tuning
     with translation held out. On a documented Mistral family with large RLHF/DPO forks, both methods
@@ -106,7 +106,7 @@ Our primary contribution is that analyzing weight changes between fine-tunings a
     updates, while weight access remains substantially more informative for smaller updates and
     requires no output sampling.
 \end{itemize}
-Throughout we span an encoder--decoder model and decoder-only models from 160M to 8B, with both full
+Our main controlled topology results cover Flan-T5-base (250M) and Llama-3.2-1B, with both full
 fine-tuning and variants of LoRA. The fitted Atteson diagnostic has a moderate pooled association with
 recovery, while the pooled association for label-free additivity is weak.
 
@@ -128,12 +128,13 @@ and \emph{behavior only}, driven by applications in provenance and IP
 auditing \citep{zhu2025independence}. Table~\ref{tab:related} compares some of the closest methods.
 
 \textbf{Model weights.} Several works trace weight changes from fine-tuning or reinforcement learning with human feedback (RLHF) back to parent models. MoTHer
-\citep{horwitz2025mother} recovers family trees from weight similarity via a directed minimum spanning
-tree; \citet{yu2025neural} recover parent--child and grandparent--child lineage with both a
+\citep{horwitz2025mother} recovers directed model trees from weight similarity via a directed minimum
+spanning tree and evaluates against controlled, known model hierarchies; \citet{yu2025neural} recover parent--child and grandparent--child lineage with both a
 learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct
 lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral
-DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. None, however,
-estimates a full phylogeny and evaluates it against a known ground-truth tree.
+DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. Our setting
+differs from MoTHer's observed-node model tree: we observe only terminal checkpoints and estimate a
+leaf phylogeny whose internal ancestors are latent.
 
 Other works examine \emph{why} lineage is detectable in models. Models fine-tuned from a shared initialization stay
 within a single low-error basin and are robust to SGD noise
@@ -169,7 +170,7 @@ neighbor-joining provably recovers the tree when distance error is less than hal
 \caption{Comparison with the closest lineage-estimation methods.
   \emph{Access} indicates whether a method uses model weights, model outputs
   (behavior), or both. \emph{Full tree} indicates whether the method estimates
-  a complete leaf-labeled topology. \emph{Known-lineage eval} indicates
+  an entire model tree or phylogeny rather than isolated relationships. \emph{Known-lineage eval} indicates
   evaluation against known training relationships. \emph{Real checkpoints}
   indicates experiments using documented real-world model checkpoints.}
 \label{tab:related}
@@ -181,7 +182,7 @@ neighbor-joining provably recovers the tree when distance error is less than hal
 Method & Access & Full tree & Known-lineage eval & Real checkpoints \\
 \midrule
 MoTHer \citep{horwitz2025mother}
-  & weights  & \ding{55}   & \ding{55}  & \checkmark \\
+  & weights  & \checkmark & \checkmark & \checkmark \\
 Neural Phylogeny \citep{yu2025neural}
   & weights  & \ding{55}   & \checkmark & \checkmark \\
 PhyloLM \citep{yax2025phylolm}
@@ -204,10 +205,10 @@ LLM DNA \citep{wu2026llmdna}
 
 We first define our terms, notation, and statistical framework. A \emph{phylogeny} $\mathcal{P}$ is a tree
 whose leaves are the observed models and whose internal nodes are latent common ancestors; a
-\emph{clade} is the set of leaves descending from one such ancestor (one branch of the tree). We assume,
-like \citet{yu2025neural} but unlike \citet{horwitz2025mother}, that all models derive from a single
-root. Unlike prior weight-based work, which recovers parent--child or pairwise links, we estimate the
-full phylogeny over all leaves. We form a pairwise distance matrix and apply neighbor-joining (NJ)
+\emph{clade} is the set of leaves descending from one such ancestor (one branch of the tree). We analyze
+single-root model families but observe only their terminal models. Thus, whereas MoTHer
+\citep{horwitz2025mother} reconstructs a directed spanning tree over observed root, intermediate, and
+terminal checkpoints, we estimate the unrooted leaf topology with internal ancestors latent. We form a pairwise distance matrix and apply neighbor-joining (NJ)
 \citep{saitou1987neighbor} to estimate the phylogeny.
 
 \textbf{Phylogeny estimation.}\label{sec:framework:phylo}
@@ -259,11 +260,11 @@ both provides an aggregate estimate and lets us rank which layers recover the li
 
 
 \textbf{When estimation succeeds.}\label{sec:framework:theory}
-Model lineage can be probed at two levels: the ordering of models (e.g.\ which pairs are parent--child
-or sit on the same branch) or the full phylogeny, the former being easier. For ordering, we pool all
-pairwise model comparisons within each valid run and test with the Mann--Whitney $U$
-statistic, the same-branch-versus-cross-branch signal that pairwise-ancestry methods such as MoTHer
-\citep{horwitz2025mother} and Neural Phylogeny \citep{yu2025neural} rely on. Recovering the full
+Model lineage can be probed at two levels: pairwise ordering (e.g.\ whether two models sit on the same
+branch) or whole-tree recovery, the former being easier. For ordering, we pool all pairwise model
+comparisons within each valid run and test with the Mann--Whitney $U$ statistic. This branch-level
+diagnostic is simpler than either pairwise parent--child detection~\citep{yu2025neural}, MoTHer's
+directed observed-node tree recovery~\citep{horwitz2025mother}, or our latent-ancestor leaf topology. Recovering the full
 \textit{phylogeny} is harder but well studied in phylogenetics: NJ is exact when the distance matrix is
 additive, a condition model-weight distances satisfy only approximately. Atteson's theorem makes the
 tolerance precise.
@@ -317,20 +318,24 @@ how behavior-based phylogeny differs from weight-based.
 % Base: Flan-T5-base (250M). Bernoulli branching, 4 tasks, 50 replications,
 % 5--8 leaves, known topology by construction.
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
-% Controlled design enables RF evaluation — all competitors lack this.
+% Controlled design enables exact evaluation against the latent-ancestor leaf topology.
 
 To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 10 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair, giving us the full weights of each leaf. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage and phylogeny estimation.
 
-We vary the root model, task types, and trained layers. We examine an encoder--decoder model
-(Flan-T5-base, 250M) and decoder-only models (Pythia-160M, Llama-3.2-1B, and the more frontier-scale
-Llama-3.1-8B), fine-tuning on Q\&A, classification, translation, and summarization. For Flan-T5 and Llama-3.2-1B, we run
+We vary the root model, task types, and trained layers. Our primary topology evaluation uses an
+encoder--decoder model (Flan-T5-base, 250M) and a decoder-only model (Llama-3.2-1B), fine-tuning on
+Q\&A, classification, translation, and summarization. Auxiliary analyses use Pythia-160M for a
+cross-architecture layer diagnostic and Llama-3.1-8B for a behavioral regression; we do not treat
+these as an end-to-end scale sweep. For Flan-T5 and Llama-3.2-1B, we run
 full fine-tuning and four LoRA \citep{hu2022lora} scopes (key only; query/key/value;
 query/key/value/output; all attention and feed-forward projections). For each base model, we use the same training instructions. We also
 validate our method on three documented model lineages from HuggingFace. We highlight one in the
 main text and report the other two in Appendix~\ref{app:organic-additional}.
 
 \paragraph{Direct lineage.}
-Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pairs or correct ordering. We also do this at the branch level. For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run branch correlation $r_{\mathrm{branch}}$ (Fisher $z$-averaged across runs)\footnote{For each run we compute $z=\operatorname{arctanh}(r)$, average on the $z$ scale, and back-transform with $r=\tanh(\bar z)$.} between weight distance and the same-branch indicator.
+MoTHer~\citep{horwitz2025mother} assembles pairwise relatedness and direction scores into a directed
+model tree, while Neural Phylogeny~\citep{yu2025neural} identifies parent--child relationships. Our
+auxiliary ordering analysis instead works at the branch level among observed leaves. For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run branch correlation $r_{\mathrm{branch}}$ (Fisher $z$-averaged across runs)\footnote{For each run we compute $z=\operatorname{arctanh}(r)$, average on the $z$ scale, and back-transform with $r=\tanh(\bar z)$.} between weight distance and the same-branch indicator.
 
 \paragraph{Phylogeny estimation.}
 \label{sec:exp:weights}
@@ -410,7 +415,7 @@ Variant & $n_{\rm rec}/n_{\rm ord}$ & \shortstack{Rank-bis.\\(SE)} & \shortstack
 \label{sec:results:weighttree}
 Table~\ref{tab:variants} reports clade recovery, PAER ($\mathrm{FN}=0$), and RF/FN for all phylogenies with at least four leaves. Weight-based clade recovery ranges from 82--97\% and PAER from 72--94\%. For Flan, full fine-tuning is strongest on both recovery measures. For Llama-3.2-1B, the separate 50-tree full-FT confirmation reaches 97\% clade recovery. More importantly, the matched rows turn our ground truth into a benchmark for another method: weights recover 94\% versus PhyloLM's 35\% on rank-8 LoRA, 96\% versus 34\% at rank 64, 85\% versus 52\% under full fine-tuning, and 95\% versus 56\% when translation is held out. Appendix~\ref{app:withintask} shows that phylogeny estimation also holds when every node in a tree trains within a single task (clade recovery $59$--$87\%$); in that design, task-path distances are all zero and provide no discriminating baseline.
 
-Treating layers as gene-like estimators reveals that query/key/value attention weights, and especially the key weights, can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime. In Flan, the encoder self-attention key subset contains 7.08M of 247.58M scalar weights (2.86\%, approximately 3\%). Layer importance differs by architecture (App.~\ref{app:layertrace}): signal is more concentrated in key weights for the encoder--decoder model and more diffuse across key weights in the decoder-only model.
+Treating layers as gene-like estimators reveals that query/key/value attention weights, and especially the key weights, can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime. On the same 47 Flan runs, the encoder self-attention key subset recovers 95.7\% (SE 2.1\%) of clades versus 90.4\% (SE 3.6\%) using all weights; PAER is 91.5\% versus 85.1\% (App.~\ref{app:layers}). This subset contains 7.08M of 247.58M scalar weights (2.86\%, approximately 3\%). Layer importance differs by architecture (App.~\ref{app:layertrace}): signal is more concentrated in key weights for the encoder--decoder model and more diffuse across key weights in the decoder-only model.
 
 Finally, the fitted Atteson diagnostic $\widetilde m$ and additivity proxy $A$ are associated with clade recovery across settings, datasets, layers, and models (Fig.~\ref{fig:coherence_recovery}). Across the 31 non-organic summary points, Pearson's $r$ on the plotted scales is 0.81 for $\log_{10}\max(\widetilde m,0.03)$ and 0.67 for $A$. The more conservative rank associations are $\rho=0.40$ and $0.04$, respectively: $\widetilde m$ retains a moderate monotonic association, whereas $A$ separates the low-diagnostic anchors but does not reliably order the remaining settings. All nine Llama norm-layer summaries have a zero minimum fitted edge and are displayed at the common $0.03$ plotting floor; the embed/head summary is 0.13, whereas attention/MLP layer summaries span 0.46--1.85. The aligned norm coordinates are therefore a property of the fitted diagnostic, not duplicated data. We use both quantities as descriptive diagnostics, not as guarantees of recovery.
 
@@ -576,23 +581,26 @@ signal; they are defined on Flan-T5-base (12 encoder + 12 decoder blocks). \emph
 $\alpha=16$, dropout $0.05$, with adapters merged into the base weights before analysis.
 
 \begin{table}[h]
-\caption{LayerTrace layer subsets (Flan-T5-base). ``SA.k'' is the self-attention key projection;
+\caption{LayerTrace layer subsets (Flan-T5-base full FT; cosine; matched $n=47$). ``SA.k'' is the self-attention key projection;
 ``pre-attention LayerNorm'' is the \texttt{layer.0.layer\_norm} preceding self-attention. The table's
 percentages count tensors in the 282-tensor trained set, not scalar parameters. In particular,
 \texttt{enc\_sak} is 12/282 tensors (4.3\%) but 7,077,888/247,577,856 scalar weights (2.86\%).
+\emph{Clade} and PAER are polytomy-aware recovery percentages with SEs over the same runs.
 \texttt{low\_signal} is a negative control (the noisiest LayerNorms).}
 \label{tab:layer_subsets}
 \centering
-\begin{tabular}{lll r}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrrr}
 \toprule
-Variant & Tensors included & Count & \% tensors \\
+Variant & Tensors included & Count & \% tensors & Clade (SE) & PAER (SE) \\
 \midrule
-\texttt{full}        & all trained tensors                                   & ---  & 100 \\
-\texttt{high\_signal}& SA.k $+$ pre-attention LayerNorm (encoder $+$ decoder) & 48   & $\sim$17 \\
-\texttt{sak}         & SA.k only (encoder $+$ decoder)                       & 24   & $\sim$8.5 \\
-\texttt{encoder\_h}  & encoder SA.k $+$ encoder pre-attention LayerNorm      & 24   & $\sim$8.5 \\
-\texttt{enc\_sak}    & encoder SA.k only                                     & 12   & 4.3 \\
-\texttt{low\_signal} & post-FFN / final-block LayerNorms (control)           & 36   & $\sim$13 \\
+\texttt{full}         & all trained tensors                                   & 282 & 100          & 90.4 (3.6) & 85.1 (5.2) \\
+\texttt{high\_signal} & SA.k $+$ pre-attention LayerNorm (encoder $+$ decoder) & 48  & $\sim$17     & 91.5 (3.2) & 85.1 (5.2) \\
+\texttt{sak}          & SA.k only (encoder $+$ decoder)                       & 24  & $\sim$8.5    & 91.5 (3.5) & 87.2 (4.9) \\
+\texttt{encoder\_h}   & encoder SA.k $+$ encoder pre-attention LayerNorm      & 24  & $\sim$8.5    & 93.6 (2.5) & 87.2 (4.9) \\
+\texttt{enc\_sak}     & encoder SA.k only                                     & 12  & 4.3           & 95.7 (2.1) & 91.5 (4.1) \\
+\texttt{low\_signal}  & post-FFN / final-block LayerNorms (control)           & 36  & $\sim$13     & 85.1 (4.0) & 74.5 (6.4) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -728,7 +736,7 @@ held-out bridge in the main text (Table~\ref{tab:behavior_holdout}) instead uses
 prompt-by-draw semantic similarity, which removes the shared prompt-content confound and strengthens the
 association in every group; we report the paired DV in the main text and keep the centroid DV here for
 continuity with the per-condition effect sizes. The Llama rows here are the 8B decoder, included as an
-additional scale point; the headline held-out bridge in Table~\ref{tab:behavior_holdout} rests on the
+auxiliary decoder-only check; the headline held-out bridge in Table~\ref{tab:behavior_holdout} rests on the
 full-FT Llama-3.2-1B and Flan-T5 models. The two agree where they overlap: held-out HellaSwag is
 negative for the 8B decoder here ($-0.08$, with a CI that includes zero) as for the 1B in the main text
 ($-0.20$). Thus the direction agrees, while its strength and statistical support depend on the probe
