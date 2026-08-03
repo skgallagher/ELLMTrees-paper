@@ -328,7 +328,7 @@ query/key/value/output; all attention and feed-forward projections). For each ba
 validate our method on two real model lineages from HuggingFace.
 
 \paragraph{Direct lineage.}
-Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pairs or correct ordering. We also do this at the branch level. For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run branch correlation $r_{\mathrm{branch}}$ (Fisher $z$-averaged across runs~\citep{fisher1921probable}) between weight distance and the same-branch indicator.
+Prior methods~\citep{horwitz2025mother, yu2025neural} identify parent--child pairs or correct ordering. We also do this at the branch level. For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run branch correlation $r_{\mathrm{branch}}$ (Fisher $z$-averaged across runs)\footnote{For each run we compute $z=\operatorname{arctanh}(r)$, average on the $z$ scale, and back-transform with $r=\tanh(\bar z)$.} between weight distance and the same-branch indicator.
 
 \paragraph{Phylogeny estimation.}
 \label{sec:exp:weights}
@@ -689,7 +689,7 @@ negative and significant for the 8B decoder here ($-0.16$) as for the 1B in the 
 raw pooled slope is not meaningful across runs; we therefore standardize within run (equivalently, treat
 the run as a blocking factor), at which point the slope equals the within-run correlation. To pool these
 per-run correlations we use a random-effects DerSimonian--Laird meta-analysis of the per-run Fisher-$z$
-values~\citep{fisher1921probable} rather than an equal-weight mean, since runs vary in leaf count and noise. As an estimator-robustness check on a representative full-FT
+values rather than an equal-weight mean, since runs vary in leaf count and noise. As an estimator-robustness check on a representative full-FT
 condition (Llama-3.2-1B, translation probe, centroid DV), the pooling choices agree in sign and
 magnitude (random-effects $r_{\mathrm{DL}}=-0.161$ ($95\%$ CI $[-0.28,-0.04]$, $p=0.011$), equal-weight mean
 $r=-0.21$, one-stage mixed model with a random slope $r=-0.136$), with genuine between-run heterogeneity
