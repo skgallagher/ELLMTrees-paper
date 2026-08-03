@@ -52,7 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted on HuggingFace, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we treat fine-tuning as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades in 72--94\% of runs (82--96\% clade recovery).  We also show where the evolutionary signal is most prominent in a few architecture dependent layers such as the attention matrices.  We are able to show that we can accurately estimate the phylogeny using only 4\% of the total parameters, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is predicted by known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models significantly predicts behavioral similarity on held-out tasks including tasks about truthfulness, knowledge, reasoning, and common sense.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. Our method not only estimates the phylogeny accurately but also helps score the success of the behavior-based method.
+While over a million deep learning models are hosted on HuggingFace, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we treat fine-tuning as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades in 72--94\% of runs (82--96\% clade recovery).  We also show the evolutionary signal is most prominent in a few architecture dependent layers such as the attention matrices.  We can accurately estimate the phylogeny using only 4\% of the total parameters, making this method practical to use. Moreover, we show that this phylogeny estimation is predicted by known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models significantly predicts behavioral similarity on held-out tasks including tasks about truthfulness, knowledge, reasoning, and common sense.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. Our method not only estimates the phylogeny accurately but also helps score the success of the behavior-based method.
 
 \end{abstract}
 
@@ -68,7 +68,7 @@ labs constantly releasing updated versions, most models are
 fine-tuned descendants of a few ancestors.  Very few of those models transparently document their full model lineage. Benchmarks can tell us how a model performs on a task, but not how a model originated, how it differs from its sibling models, or how it may
 fail. In contrast, training lineage can reveal much about model provenance, auditing, and safety~\cite{behavioral2026provenance, nikolic2026model, tensorguard2025}.
 
-We, like other prior works~\citep{horwitz2025mother, yu2025neural, wu2026llmdna}, observe that fine-tuning is a path-dependent, branching process. Each
+Like other prior works~\citep{horwitz2025mother, yu2025neural, wu2026llmdna}, we observe that fine-tuning is a path-dependent, branching process. Each
 child model inherits its parent's  updated weights, nudged towards a certain loss and/or data set. This is
 precisely an evolutionary process, as described in \cite{yax2025phylolm}, and moreover, the evolutionary path leaves signal in weight space. We treat a line or genealogy of fine-tuned models
 as a phylogeny (i.e. an evolutionary tree~\cite{saitou1987neighbor}) and ask whether this phylogeny can be \emph{estimated} from the model parameters alone.
@@ -101,7 +101,7 @@ Our primary contribution is that analyzing the changes in weights between fine-t
   \item \textbf{Weight$\to$behavior bridge.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
   \item \textbf{Weights recover lineage with a larger margin and no queries.}
     \emph{Because} our weight-based estimate is scored against ground truth, which behavior-only
-    methods currently lack, we can calibrate behavior-only estimation directly.  We show that in some circumstances, weight-based phylogeny estimation outperforms behavior-based estimation. On the same documented, real
+    methods currently lack, we can calibrate behavior-only estimation directly.  We show that weight-based phylogeny estimation can outperform behavior-based estimation. On the same documented, real
     families, weight access matches the strongest behavior-only method (PhyloLM ~\cite{yax2025phylolm}), recovering the same
     forks but with a larger additivity margin ($\bar{A}=0.98$ vs.\ $0.84$)
     and requiring no query access or output sampling.
@@ -408,7 +408,7 @@ models. We see that the norm layers seem to have the worst recovery.  They have 
 
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=0.78\linewidth]{\figpath/fig4_coherence_atteson.png}
+    \includegraphics[width=0.9\linewidth]{\figpath/fig4_coherence_atteson.png}
   \end{center}
   \caption{\textbf{What guides clade recovery.} \textbf{(A)} Clade recovery against the oracle
     bottleneck Atteson margin (min.\ fitted edge length, internal or pendant, over twice the
