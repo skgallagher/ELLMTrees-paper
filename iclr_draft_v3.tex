@@ -52,18 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted online, most are fine-tuned descendants from a
-small set of ancestors, yet their lineage is only sometimes documented fully. We construct controlled
-model families whose training topology is known and show that a model \textit{phylogeny} can be estimated
-from weights alone, recovering every true clade in 72--94\% of runs (82--97\% mean clade recovery).
-This ground-truth benchmark lets us evaluate behavior-only lineage estimation directly: on identical
-rank-8 LoRA trees, weight distances recover 94\% of clades while PhyloLM recovers 35\%; on full-fine-tuned
-trees with translation held out, the comparison is 95\% versus 56\%. Both methods recover all three
-documented forks in a small real Mistral family, suggesting that behavior-only reconstruction works best
-when updates move behavior substantially. Treating layers as gene-like estimators localizes the signal
-and recovers the training trees using about 3\% of Flan's scalar weights. Finally, weight proximity
-predicts held-out behavioral similarity, but as an attenuated, probe-dependent readout of the stronger
-weight-space lineage signal.
+While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 72--94\% of runs.  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. Our method not only estimates the phylogeny accurately but also helps score the success of the behavior-based method.
 
 \end{abstract}
 
