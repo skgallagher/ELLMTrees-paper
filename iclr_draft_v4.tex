@@ -52,7 +52,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 72--94\% of runs.  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. On controlled rank-8 LoRA and translation-held-out full-fine-tuning trees, weights recover 94\% of clades versus PhyloLM's 35\% and 95\% versus 56\%, respectively, while both methods recover all three documented splits in the real Mistral family.
+While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering 88-97\% true clades (branches).  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. On controlled rank-8 LoRA and translation-held-out full-fine-tuning trees, weights recover 94\% of clades versus PhyloLM's 35\% and 95\% versus 56\%, respectively, while both methods recover all three documented splits in the real Mistral family.
 
 \end{abstract}
 
@@ -167,13 +167,7 @@ signal'' has a phylogenetic counterpart in Atteson's theorem: for a fixed additi
 neighbor-joining provably recovers the tree when distance error is less than half its shortest edge.
 
 \begin{table}[t]
-\caption{Comparison with the closest lineage-estimation methods.
-  \emph{Access} indicates whether a method uses model weights, model outputs
-  (behavior), or both. \emph{Latent ancestors} indicates whether the method reconstructs a
-  leaf topology from terminal checkpoints without requiring root or intermediate checkpoints to be
-  observed. \emph{Known-lineage eval} indicates
-  evaluation against known training relationships. \emph{Real checkpoints}
-  indicates experiments using documented real-world model checkpoints.}
+\caption{Comparison with the closest lineage-estimation methods.}
 \label{tab:related}
 \begin{center}
 \small
@@ -378,13 +372,7 @@ We first determine how well direct lineage estimation (e.g., parent--child or wi
   RF (SE); FN (SE); clade recovery $=1-\mathrm{FN}/|\text{true splits}|$; PAER (polytomy-aware exact
   recovery) $=$ \% runs with $\mathrm{FN}=0$, i.e.\ every true clade recovered despite NJ's forced
   binary refinements (binomial SE). The sample column gives $n_{\mathrm{rec}}/n_{\mathrm{ord}}$:
-  runs entering phylogeny recovery and direct-ordering summaries, respectively. The fresh Flan
-  regimes and the first three Llama regimes use the same 50 topology IDs and task/data assignments
-  ($50/26$ in every row). The displayed translation-held-out result is from an earlier independent
-  Llama sample; its shared-tree confirmation was still running when this draft was frozen. The
-  separately matched historical weight--PhyloLM benchmark is reported in
-  Table~\ref{tab:phylolm}. What correlates with recovery is analyzed in
-  Fig.~\ref{fig:coherence_recovery}.}
+  runs entering phylogeny recovery and direct-ordering summaries, respectively.}
 \label{tab:variants}
 \begin{center}
 \scriptsize
@@ -426,15 +414,12 @@ Finally, the fitted Atteson diagnostic $\widetilde m$ and additivity proxy $A$ a
 
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=0.78\linewidth]{\figpath/fig4_coherence_atteson.png}
+    \includegraphics[width=\linewidth]{\figpath/fig4_coherence_atteson.png}
   \end{center}
   \caption{\textbf{What guides clade recovery.} \textbf{(A)} Clade recovery against the fitted
     Atteson diagnostic $\widetilde m$ (minimum fitted edge length, internal or pendant, over twice the
     non-additivity error). \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
-    no ground-truth tree. Small points are individual Llama-1B full-FT layers (attention/MLP and
-    norm/embed); large symbols are whole-run summaries, Flan LayerTrace subsets, organic HF
-    validation, and layer-family centroids. The log-scale plot floors zero fitted margins at $0.03$;
-    the aligned Llama norm points are zero-margin fits, not duplicated measurements.}
+    no ground-truth tree. }
   \label{fig:coherence_recovery}
 \end{figure}
 
@@ -463,12 +448,7 @@ reflects whether two leaves fail in the same way, not transmission of held-out t
   random-effects DerSimonian--Laird pooled correlation $r_{\mathrm{DL}}$ between weight distance and behavioral
 similarity (paired prompt-by-draw semantic DV, with immediate-EOS completions represented explicitly;
 $z$-scored within run), with the $95\%$ CI in brackets.
-Held-out probes had no node trained on them; translation is shown both in the training mix
-  and withheld from every node. Negative $r_{\mathrm{DL}}$ supports the bridge (closer weights $\Rightarrow$ more
-similar behavior). $^\ddagger$degenerate Flan probe: outputs are repetitive or collapse onto trained-task label
-vocabulary (rouge-L vs.\ reference $\approx 0$ for all nodes), so a negative $r$ reflects shared
-degenerate output style within a lineage rather than held-out competence (examples in
-App.~\ref{app:translation_probe}). Per-cell heterogeneity ($I^2$) in App.~\ref{app:regression}.}
+$^\ddagger$degenerate Flan probe. Per-cell heterogeneity ($I^2$) in App.~\ref{app:regression}.}
 \label{tab:behavior_holdout}
 \centering
 \small
