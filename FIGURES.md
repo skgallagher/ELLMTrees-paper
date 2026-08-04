@@ -3,22 +3,24 @@
 This folder is assembled by `bash scripts/assemble_paper.sh`. Re-run it whenever
 results are updated on Leviathan/Ghidorah and pulled locally.
 
-## Current Fig. 4 (updated 2026-06-29)
+## Current manuscript figures (ggplot refresh 2026-08-04)
 
 | File | Source | Reproduce |
 |------|--------|-----------|
-| `figures/fig4_coherence_atteson.png` | `/Users/shannon/Desktop/phylo/ELLMTrees/results/aggregate/recovery_rescore/fig4_atteson_layermeans.png` | In the main repo: `python scripts/make_fig4_atteson_layers.py`, then copy the output over this PNG. |
+| `figures/fig4_coherence_atteson.pdf` | recovery, Atteson, additivity, and layer-summary artifacts | `bash scripts/make_paper_figures_ggplot.sh` in `../ELLMTrees/` |
+| `figures/hf_mistral_hero_3panel.pdf` | documented truth, weight Fr\'echet, and PhyloLM Newick trees | same command |
+| `figures/fig3_layertrace_grid.pdf` | per-layer RF summaries for Flan-T5 and Llama-3.2-1B | same command |
+| `figures/regression_diagnostics_semantic.pdf` | six per-pair regression CSVs in `results/aggregate/` | same command |
 
 Notes:
 
-- Main script: `/Users/shannon/Desktop/phylo/ELLMTrees/scripts/make_fig4_atteson_layers.py`.
-- Panel A uses oracle bottleneck Atteson margin with the `margin=1` guarantee line.
-- Panel B uses raw label-free quartet additivity `<A>`.
-- Layer/adapter summaries use median bottleneck margin across runs on the x-axis and mean clade
-  recovery on the y-axis; this avoids rare high-margin q/k/v outliers making weak adapter summaries
-  look as if they clear the theorem threshold.
-- The confusing FLAN organic point is intentionally omitted; the organic point shown is the Llama
-  bush/twoclade validation.
+- `scripts/export_ggplot_data.py` reuses the existing Python analysis functions and exports stable,
+  tidy CSVs. It does not alter or duplicate the scientific calculations.
+- `scripts/ggplot/make_paper_figures.R` owns presentation through one shared publication theme.
+- R dependencies are `ggplot2`, `dplyr`, `readr`, `tidyr`, `ggrepel`, and `patchwork`.
+- Both vector PDFs (used by LaTeX) and high-resolution PNG previews are generated.
+- The color palette is color-vision-deficiency safe; critical categories also differ by shape.
+- The TikZ overview remains vector TikZ and is intentionally outside the ggplot pipeline.
 
 ---
 

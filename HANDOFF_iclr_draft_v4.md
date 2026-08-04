@@ -98,5 +98,25 @@ the AI-use statement is present.
 - The main text reports one real-checkpoint family; the other real families remain appendix material.
 - The scale claim is deliberately narrowed to the architectures and sizes actually tested.
 
+## Pending experiment: restore a round topology sample
+
+Do not start this experiment implicitly. When compute work is explicitly resumed, generate four new
+controlled trees whose truths each contain at least one nontrivial unrooted split, then add those same
+four topology IDs and locked task/data assignments to **every experiment that uses the fresh shared-tree
+controlled grid**. The existing grid generated 50 trees, but IDs 015, 020, 037, and 047 are ineligible
+for topology recovery because their truths have no nontrivial split; adding four eligible trees should
+produce 54 generated trees and a clean topology-recovery sample of $n=50$.
+
+The scope is literal: propagate the four trees through all Flan and Llama training regimes, weight
+subsets/layer diagnostics, direct-lineage and behavioral analyses, and the matched PhyloLM runs. Use
+the identical four truth trees wherever a cross-method or cross-regime comparison is claimed. Before
+launching training, validate and record that each new truth passes the topology eligibility check.
+After all runs finish, recompute the workbook, tables, figures, uncertainty estimates, ranges, sample
+accounting, and every manuscript claim derived from the fresh grid. Direct-ordering $n$ should be
+reported from its own eligibility rule rather than forced to 50.
+
+Acceptance criterion: every fresh shared-tree condition has 50 topology-eligible observations on the
+same truth-tree set, with no condition silently retaining the current $n=46$ subset.
+
 The paper is now in submission-maintenance mode. Reopen substantive writing only for a discovered error,
 a genuinely new result, or reviewer feedback.

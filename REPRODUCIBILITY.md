@@ -27,12 +27,12 @@ pdfinfo _b.pdf | grep Pages     # main text ends p9; refs p10+ don't count to th
 | Label | File | Generator (in `../ELLMTrees/`) | Notes / expected |
 |---|---|---|---|
 | `fig:overview` | `fig1_paper_overview.pdf` | `figures/fig1_paper_overview.tex` (standalone TikZ, in this repo) | Schematic; no data. |
-| `fig:coherence_recovery` | `fig4_coherence_atteson.png` | `scripts/make_fig4_atteson_layers.py` | Panel A oracle Atteson margin w/ margin=1 line; Panel B raw quartet additivity ⟨A⟩. |
-| `fig:real-trees` | `hf_mistral_hero_3panel.png` | `codex/score_hf_zoo_recovery.py` + `codex/plot_hf_zoo_tree_vs_truth.py` | Organic Mistral `d_mistral_7b`: cosine/correlation → FN=0, **100% clade recovery** on all 3 SFT→RLHF/DPO splits; ⟨A⟩=0.98. |
-| `fig:layertrace_grid` | `fig3_layertrace_grid.png` | `scripts/make_layertrace_grid.py` (per-group `scripts/make_fig3_fn.py`) | App. B. Encoder SA.k is the cleanest carrier; Pythia input-embed 3.2% FN. |
+| `fig:coherence_recovery` | `fig4_coherence_atteson.pdf` | `scripts/export_ggplot_data.py` → `scripts/ggplot/make_paper_figures.R` | Panel A fitted Atteson diagnostic; Panel B raw quartet additivity. |
+| `fig:real-trees` | `hf_mistral_hero_3panel.pdf` | same ggplot pipeline, using the scored truth/weight/PhyloLM Newick trees | Organic Mistral `d_mistral_7b`: FN=0, **100% clade recovery** on all 3 SFT→RLHF/DPO splits; weight ⟨A⟩=0.98. |
+| `fig:layertrace_grid` | `fig3_layertrace_grid.pdf` | same ggplot pipeline; data calculation reuses `scripts/make_layertrace_grid.py` | App. B. Key matrices are highlighted against the full per-layer profiles. |
 | `fig:blackbox_hero` | `hero_phylogeny_treespace.png` | `scripts/frechet_task_trees.py` → `scripts/make_hero_figure.py` | 21 models, per-prompt Fréchet (n=264). Run frechet_task_trees first. |
 | `fig:frechet_grid` | `frechet_grid_tasks.png` | `scripts/make_frechet_grid.py` | Appendix. Overall + 4 per-task Fréchet trees. |
-| `fig:regression_diagnostics` | `regression_diagnostics_semantic.png` | `scripts/regression_distance_vs_behavior.py --plot` | Appendix F. |
+| `fig:regression_diagnostics` | `regression_diagnostics_semantic.pdf` | same ggplot pipeline, reading the six per-pair regression CSVs | Appendix F. |
 
 ## Tables
 
@@ -40,7 +40,7 @@ pdfinfo _b.pdf | grep Pages     # main text ends p9; refs p10+ don't count to th
 |---|---|---|---|
 | `tab:related` | prior-work comparison | static (hand-authored) | — |
 | `tab:rf_by_leaves` (Table 1) | recovery by model, leaves ≥ 5 | `scripts/rescore_recovery.py` → `results/aggregate/recovery_rescore/by_group_cosine.csv` | clade recovery: branching_v3 **90.4%**, pythia160m_full_ft **97.5%**, llama1b_base_full_ft **85.2%** |
-| `tab:variants` | layer + LoRA variants | same `by_group_cosine.csv` rows + `tab:layer_subsets` | lora_qkv 83.3%, lora_k_only 81.6% (cumulative) |
+| `tab:variants` | controlled training-regime comparison | fresh Flan and Llama rows: `../WeightTraits/paper/weighttraits_variants_registry.yaml` over `outputs/analysis_v20260713/*_summary.json`, `outputs/analysis_llama32_20260722/{r8,r64}/direct_run_set_analysis_summary.json`, and `outputs/analysis_llama32_full_ft_20260722/production_rollup.json`; translation-held-out row remains the earlier ELLMTrees result | Flan plus Llama rank-8, rank-64, and full FT use the same 50 topology/task-assignment manifests (**50/26**). The displayed earlier held-out row is **46/36** pending replacement by its live shared-tree confirmation. |
 | `tab:layer_subsets` | LayerTrace sparse-layer recovery | `run_analysis.py --layer_subset ...` per run, rescored | enc SA.k recovers ≥ full-weight |
 | `tab:lora_variants` | LoRA branch-structure dose-response | `scripts/analyze_branch_structure.py` per group | Fisher-z r monotone: k_only −0.597 → qkv −0.670 → full-FT −0.802 |
 | `tab:direct` | same- vs cross-branch (direct lineage) | `scripts/analyze_branch_structure.py` | branching_v3 Mann-Whitney p=8.9e-47, rank-biserial 0.61 |
