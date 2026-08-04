@@ -75,7 +75,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 70--94\% of runs.  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, making this method ideal for practical use. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Because phylogenies can be estimated from changes in weights, we demonstrate two corollaries.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. On the topology-eligible subset of fresh matched controlled trees, weights recover 95\% of clades versus PhyloLM's 35\% under rank-8 LoRA and 97\% versus 52\% under full fine-tuning, while both methods recover all three documented splits in the real Mistral family.
+While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 70--94\% of runs.  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, suggesting that lineage can be recovered from a small, architecture-specific weight subset. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Beyond phylogeny estimation, we report two additional empirical findings.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. On the topology-eligible subset of fresh matched controlled trees, weights recover 95\% of clades versus PhyloLM's 35\% under rank-8 LoRA and 97\% versus 52\% under full fine-tuning, while both methods recover all three documented splits in the real Mistral family.
 
 \end{abstract}
 
@@ -129,9 +129,11 @@ PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and 97\% versus 52\% under ful
     updates, while weight access remains substantially more informative for smaller updates and
     requires no output sampling.
 \end{itemize}
+% Submission TODO: add the anonymous code-and-artifact URL here once the blind snapshot exists.
 Our main controlled topology results cover Flan-T5-base (250M) and Llama-3.2-1B, with both full
 fine-tuning and variants of LoRA. The fitted Atteson diagnostic has a moderate pooled association with
-recovery, while the pooled association for label-free additivity is weak.
+recovery. Label-free additivity tracks recovery within architecture, but architecture-specific offsets
+make its pooled cross-architecture rank association misleading.
 
 
 
@@ -430,15 +432,20 @@ Table~\ref{tab:variants} reports clade recovery, PAER ($\mathrm{FN}=0$), and RF/
 
 Treating layers as gene-like estimators reveals that query/key/value attention weights, and especially the key weights, can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime. On the same 47 Flan runs, the encoder self-attention key subset recovers 95.7\% (SE 2.1\%) of clades versus 90.4\% (SE 3.6\%) using all weights; PAER is 91.5\% versus 85.1\% (App.~\ref{app:layers}). This subset contains 7.08M of 247.58M scalar weights (2.86\%, approximately 3\%). Layer importance differs by architecture (App.~\ref{app:layertrace}): signal is more concentrated in key weights for the encoder--decoder model and more diffuse across key weights in the decoder-only model.
 
-Finally, the fitted Atteson diagnostic $\widetilde m$ and additivity proxy $A$ are associated with clade recovery across settings, datasets, layers, and models (Fig.~\ref{fig:coherence_recovery}). Across the 31 non-organic summary points, Pearson's $r$ on the plotted scales is 0.81 for $\log_{10}\max(\widetilde m,0.03)$ and 0.67 for $A$. The more conservative rank associations are $\rho=0.40$ and $0.04$, respectively: $\widetilde m$ retains a moderate monotonic association, whereas $A$ separates the low-diagnostic anchors but does not reliably order the remaining settings. All nine Llama norm-layer summaries have a zero minimum fitted edge and are displayed at the common $0.03$ plotting floor; the embed/head summary is 0.13, whereas attention/MLP layer summaries span 0.46--1.85. The aligned norm coordinates are therefore a property of the fitted diagnostic, not duplicated data. We use both quantities as descriptive diagnostics, not as guarantees of recovery.
+Finally, the fitted Atteson diagnostic $\widetilde m$ and additivity proxy $A$ are associated with clade recovery across settings, datasets, layers, and models (Fig.~\ref{fig:coherence_recovery}). Architecture is essential to interpreting this comparison: pooling the 31 non-organic summary points (including the single Pythia reference omitted from the faceted figure) gives $\rho=0.04$ for $A$, but this mixes architecture-specific scales and conceals strong within-architecture structure. Across the 112 Llama attention/MLP layer summaries, $A$ tracks recovery with $\rho=0.73$; across the four Flan LoRA scopes the ordering is perfectly monotone ($\rho=1.00$, descriptive given $n=4$). The ten Llama LoRA scopes instead occupy a very narrow $A$ interval (0.784--0.795) and are essentially flat (Pearson's $r=-0.04$). Pooling the Flan and Llama LoRA points produces an apparent negative association ($\rho=-0.70$) because Llama has lower $A$ but higher recovery; after centering within architecture, the Pearson association is positive ($r=0.56$). We therefore interpret $A$ as an architecture-conditional, label-free diagnostic rather than a cross-architecture calibrated score. For $\widetilde m$, the 31-point pooled association is $\rho=0.40$ (Pearson's $r=0.81$ on $\log_{10}\max(\widetilde m,0.03)$). All nine Llama norm-layer summaries have a zero minimum fitted edge and are displayed at the common $0.03$ plotting floor; the embed/head summary is 0.13, whereas attention/MLP layer summaries span 0.46--1.85. We use both quantities as descriptive diagnostics, not as guarantees of recovery.
 
 \begin{figure}[t]
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/fig4_coherence_atteson.pdf}
   \end{center}
-  \caption{\textbf{Diagnostics of clade recovery.} Recovery against \textbf{(A)} the fitted Atteson
-    diagnostic $\widetilde m$ and \textbf{(B)} label-free quartet additivity $A$. Full-FT triangles
-    summarize Flan-T5, Llama, and Pythia groups; LoRA circles summarize Flan-T5 and Llama groups.}
+  \caption{\textbf{Architecture-conditional diagnostics of clade recovery.} Recovery against
+    \textbf{(A)} the fitted Atteson diagnostic $\widetilde m$ and \textbf{(B)} label-free quartet
+    additivity $A$, faceted by full fine-tuning versus LoRA. Color separates the four
+    architecture--training groups; shape identifies the weight view, and hollow Llama layer marks
+    denote low-signal norm/embed views. Solid lines are group-specific descriptive least-squares fits.
+    Annotations report Pearson's $r$ and the number of plotted points contributing to each fit.
+    Facet scales are free to expose within-regime variation, so line directions---not slope magnitudes
+    across rows---should be compared. Pooling architectures or training regimes obscures these patterns.}
   \label{fig:coherence_recovery}
 \end{figure}
 
@@ -454,8 +461,7 @@ Table~\ref{tab:behavior_holdout} reports a consistent, significant negative rand
 probes in Llama and for HellaSwag in Flan. Immediate EOS is an observed output and is represented as an
 explicit empty-output semantic state in the primary analysis. In the Llama full-FT production runs,
 30.03\% of HellaSwag outputs were empty, versus 0.10\% for TruthfulQA and less than 0.01\% for ARC-C
-and MMLU. This choice is consequential for HellaSwag: including immediate EOS gives $r_{\mathrm{DL}}=-0.20$ [$-0.30,-0.10$], whereas excluding empty completions gives $-0.08$ [$-0.18,0.02$] and leaves the other probe estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). Our results support that unexpected traits can be passed to child
-models. The positive Flan held-out-translation cell is instead a degeneration diagnostic:
+and MMLU. This choice is consequential for HellaSwag: including immediate EOS gives $r_{\mathrm{DL}}=-0.20$ [$-0.30,-0.10$], whereas excluding empty completions gives $-0.08$ [$-0.18,0.02$] and leaves the other probe estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). These results show that shared fine-tuning ancestry is associated with behavioral similarity on held-out probes. The positive Flan held-out-translation cell is instead a degeneration diagnostic:
 classification-trained leaves collapse to their label vocabulary rather than translate, so similarity
 reflects whether two leaves fail in the same way, not transmission of held-out translation behavior
 (App.~\ref{app:translation_probe}).
