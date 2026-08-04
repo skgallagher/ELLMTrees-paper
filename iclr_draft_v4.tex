@@ -11,6 +11,7 @@
 \usepackage{amsthm}
 \usepackage{enumitem}
 \usepackage{pifont}
+\DeclareMathSizes{9}{10}{7}{5}
 
 % Theorem environments and shared math notation.
 \newtheorem{theorem}{Theorem}
@@ -29,6 +30,21 @@
 \setlength{\intextsep}{8pt plus 2pt minus 2pt}
 \setlength{\abovecaptionskip}{4pt}
 \setlength{\belowcaptionskip}{2pt}
+
+% Compact captions: keep plots readable while avoiding body-sized caption blocks.
+\makeatletter
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  {\footnotesize
+    \sbox\@tempboxa{\textbf{#1:} #2}%
+    \ifdim \wd\@tempboxa >\hsize
+      \textbf{#1:} #2\par
+    \else
+      \global\@minipagefalse
+      \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+    \fi}
+  \vskip\belowcaptionskip}
+\makeatother
 
 % -----------------------------------------------------------------------
 % Working title — change before submission
@@ -362,49 +378,37 @@ We examine the results of our controlled and real data experiments with our enco
 We first determine how well direct lineage estimation (e.g., parent--child or within-branch) performs under different conditions. Table~\ref{tab:variants} reports the Mann--Whitney rank-biserial effect and the within-run branch correlation $r_{\mathrm{branch}}$ between cosine distance and a same-branch indicator. Every mean rank-biserial effect is positive and every $r_{\mathrm{branch}}$ is negative. Branch ordering is especially strong for LoRA in both architectures; comparisons between architectures remain descriptive because width and training setup are confounded.
 
 \begin{table}[t]
-\caption{Lineage signal and recovery by training regime (cosine; fresh LoRA rows use cumulative
-  root-to-node adapter updates restricted to trained target tensors, while full-FT rows use full model
-  weights). \emph{Ordering:} rank-biserial is the Mann--Whitney effect
-  size (same-branch vs.\ cross-branch cosine distances, oriented so larger $=$ siblings closer),
-  averaged per run with SE over runs; $r_{\mathrm{branch}}$ is the within-run point-biserial correlation between cosine
-  distance and the same-branch indicator, Fisher-$z$ averaged over runs (SE over runs, $\geq 4$ leaves).
-  \emph{Phylogeny:} RF and FN (true clades missed) are polytomy-aware NJ means reported together as
-  RF (SE); FN (SE); clade recovery $=1-\mathrm{FN}/|\text{true splits}|$; PAER (polytomy-aware exact
-  recovery) $=$ \% runs with $\mathrm{FN}=0$, i.e.\ every true clade recovered despite NJ's forced
-  binary refinements (binomial SE). The sample column gives $n_{\mathrm{rec}}/n_{\mathrm{ord}}$:
-  runs entering phylogeny recovery and direct-ordering summaries, respectively. The fresh Flan
-  regimes and the first three Llama regimes use the same 50 generated topology IDs and task/data
-  assignments. Four truths have no nontrivial unrooted split, so topology recovery uses the common
-  eligible subset ($46/26$ in every row). The displayed translation-held-out result is from an earlier independent
-  Llama sample; its shared-tree confirmation was still running when this draft was frozen. The
-  fresh matched weight--PhyloLM comparison and the historical robustness cohort are reported in
-  Table~\ref{tab:phylolm}. What correlates with recovery is analyzed in
-  Fig.~\ref{fig:coherence_recovery}.}
+\caption{Lineage signal and recovery by training regime (cosine). Fresh LoRA rows use cumulative
+  root-to-node updates on trained tensors; full-FT rows use full weights. Columns report run means
+  (SE); PAER is the percentage of runs with $\mathrm{FN}=0$. PhyloLM is decoder-only and therefore
+  n/a for Flan. Fresh Llama PhyloLM values use the same $n=46$ topology-eligible trees as weights;
+  the translation-held-out row is an earlier matched $n=46$ sample. Full definitions and
+  behavior-only results are in Appendix~\ref{app:details} and Table~\ref{tab:phylolm}.}
 \label{tab:variants}
 \begin{center}
 \scriptsize
 \setlength{\tabcolsep}{1.1pt}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrr}
 \toprule
-Variant & $n_{\rm rec}/n_{\rm ord}$ & \shortstack{Rank-bis.\\(SE)} & \shortstack{$r_{\mathrm{branch}}$\\(SE)} & \shortstack{Clade\\(SE)} & \shortstack{PAER\\(SE)} & \shortstack{RF (SE);\\FN (SE)} \\
+Variant & $n_{\rm rec}/n_{\rm ord}$ & \shortstack{Rank-bis.\\(SE)} & \shortstack{$r_{\mathrm{branch}}$\\(SE)} & \shortstack{Weight clade\\(SE)} & \shortstack{PhyloLM clade\\(SE)} & \shortstack{Weight PAER\\(SE)} & \shortstack{Weight RF (SE);\\FN (SE)} \\
 \midrule
-\multicolumn{7}{l}{\textbf{Encoder--decoder: Flan-T5-base} ($d=768$)} \\
-\multicolumn{7}{l}{\quad\textit{LoRA adapter scope}} \\
-\quad LoRA: key only                    & 46/26 & 0.97 (0.02) & $-0.89$ (0.03) & \textbf{87\%} (3\%) & \textbf{70\%} (7\%) & 2.78 (0.27); 0.37 (0.09) \\
-\quad LoRA: q/k/v                       & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{93\%} (2\%) & \textbf{80\%} (6\%) & 2.43 (0.24); 0.20 (0.06) \\
-\quad LoRA: q/k/v/o (all attention)     & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{92\%} (2\%) & \textbf{78\%} (6\%) & 2.48 (0.24); 0.22 (0.06) \\
-\quad LoRA: q/k/v/o + FFN projections  & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{90\%} (3\%) & \textbf{74\%} (6\%) & 2.57 (0.25); 0.26 (0.07) \\
-\multicolumn{7}{l}{\quad\textit{Full fine-tuning}} \\
-\quad Full fine-tuning                  & 46/26 & 0.69 (0.08) & $-0.70$ (0.06) & \textbf{95\%} (2\%) & \textbf{89\%} (5\%) & 2.26 (0.23); 0.11 (0.05) \\
+\multicolumn{8}{l}{\textbf{Encoder--decoder: Flan-T5-base} ($d=768$)} \\
+\multicolumn{8}{l}{\quad\textit{LoRA adapter scope}} \\
+\quad LoRA: key only                    & 46/26 & 0.97 (0.02) & $-0.89$ (0.03) & \textbf{87\%} (3\%) & n/a & \textbf{70\%} (7\%) & 2.78 (0.27); 0.37 (0.09) \\
+\quad LoRA: q/k/v                       & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{93\%} (2\%) & n/a & \textbf{80\%} (6\%) & 2.43 (0.24); 0.20 (0.06) \\
+\quad LoRA: q/k/v/o (all attention)     & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{92\%} (2\%) & n/a & \textbf{78\%} (6\%) & 2.48 (0.24); 0.22 (0.06) \\
+\quad LoRA: q/k/v/o + FFN projections  & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{90\%} (3\%) & n/a & \textbf{74\%} (6\%) & 2.57 (0.25); 0.26 (0.07) \\
+\multicolumn{8}{l}{\quad\textit{Full fine-tuning}} \\
+\quad Full fine-tuning                  & 46/26 & 0.69 (0.08) & $-0.70$ (0.06) & \textbf{95\%} (2\%) & n/a & \textbf{89\%} (5\%) & 2.26 (0.23); 0.11 (0.05) \\
 \midrule
-\multicolumn{7}{l}{\textbf{Decoder-only: Llama-3.2-1B} ($d=2048$)} \\
-\multicolumn{7}{l}{\quad\textit{Fresh shared-tree suite}} \\
-\quad LoRA qkv ($r{=}8$)                 & 46/26 & 1.00 (0.00) & $-0.92$ (0.02) & \textbf{95\%} (2\%) & \textbf{87\%} (5\%) & 2.30 (0.24); 0.13 (0.05) \\
-\quad LoRA qkv ($r{=}64$)                & 46/26 & 1.00 (0.00) & $-0.92$ (0.02) & \textbf{97\%} (2\%) & \textbf{91\%} (4\%) & 2.22 (0.22); 0.09 (0.04) \\
-\quad Full fine-tuning                   & 46/26 & 0.69 (0.08) & $-0.68$ (0.06) & \textbf{97\%} (2\%) & \textbf{91\%} (4\%) & 2.22 (0.22); 0.09 (0.04) \\
-\multicolumn{7}{l}{\quad\textit{Earlier held-out-task sample}} \\
-\quad Full FT, translation held out      & 46/36 & 0.71 (0.05) & $-0.65$ (0.05) & \textbf{95\%} (3\%) & \textbf{94\%} (4\%) & 1.63 (0.20); 0.09 (0.05) \\
+\multicolumn{8}{l}{\textbf{Decoder-only: Llama-3.2-1B} ($d=2048$)} \\
+\multicolumn{8}{l}{\quad\textit{Fresh shared-tree suite}} \\
+\quad LoRA qkv ($r{=}8$)                 & 46/26 & 1.00 (0.00) & $-0.92$ (0.02) & \textbf{95\%} (2\%) & 35\% (5\%) & \textbf{87\%} (5\%) & 2.30 (0.24); 0.13 (0.05) \\
+\quad LoRA qkv ($r{=}64$)                & 46/26 & 1.00 (0.00) & $-0.92$ (0.02) & \textbf{97\%} (2\%) & 24\% (5\%) & \textbf{91\%} (4\%) & 2.22 (0.22); 0.09 (0.04) \\
+\quad Full fine-tuning                   & 46/26 & 0.69 (0.08) & $-0.68$ (0.06) & \textbf{97\%} (2\%) & 52\% (5\%) & \textbf{91\%} (4\%) & 2.22 (0.22); 0.09 (0.04) \\
+\multicolumn{8}{l}{\quad\textit{Earlier held-out-task sample}} \\
+\quad Full FT, translation held out      & 46/36 & 0.71 (0.05) & $-0.65$ (0.05) & \textbf{95\%} (3\%) & 56\% (6\%) & \textbf{94\%} (4\%) & 1.63 (0.20); 0.09 (0.05) \\
 \bottomrule
 \end{tabular}
 }
@@ -425,11 +429,9 @@ Finally, the fitted Atteson diagnostic $\widetilde m$ and additivity proxy $A$ a
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/fig4_coherence_atteson.pdf}
   \end{center}
-  \caption{\textbf{What guides clade recovery.} \textbf{(A)} Clade recovery against the fitted
-    Atteson diagnostic $\widetilde m$ (minimum fitted edge length, internal or pendant, over twice the
-    non-additivity error). \textbf{(B)} The same recovery against the label-free quartet additivity proxy $A$, which needs
-    no ground-truth tree. Full-FT triangles summarize Flan-T5, Llama, and Pythia groups; LoRA circles
-    summarize Flan-T5 and Llama groups. }
+  \caption{\textbf{Diagnostics of clade recovery.} Recovery against \textbf{(A)} the fitted Atteson
+    diagnostic $\widetilde m$ and \textbf{(B)} label-free quartet additivity $A$. Full-FT triangles
+    summarize Flan-T5, Llama, and Pythia groups; LoRA circles summarize Flan-T5 and Llama groups.}
   \label{fig:coherence_recovery}
 \end{figure}
 
@@ -454,11 +456,9 @@ reflects whether two leaves fail in the same way, not transmission of held-out t
 
 
 \begin{table}[t]
-\caption{Weight$\to$behavior bridge by model and probe (full fine-tuning). Each cell is the
-  random-effects DerSimonian--Laird pooled correlation $r_{\mathrm{DL}}$ between weight distance and behavioral
-similarity (paired prompt-by-draw semantic DV, with immediate-EOS completions represented explicitly;
-$z$-scored within run), with the $95\%$ CI in brackets.
-$^\ddagger$degenerate Flan probe. Per-cell heterogeneity ($I^2$) in App.~\ref{app:regression}.}
+\caption{Weight$\to$behavior bridge under full fine-tuning: random-effects pooled
+  $r_{\mathrm{DL}}$ with 95\% CI. Immediate EOS is represented explicitly; $^\ddagger$degenerate
+  Flan probe. Heterogeneity is in Appendix~\ref{app:regression}.}
 \label{tab:behavior_holdout}
 \centering
 \small
@@ -494,12 +494,8 @@ The Mistral forks are large RLHF or direct-preference-optimization (DPO) weight 
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/hf_mistral_hero_3panel.pdf}
   \end{center}
-  \caption{\textbf{Estimating a real HuggingFace family from weights vs.\ behavior, against documented
-    truth.} A real Mistral-7B-v0.1 family of ten public checkpoints. \textbf{(Left)} documented lineage.
-    \textbf{(Middle)} our estimate (BHV Fr\'echet mean of the per-layer NJ trees obtained from cosine
-    weight distances over layers common to all ten checkpoints). \textbf{(Right)} PhyloLM estimation \citep{yax2025phylolm}
-    (neighbor-joining on the PhyloLM genetic distance between sampled output alleles, no weight access).  PhyloLM uses
-    its released \texttt{math} genes ($G{=}128$, $N{=}32$).}
+  \caption{\textbf{Documented Mistral lineage:} truth (left), our weight-based estimate (middle),
+    and PhyloLM's output-based estimate (right)~\citep{yax2025phylolm}. Both recover all three splits.}
   \label{fig:real-trees}
 \end{figure}
 % -----------------------------------------------------------------------
