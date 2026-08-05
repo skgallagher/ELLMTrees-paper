@@ -46,7 +46,9 @@ deviance explained. The reported contrasts are:
 
 Intervals come from 2,000 replicates that resample the 46 tree IDs jointly across every estimator,
 recompute all 400 x/y means, and refit both fractional logits. This preserves the shared-tree pairing.
-The shaded regions behind the dashed curves show the corresponding pointwise bootstrap intervals.
+The bootstrap intervals are reported numerically but are not drawn on the figure, keeping the dense
+estimator display visually clean. The shared x-axis label explicitly identifies each plotted
+diagnostic as a mean statistic across the 46 trees.
 
 ## Scientific interpretation
 

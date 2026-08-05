@@ -17,7 +17,8 @@ Notes:
 - Figure 2 data are built by `WeightTraits/scripts/build_merged_weight_figure2.py` from the full-FT
   and fresh merged-weight distance cubes plus the fresh matched PhyloLM per-run metrics, then rendered
   by `ELLMTrees/scripts/ggplot/make_merged_weight_figure2.R` with the shared publication theme. Its
-  fractional-logit bands and odds-ratio intervals use a paired bootstrap over the 46 tree IDs.
+  reported odds-ratio intervals use a paired bootstrap over the 46 tree IDs; the intervals are not
+  drawn on the figure.
 - `scripts/export_ggplot_data.py` reuses the existing Python analysis functions and exports stable,
   tidy CSVs. It does not alter or duplicate the scientific calculations.
 - `scripts/ggplot/make_paper_figures.R` owns presentation through one shared publication theme.
