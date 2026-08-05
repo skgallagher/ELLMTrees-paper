@@ -36,11 +36,17 @@ proportion and the model is a quasi-binomial logit weighted by `n_runs` (46 for 
 the clarified estimand, the fit uses all 400 displayed estimator summaries: simulations, subsets,
 individual matrices, and PhyloLM. Every point remains a mean over the same 46-tree distribution.
 
-For the final all-point descriptive fits, the logit slope is 1.75 per unit increase in
-`log10(Atteson)` with 62.6% of null deviance explained; the additivity slope is 15.55 per unit of
-additivity with 64.7% of null deviance explained. These are useful rough strength summaries, but their
-naive model-based standard errors are not used because the 400 estimator summaries are paired through
-the same trees.
+For the final all-point fits, the logit slope is 1.75 per unit increase in `log10(Atteson)` with 62.6%
+of null deviance explained; the additivity slope is 15.55 per unit of additivity with 64.7% of null
+deviance explained. The reported contrasts are:
+
+- Atteson: odds ratio 5.77 (95% paired-bootstrap interval 3.18–12.18) per tenfold increase in the
+  mean diagnostic.
+- Additivity: odds ratio 4.73 (95% paired-bootstrap interval 3.29–7.14) per 0.10 increase in mean A.
+
+Intervals come from 2,000 replicates that resample the 46 tree IDs jointly across every estimator,
+recompute all 400 x/y means, and refit both fractional logits. This preserves the shared-tree pairing.
+The shaded regions behind the dashed curves show the corresponding pointwise bootstrap intervals.
 
 ## Scientific interpretation
 
@@ -49,12 +55,9 @@ individual matrices and 87–98% for whole simulations) down to 24–52%. Both d
 clear positive, saturating empirical relationship with recovery. This is much more informative than
 a pooled correlation among ceiling-compressed weight estimates.
 
-The dashed curves are still descriptive calibration, not a formal independence-aware significance
-test. Subsets and matrices reuse the same 46 trees and are correlated. This does not invalidate the
-rough calibration slope, but naive GLM standard errors would be too optimistic. If formal inference is
-needed, resample the 46 tree IDs jointly, recompute every estimator mean, and refit the fractional
-logit in each bootstrap replicate; that preserves the paired dependence and directly quantifies slope
-uncertainty.
+The paired tree bootstrap addresses the main dependence created by reusing the same simulation trees.
+The fitted estimators themselves remain the fixed panel of weight views used in the paper; the interval
+does not claim generalization to every possible architecture or unobserved layer definition.
 
 ## Source and generated files
 
@@ -71,6 +74,8 @@ ELLMTrees:
 - `scripts/ggplot/theme_weighttraits.R` — shared publication theme.
 - `results/aggregate/weighttraits_fresh_phylolm/per_run_metrics.csv` — fresh matched PhyloLM source.
 - `results/aggregate/weighttraits_fresh_phylolm/table_metrics.csv` — archived aggregate source table.
+- `results/aggregate/figure2_bootstrap_odds_ratios.csv` — reported odds ratios, percentile intervals,
+  bootstrap seed, and replicate count.
 
 ELLMTrees-paper:
 
@@ -87,7 +92,8 @@ From `/Users/shannon/Desktop/phylo/WeightTraits` in the `ellmtrees` environment:
 PYTHONPATH=src python scripts/build_merged_weight_figure2.py \
   --weighttraits-root . \
   --out reports/paper/merged_weight_figure2.json \
-  --csv-out reports/paper/merged_weight_figure2.csv
+  --csv-out reports/paper/merged_weight_figure2.csv \
+  --records-out reports/paper/merged_weight_figure2_records.csv
 ```
 
 Then:
@@ -95,18 +101,22 @@ Then:
 ```bash
 Rscript /Users/shannon/Desktop/phylo/ELLMTrees/scripts/ggplot/make_merged_weight_figure2.R \
   /Users/shannon/Desktop/phylo/WeightTraits \
-  /Users/shannon/Desktop/phylo/ELLMTrees-paper
+  /Users/shannon/Desktop/phylo/ELLMTrees-paper \
+  2000
 ```
 
 ## Validation completed
 
-- Data validation: 400 rows total; all `n_runs=46`; 397 weight summaries and 3 PhyloLM summaries.
+- Data validation: 400 summaries and 18,400 paired estimator-tree records; all estimators contain the
+  same 46 tree IDs; 397 weight summaries and 3 PhyloLM summaries.
 - Exact PhyloLM topology-ID intersection checked against the Llama weight rollup (46/46, no mismatch).
 - `ruff check scripts/build_merged_weight_figure2.py` passed.
 - R rendering completed without warnings.
 - PDF checked as a one-page R 4.5.2 artifact, 514 × 342 points.
 - PNG was visually inspected after the final dashed-line render; axes, symbols, error bars, and legends
   are not clipped.
+- The paired bootstrap used seed `20260805`; its odds-ratio summary is written to
+  `WeightTraits/reports/paper/merged_weight_figure2_bootstrap.csv`.
 - TeX was not compiled locally because a TeX installation is unavailable in this workspace.
 
 ## Working-tree warning

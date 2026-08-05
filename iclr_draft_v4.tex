@@ -432,7 +432,7 @@ Our methods also estimate the phylogeny, as shown in Table~\ref{tab:variants}, w
 
 Treating layers as gene-like estimators reveals that query/key/value attention weights, and especially the key weights, can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime. On the same 47 Flan runs, the encoder self-attention key subset recovers 95.7\% (SE 2.1\%) of clades versus 90.4\% (SE 3.6\%) using all weights; PAER is 91.5\% versus 85.1\% (App.~\ref{app:layers}). This subset contains 7.08M of 247.58M scalar weights (2.86\%, approximately 3\%). Layer importance differs by architecture (App.~\ref{app:layertrace}): signal is more concentrated in key weights for the encoder--decoder model and more diffuse across key weights in the decoder-only model.
 
-Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subset, and individual-matrix recovery summaries from the same full-weight trees as Table~\ref{tab:variants}, together with the matched PhyloLM estimates for the three Llama conditions. Every point averages the same 46 topology-eligible runs rather than plotting runs as separate observations. Whole-weight simulation recovery ranges from 87--98\%, including 95\% for Flan full fine-tuning and 97\% for Llama full fine-tuning; post-hoc projection subsets recover 88--98\%. Individual q/k/v matrices retain substantial signal across both full fine-tuning and merged LoRA, with mean clade recovery spanning 71--99\%. The matched PhyloLM estimates recover 24--52\% of clades. Pooled fractional-logit fits show recovery rising with both the fitted Atteson diagnostic $\widetilde m$ and label-free additivity proxy $A$; we treat these as empirical recovery diagnostics rather than guarantees.
+Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subset, and individual-matrix recovery summaries from the same full-weight trees as Table~\ref{tab:variants}, together with the matched PhyloLM estimates for the three Llama conditions. Every point averages the same 46 topology-eligible runs rather than plotting runs as separate observations. Whole-weight simulation recovery ranges from 87--98\%, including 95\% for Flan full fine-tuning and 97\% for Llama full fine-tuning; post-hoc projection subsets recover 88--98\%. Individual q/k/v matrices retain substantial signal across both full fine-tuning and merged LoRA, with mean clade recovery spanning 71--99\%. The matched PhyloLM estimates recover 24--52\% of clades. Pooled fractional-logit fits show recovery rising with both the fitted Atteson diagnostic $\widetilde m$ and label-free additivity proxy $A$. Under a paired 2,000-replicate bootstrap that jointly resamples the 46 tree IDs, the recovery odds ratio is 5.77 (95\% bootstrap interval 3.18--12.18) per tenfold increase in mean $\widetilde m$, and 4.73 (3.29--7.14) per 0.10 increase in mean $A$. We treat these as empirical recovery diagnostics rather than guarantees.
 
 \begin{figure}[t]
   \begin{center}
@@ -448,8 +448,8 @@ Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subse
     Every mark is an average over the same 46 topology-eligible trees used in
     Tables~\ref{tab:variants} and~\ref{tab:phylolm}; vertical intervals on simulation, PhyloLM, and
     subset summaries are $\pm1$ SE. Dark dashed curves are pooled fractional-logit fits to all
-    displayed estimator summaries. Because estimators reuse the same 46 trees, the curves are
-    descriptive calibrations rather than independence-based inferential tests.
+    displayed estimator summaries; shaded bands are 95\% intervals from 2,000 paired bootstrap
+    resamples of the 46 tree IDs.
     Panel A uses a log scale.}
   \label{fig:coherence_recovery}
 \end{figure}

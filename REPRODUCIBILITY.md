@@ -27,7 +27,7 @@ pdfinfo _b.pdf | grep Pages     # main text ends p9; refs p10+ don't count to th
 | Label | File | Generator (in `../ELLMTrees/`) | Notes / expected |
 |---|---|---|---|
 | `fig:overview` | `fig1_paper_overview.pdf` | `figures/fig1_paper_overview.tex` (standalone TikZ, in this repo) | Schematic; no data. |
-| `fig:coherence_recovery` | `fig4_coherence_atteson.pdf` | `WeightTraits/scripts/build_merged_weight_figure2.py` → `ELLMTrees/scripts/ggplot/make_merged_weight_figure2.R` | Panel A fitted Atteson diagnostic; Panel B raw quartet additivity; full-weight and matched fresh PhyloLM summaries. |
+| `fig:coherence_recovery` | `fig4_coherence_atteson.pdf` | `WeightTraits/scripts/build_merged_weight_figure2.py` → `ELLMTrees/scripts/ggplot/make_merged_weight_figure2.R` | Panel A fitted Atteson diagnostic; Panel B raw quartet additivity; full-weight and matched fresh PhyloLM summaries; paired 2,000-replicate tree bootstrap. |
 | `fig:real-trees` | `hf_mistral_hero_3panel.pdf` | same ggplot pipeline, using the scored truth/weight/PhyloLM Newick trees | Organic Mistral `d_mistral_7b`: FN=0, **100% clade recovery** on all 3 SFT→RLHF/DPO splits; weight ⟨A⟩=0.98. |
 | `fig:layertrace_grid` | `fig3_layertrace_grid.pdf` | same ggplot pipeline; data calculation reuses `scripts/make_layertrace_grid.py` | App. B. Key matrices are highlighted against the full per-layer profiles. |
 | `fig:blackbox_hero` | `hero_phylogeny_treespace.png` | `scripts/frechet_task_trees.py` → `scripts/make_hero_figure.py` | 21 models, per-prompt Fréchet (n=264). Run frechet_task_trees first. |
