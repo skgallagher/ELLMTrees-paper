@@ -3,17 +3,22 @@
 This folder is assembled by `bash scripts/assemble_paper.sh`. Re-run it whenever
 results are updated on Leviathan/Ghidorah and pulled locally.
 
-## Current manuscript figures (ggplot refresh 2026-08-04)
+## Current manuscript figures (refresh 2026-08-04)
 
 | File | Source | Reproduce |
 |------|--------|-----------|
-| `figures/fig4_coherence_atteson.pdf` | recovery, Atteson, additivity, and layer-summary artifacts | `bash scripts/make_paper_figures_ggplot.sh` in `../ELLMTrees/` |
+| `figures/fig4_coherence_atteson.pdf` | full-FT plus fresh merged-weight Flan/Llama LoRA run, subset, and single-matrix summaries, with matched Llama PhyloLM estimates (46 eligible trees per point) | run the Figure 2 builder and ggplot renderer listed in `HANDOFF_FIGURE2_20260804.md` |
 | `figures/hf_mistral_hero_3panel.pdf` | documented truth, weight Fr\'echet, and PhyloLM Newick trees | same command |
 | `figures/fig3_layertrace_grid.pdf` | per-layer RF summaries for Flan-T5 and Llama-3.2-1B | same command |
 | `figures/regression_diagnostics_semantic.pdf` | six per-pair regression CSVs in `results/aggregate/` | same command |
 
 Notes:
 
+- Figure 2 data are built by `WeightTraits/scripts/build_merged_weight_figure2.py` from the full-FT
+  and fresh merged-weight distance cubes plus the fresh matched PhyloLM per-run metrics, then rendered
+  by `ELLMTrees/scripts/ggplot/make_merged_weight_figure2.R` with the shared publication theme. Its
+  reported odds-ratio intervals use a paired bootstrap over the 46 tree IDs; the intervals are not
+  drawn on the figure.
 - `scripts/export_ggplot_data.py` reuses the existing Python analysis functions and exports stable,
   tidy CSVs. It does not alter or duplicate the scientific calculations.
 - `scripts/ggplot/make_paper_figures.R` owns presentation through one shared publication theme.
