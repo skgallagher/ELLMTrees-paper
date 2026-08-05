@@ -576,9 +576,9 @@ The fresh PhyloLM comparison generates all 50 trees in each shared-tree Llama co
 topology summaries use the common 46-tree subset after excluding four truths with no nontrivial
 unrooted split (topology IDs 015, 020, 037, and 047); matched weight values in
 Table~\ref{tab:variants} are computed on those same 46 trees.
-The Flan per-layer profile in
-Fig.~\ref{fig:layertrace_grid} is a separate earlier archive and uses $n=44$: three of its 47 recovery
-runs have 281 rather than the canonical 282 aligned tensor entries and cannot enter a position-wise mean.
+The Flan per-layer profile in Fig.~\ref{fig:layertrace_grid} is rescored from the saved distance cubes
+on the same 46 topology-eligible fresh full-fine-tuning trees. The Llama panel remains the earlier
+full-fine-tuning archive with $n=47$.
 
 \subsection*{Training Configuration}
 \paragraph{Flan-T5-base.} Each node trained for 2,000 steps, learning rate $3 \times 10^{-4}$, batch size 8, gradient accumulation 4 (effective batch 32), warmup 200 steps, weight decay 0.01, and bf16 precision. We used up to 10,000 training examples and 1,000 evaluation examples per dataset, with a fixed dataset seed across all nodes to avoid data variation as a confound.
@@ -643,26 +643,24 @@ Variant & Target modules & Trainable params & \% of model \\
 \subsection*{LayerTrace: Per-Layer Recovery}
 \label{app:layertrace}
 Treating each layer as an independent estimator, Fig.~\ref{fig:layertrace_grid} reports the per-layer
-FN-rate across architectures. The attention key matrices recur once per block and miss the fewest true
-clades (10\% vs.\ 14\% elsewhere in Flan; 13\% vs.\ 20\% in Llama), while \textsc{LayerNorm} is the
-periodic maximum. In Flan the encoder \textsc{SelfAttention.k} and encoder--decoder cross-attention
-keys are lowest; the decoder-only model recovers the same key-matrix carrier without any
-cross-attention. Across blocks every block contributes, with slight evidence that earlier blocks carry
-somewhat more signal.
+FN-rate across architectures. On the fresh Flan trees the signal is diffuse across individual tensors:
+attention key matrices and the remaining tensors each miss about 7\% of true clades on average. This
+does not conflict with Table~\ref{tab:layer_subsets}, where averaging only the 12 encoder
+\textsc{SelfAttention.k} matrices matches the all-weight reconstruction. The earlier Llama profile is
+more key-concentrated (13\% missed for key matrices vs.\ 20\% elsewhere). \textsc{LayerNorm} produces
+prominent periodic maxima in both panels.
 
 \begin{figure}[h]
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/fig3_layertrace_grid.pdf}
   \end{center}
   \caption{Per-layer FN-rate (\% of true clades missed; mean $\pm$ 2\,SE, cosine, full
-    fine-tuning) for an encoder--decoder (Flan-T5-base, $d{=}768$, $n=44$) and a decoder-only model
-    (Llama-3.2-1B, $d{=}2048$, $n=47$). The same layers carry lineage in both: the attention
-    \emph{key} matrices recur once per block and miss the fewest true clades (10\% vs.\ 14\%
-    elsewhere in Flan; 13\% vs.\ 20\% in Llama), while \textsc{LayerNorm} is the periodic maximum
-    (noise floor). The decoder-only model recovers the same key-matrix carrier without any
-    cross-attention, so the localization is not an encoder--decoder artifact. Point colors and markers
-    encode tensor family consistently across panels; the blue and orange summary lines distinguish
-    Flan and Llama.}
+    fine-tuning) for an encoder--decoder (fresh Flan-T5-base, $d{=}768$, $n=46$) and a decoder-only
+    model (earlier Llama-3.2-1B archive, $d{=}2048$, $n=47$). Flan key matrices and other tensors each
+    average about 7\% missed clades, whereas the Llama profile remains more key-concentrated (13\%
+    vs.\ 20\%). \textsc{LayerNorm} produces prominent local maxima. Point colors and markers encode
+    tensor family consistently across panels; the blue and orange summary lines distinguish Flan and
+    Llama.}
   \label{fig:layertrace_grid}
 \end{figure}
 
