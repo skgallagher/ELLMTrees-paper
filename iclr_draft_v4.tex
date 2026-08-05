@@ -75,7 +75,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 70--94\% of runs.  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, suggesting that lineage can be recovered from a small, architecture-specific weight subset. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Beyond phylogeny estimation, we report two additional empirical findings.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. On the topology-eligible subset of fresh matched controlled trees, weights recover 95\% of clades versus PhyloLM's 35\% under rank-8 LoRA and 97\% versus 52\% under full fine-tuning, while both methods recover all three documented splits in the real Mistral family.
+While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 70--93\% of runs.  We treat individual layers as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each layer to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, suggesting that lineage can be recovered from a small, architecture-specific weight subset. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Beyond phylogeny estimation, we report two additional empirical findings.  One, weight-space proximity in models predicts behavioral similarity on several held-out tasks about truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe.  Two, weight estimation of phylogeny supports and can even outperform behavioral estimation of phylogeny such as in low-rank settings.  We finally compare our weight-based method to a state-of-the-art behavior-based method on a real, albeit small modern model phylogeny. On the topology-eligible subset of fresh matched controlled trees, weights recover 96\% of clades versus PhyloLM's 35\% under rank-8 LoRA and 97\% versus 52\% under full fine-tuning, while both methods recover all three documented splits in the real Mistral family.
 
 \end{abstract}
 
@@ -118,11 +118,11 @@ Our primary contribution is that analyzing weight changes between fine-tunings a
 \begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
   \item \textbf{Phylogeny estimation from model weights against ground truth.} Guided by the geometry of
     fine-tuning updates, our distance metric and summary-statistic choices estimate the model phylogeny from
-    weights alone. Our controlled experiments recover all true clades in $70$--$94\%$ of runs
-    ($87$--$97\%$ clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 3\% of the scalar weights can accurately estimate the known phylogenies. Treating layers as gene-like estimators also yields a separate phylogeny from each layer and localizes where lineage signal is carried. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
+    weights alone. Our controlled experiments recover all true clades in $70$--$93\%$ of runs
+    ($87$--$98\%$ clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 3\% of the scalar weights can accurately estimate the known phylogenies. Treating layers as gene-like estimators also yields a separate phylogeny from each layer and localizes where lineage signal is carried. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
   \item \textbf{Weight-behavior bridge.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
   \item \textbf{Controlled ground truth exposes when behavior-only lineage fails.}
-    On the same 46 topology-eligible fresh controlled trees, weights recover 95\% of clades versus 35\% for
+    On the same 46 topology-eligible fresh controlled trees, weights recover 96\% of clades versus 35\% for
 PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and 97\% versus 52\% under full fine-tuning.
     On a documented Mistral family with large RLHF/DPO forks, both methods
     recover all three true splits. Thus behavior-only estimation can succeed after behaviorally large
@@ -131,9 +131,9 @@ PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and 97\% versus 52\% under ful
 \end{itemize}
 % Submission TODO: add the anonymous code-and-artifact URL here once the blind snapshot exists.
 Our main controlled topology results cover Flan-T5-base (250M) and Llama-3.2-1B, with both full
-fine-tuning and variants of LoRA. The fitted Atteson diagnostic has a moderate pooled association with
-recovery. Label-free additivity tracks recovery within architecture, but architecture-specific offsets
-make its pooled cross-architecture rank association misleading.
+fine-tuning and variants of LoRA. Within architecture--training groups, the fitted Atteson diagnostic
+has a moderate association with recovery, whereas label-free additivity is only weakly associated;
+we therefore use both as descriptive diagnostics rather than trust guarantees.
 
 
 
@@ -260,7 +260,7 @@ similarity) throughout, for three reasons. It is bounded and scale-invariant acr
 high-magnitude layer dominates the aggregate, unlike $\ell_1$ or $\ell_2$. It is the prevailing choice in
 recent provenance and fingerprinting work \citep{zeng2024huref, behavioral2026provenance,
 zhu2025independence}, keeping our distances comparable to that literature. Finally, it has a direct geometric
-reading: aligned fine-tuning updates indicate shared training history, while near-orthogonal updates carry little lineage signal. Each child in our fresh LoRA trees trains a new adapter on its parent's merged weights. For analysis, we represent each node by the cumulative sum of the low-rank updates along its root-to-node path and compute distances on the trained target tensors. These rows therefore measure update-space geometry ($\Delta_{\mathrm{path}}$), whereas full-fine-tuning rows use full model weights; comparisons across these training regimes are descriptive. Historical analyses that use fully merged weights are labeled explicitly.
+reading on merged checkpoints: descendants whose weight vectors are deflected in similar directions remain closer in angle. Each child in our fresh LoRA trees trains a new adapter on its parent's merged weights. For analysis, we replay the ordered root-to-leaf adapter chain, merging each adapter into its parent state, and compute distances on the resulting standalone full-weight leaf checkpoints. Thus both LoRA and full-fine-tuning rows use deployable full model weights; the LoRA training intervention remains low-rank even though its evaluated checkpoint is merged.
 
 
 
@@ -338,7 +338,7 @@ how behavior-based phylogeny differs from weight-based.
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
 % Controlled design enables exact evaluation against the latent-ancestor leaf topology.
 
-To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 10 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair, giving us either the full weights or the cumulative LoRA update of each leaf. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage and phylogeny estimation.
+To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 10 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair. LoRA chains are sequentially merged so every evaluated leaf is a standalone full-weight checkpoint. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage and phylogeny estimation.
 
 We vary the root model, task types, and trained layers. Our primary topology evaluation uses an
 encoder--decoder model (Flan-T5-base, 250M) and a decoder-only model (Llama-3.2-1B), fine-tuning on
@@ -370,7 +370,7 @@ We next estimate how strongly whitebox weight distance predicts behavioral simil
 
 \paragraph{Comparison to behavior-only estimation.}
 \label{sec:exp:blackbox}
-Sometimes weights are unavailable and provenance must be inferred from outputs alone; prior work estimates lineage from behavior in exactly this setting~\citep{wu2026llmdna, yax2025phylolm}. Because our documented HuggingFace family (\S\ref{sec:exp:trees}) has a known topology, we can score behavior-only estimation against its documented reference lineage rather than leaving it unsupervised. On that family we run the behavior-based PhyloLM method~\citep{yax2025phylolm}, using its released genes and genetic distance on the same checkpoints, alongside a naive neighbor-joining tree on sentence-embedding distances between the same models' outputs, and compare both against our weight-based reconstruction on the identical documented lineage (details in App.~\ref{app:blackbox}). Our primary controlled comparison runs PhyloLM on every tree in the fresh shared-tree Llama rank-8 LoRA, rank-64 LoRA, and full-FT conditions (50 reconstructions per condition). Topology metrics use the common 46-tree subset with at least one nontrivial unrooted truth split. As a separate robustness cohort, we retain five historical decoder-only causal groups, matched to their available weight reconstructions ($n=47,47,47,44,46$; App.~\ref{app:phylolm}). The encoder--decoder Flan groups are outside PhyloLM's decoder-only scope.
+Sometimes weights are unavailable and provenance must be inferred from outputs alone; prior work estimates lineage from behavior in exactly this setting~\citep{wu2026llmdna, yax2025phylolm}. Because our documented HuggingFace family (\S\ref{sec:exp:trees}) has a known topology, we can score behavior-only estimation against its documented reference lineage rather than leaving it unsupervised. On that family we run the behavior-based PhyloLM method~\citep{yax2025phylolm}, using its released genes and genetic distance on the same checkpoints, and compare it against our weight-based reconstruction on the identical documented lineage (details in App.~\ref{app:blackbox}). Our controlled comparison runs PhyloLM on every tree in the fresh shared-tree Llama rank-8 LoRA, rank-64 LoRA, and full-FT conditions (50 reconstructions per condition). Topology metrics use the common 46-tree subset with at least one nontrivial unrooted truth split. The encoder--decoder Flan groups are outside PhyloLM's decoder-only scope.
 
 
 % -----------------------------------------------------------------------
@@ -384,15 +384,13 @@ We examine the results of our controlled and real data experiments with our enco
 
 
 \paragraph{Direct lineage.}
-We first determine how well direct lineage estimation (e.g., parent--child or within-branch) performs under different conditions. Table~\ref{tab:variants} reports the Mann--Whitney rank-biserial effect and the within-run branch correlation $r_{\mathrm{branch}}$ between cosine distance and a same-branch indicator. Every mean rank-biserial effect is positive and every $r_{\mathrm{branch}}$ is negative. Branch ordering is especially strong for LoRA in both architectures; comparisons between architectures remain descriptive because width and training setup are confounded.
+We first determine how well direct lineage estimation (e.g., parent--child or within-branch) performs under different conditions. Table~\ref{tab:variants} reports the Mann--Whitney rank-biserial effect and the within-run branch correlation $r_{\mathrm{branch}}$ between cosine distance and a same-branch indicator. Every mean rank-biserial effect is positive and every $r_{\mathrm{branch}}$ is negative. Branch ordering is present in both training regimes, though its magnitude varies by architecture and LoRA scope; comparisons between architectures remain descriptive because width and training setup are confounded.
 
 \begin{table}[t]
-\caption{Lineage signal and recovery by training regime (cosine). Fresh LoRA rows use cumulative
-  root-to-node updates on trained tensors; full-FT rows use full weights. Columns report run means
-  (SE); PAER is the percentage of runs with $\mathrm{FN}=0$. PhyloLM is decoder-only and therefore
-  n/a for Flan. Fresh Llama PhyloLM values use the same $n=46$ topology-eligible trees as weights;
-  the translation-held-out row is an earlier matched $n=46$ sample. Full definitions and
-  behavior-only results are in Appendix~\ref{app:details} and Table~\ref{tab:phylolm}.}
+\caption{Lineage and recovery by training regime (cosine; mean with SE). LoRA uses sequentially
+  merged full weights; $\dagger$ marks an update-space ablation whose adapters were not archived.
+  PAER means $\mathrm{FN}=0$. Fresh Llama weight and PhyloLM values share the same $n=46$
+  topology-eligible trees; Flan is outside PhyloLM's scope.}
 \label{tab:variants}
 \begin{center}
 \scriptsize
@@ -404,20 +402,18 @@ Variant & $n_{\rm rec}/n_{\rm ord}$ & \shortstack{Rank-bis.\\(SE)} & \shortstack
 \midrule
 \multicolumn{8}{l}{\textbf{Encoder--decoder: Flan-T5-base} ($d=768$)} \\
 \multicolumn{8}{l}{\quad\textit{LoRA adapter scope}} \\
-\quad LoRA: key only                    & 46/26 & 0.97 (0.02) & $-0.89$ (0.03) & \textbf{87\%} (3\%) & n/a & \textbf{70\%} (7\%) & 2.78 (0.27); 0.37 (0.09) \\
-\quad LoRA: q/k/v                       & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{93\%} (2\%) & n/a & \textbf{80\%} (6\%) & 2.43 (0.24); 0.20 (0.06) \\
-\quad LoRA: q/k/v/o (all attention)     & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{92\%} (2\%) & n/a & \textbf{78\%} (6\%) & 2.48 (0.24); 0.22 (0.06) \\
-\quad LoRA: q/k/v/o + FFN projections  & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{90\%} (3\%) & n/a & \textbf{74\%} (6\%) & 2.57 (0.25); 0.26 (0.07) \\
+\quad LoRA: key only                    & 46/26 & 0.58 (0.08) & $-0.63$ (0.07) & \textbf{87\%} (3\%) & n/a & \textbf{70\%} (7\%) & 2.78 (0.27); 0.37 (0.09) \\
+\quad LoRA: q/k/v                       & 46/26 & 0.63 (0.08) & $-0.66$ (0.07) & \textbf{98\%} (1\%) & n/a & \textbf{93\%} (4\%) & 2.17 (0.21); 0.07 (0.04) \\
+\quad LoRA: q/k/v/o (all attention)     & 46/26 & 0.63 (0.08) & $-0.66$ (0.07) & \textbf{98\%} (1\%) & n/a & \textbf{93\%} (4\%) & 2.17 (0.21); 0.07 (0.04) \\
+\quad LoRA: q/k/v/o + FFN projections$^\dagger$ & 46/26 & 0.99 (0.01) & $-0.91$ (0.02) & \textbf{90\%} (3\%) & n/a & \textbf{74\%} (6\%) & 2.57 (0.25); 0.26 (0.07) \\
 \multicolumn{8}{l}{\quad\textit{Full fine-tuning}} \\
 \quad Full fine-tuning                  & 46/26 & 0.69 (0.08) & $-0.70$ (0.06) & \textbf{95\%} (2\%) & n/a & \textbf{89\%} (5\%) & 2.26 (0.23); 0.11 (0.05) \\
 \midrule
 \multicolumn{8}{l}{\textbf{Decoder-only: Llama-3.2-1B} ($d=2048$)} \\
 \multicolumn{8}{l}{\quad\textit{Fresh shared-tree suite}} \\
-\quad LoRA qkv ($r{=}8$)                 & 46/26 & 1.00 (0.00) & $-0.92$ (0.02) & \textbf{95\%} (2\%) & 35\% (5\%) & \textbf{87\%} (5\%) & 2.30 (0.24); 0.13 (0.05) \\
-\quad LoRA qkv ($r{=}64$)                & 46/26 & 1.00 (0.00) & $-0.92$ (0.02) & \textbf{97\%} (2\%) & 24\% (5\%) & \textbf{91\%} (4\%) & 2.22 (0.22); 0.09 (0.04) \\
+\quad LoRA qkv ($r{=}8$)                 & 46/26 & 0.65 (0.08) & $-0.65$ (0.07) & \textbf{96\%} (2\%) & 35\% (5\%) & \textbf{89\%} (5\%) & 2.26 (0.23); 0.11 (0.05) \\
+\quad LoRA qkv ($r{=}64$)                & 46/26 & 0.70 (0.08) & $-0.67$ (0.07) & \textbf{98\%} (1\%) & 24\% (5\%) & \textbf{93\%} (4\%) & 2.17 (0.21); 0.07 (0.04) \\
 \quad Full fine-tuning                   & 46/26 & 0.69 (0.08) & $-0.68$ (0.06) & \textbf{97\%} (2\%) & 52\% (5\%) & \textbf{91\%} (4\%) & 2.22 (0.22); 0.09 (0.04) \\
-\multicolumn{8}{l}{\quad\textit{Earlier held-out-task sample}} \\
-\quad Full FT, translation held out      & 46/36 & 0.71 (0.05) & $-0.65$ (0.05) & \textbf{95\%} (3\%) & 56\% (6\%) & \textbf{94\%} (4\%) & 1.63 (0.20); 0.09 (0.05) \\
 \bottomrule
 \end{tabular}
 }
@@ -428,9 +424,9 @@ Variant & $n_{\rm rec}/n_{\rm ord}$ & \shortstack{Rank-bis.\\(SE)} & \shortstack
 
 \paragraph{Phylogeny estimation.}
 \label{sec:results:weighttree}
-Our methods also estimate the phylogeny, as shown in Table~\ref{tab:variants}, with respect to clade recovery, polytomy-aware exact recovery (PAER; $\mathrm{FN}=0$), and RF/FN for all eligible phylogenies. In the fresh shared-tree suite, clade recovery ranges from 87--97\% and PAER from 70--91\%. Again, we see stronger lineage in full fine-tuning for the encoder--decoder model, whereas rank-64 LoRA and full fine-tuning both recover 97\% of clades for Llama. On the same 46 trees with a nontrivial truth split, weights recover 95\% versus PhyloLM's 35\% under rank-8 LoRA, 97\% versus 24\% at rank 64, and 97\% versus 52\% under full fine-tuning (Table~\ref{tab:phylolm}). A separately labeled historical cohort gives the same qualitative result, including 95\% versus 56\% when translation is held out. We see in Appendix~\ref{app:withintask} that phylogeny estimation still holds when every node in a tree trains within a single task (clade recovery $59$--$87\%$); in that design, task-path distances are all zero and provide no discriminating baseline.
+Our methods also estimate the phylogeny, as shown in Table~\ref{tab:variants}, with respect to clade recovery, polytomy-aware exact recovery (PAER; $\mathrm{FN}=0$), and RF/FN for all eligible phylogenies. In the fresh shared-tree suite, clade recovery ranges from 87--98\% and PAER from 70--93\%. The merged LoRA variants recover 87--98\% of clades for Flan and 96--98\% for Llama; full fine-tuning recovers 95\% and 97\%, respectively. On the same 46 trees with a nontrivial truth split, weights recover 96\% versus PhyloLM's 35\% under rank-8 LoRA, 98\% versus 24\% at rank 64, and 97\% versus 52\% under full fine-tuning. We see in Appendix~\ref{app:withintask} that phylogeny estimation still holds when every node in a tree trains within a single task (clade recovery $59$--$87\%$); in that design, task-path distances are all zero and provide no discriminating baseline.
 
-Treating layers as gene-like estimators reveals that query/key/value attention weights, and especially the key weights, can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime. On the same 47 Flan runs, the encoder self-attention key subset recovers 95.7\% (SE 2.1\%) of clades versus 90.4\% (SE 3.6\%) using all weights; PAER is 91.5\% versus 85.1\% (App.~\ref{app:layers}). This subset contains 7.08M of 247.58M scalar weights (2.86\%, approximately 3\%). Layer importance differs by architecture (App.~\ref{app:layertrace}): signal is more concentrated in key weights for the encoder--decoder model and more diffuse across key weights in the decoder-only model.
+Treating layers as gene-like estimators reveals that query/key/value attention weights, and especially the key weights, can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime. On the same 46 fresh shared-tree Flan runs, the encoder self-attention key subset recovers 95.5\% (SE 2.0\%) of clades, identical to the all-weight estimate; PAER is 89.1\% for both (App.~\ref{app:layers}). This subset contains 7.08M of 247.58M scalar weights (2.86\%, approximately 3\%). Layer importance differs by architecture (App.~\ref{app:layertrace}): signal is more concentrated in key weights for the encoder--decoder model and more diffuse across key weights in the decoder-only model.
 
 Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subset, and individual-matrix recovery summaries from the same full-weight trees as Table~\ref{tab:variants}, together with the matched PhyloLM estimates for the three Llama conditions. Every point averages the same 46 topology-eligible runs rather than plotting runs as separate observations. Whole-weight simulation recovery ranges from 87--98\%, including 95\% for Flan full fine-tuning and 97\% for Llama full fine-tuning; post-hoc projection subsets recover 88--98\%. Individual q/k/v matrices retain substantial signal across both full fine-tuning and merged LoRA, with mean clade recovery spanning 71--99\%. The matched PhyloLM estimates recover 24--52\% of clades. Pooled fractional-logit fits show recovery rising with both the fitted Atteson diagnostic $\widetilde m$ and label-free additivity proxy $A$. Under a paired 2,000-replicate bootstrap that jointly resamples the 46 tree IDs, the recovery odds ratio is 5.77 (95\% bootstrap interval 3.18--12.18) per tenfold increase in mean $\widetilde m$, and 4.73 (3.29--7.14) per 0.10 increase in mean $A$. We treat these as empirical recovery diagnostics rather than guarantees.
 
@@ -446,7 +442,7 @@ Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subse
     subsets; small translucent symbols are individual q, k, or v matrices from both full-fine-tuning
     conditions and the Flan q/k/v and Llama rank-8/rank-64 merged LoRA runs.
     Every mark is an average over the same 46 topology-eligible trees used in
-    Tables~\ref{tab:variants} and~\ref{tab:phylolm}; vertical intervals on simulation, PhyloLM, and
+    Table~\ref{tab:variants}; vertical intervals on simulation, PhyloLM, and
     subset summaries are $\pm1$ SE. Dark dashed curves are pooled fractional-logit fits to all
     displayed estimator summaries. Odds-ratio intervals reported in the text use 2,000 paired
     bootstrap resamples of the 46 tree IDs.
@@ -503,10 +499,9 @@ estimation to PhyloLM~\citep{yax2025phylolm}, scored against the
 same documented lineage. On the real Mistral family (Fig.~\ref{fig:real-trees}), PhyloLM and weights
 both recover all three forks. Their informative-quartet additivity differs ($A=0.84$ vs.\ $0.98$), but
 we treat that as a distance-matrix diagnostic rather than evidence of better topology because both
-reconstructions are exact. A naive sentence-embedding phylogeny on the same outputs recovers only one
-fork, so behavior-only recovery is strongly method-dependent.
+reconstructions are exact.
 
-The Mistral forks are large RLHF or direct-preference-optimization (DPO) weight changes that move behavior substantially. Our controlled trees are a more precise test. In the LoRA and low-update regimes fine-tuning barely shifts behavior, yet weight distance can still estimate phylogenies. Running PhyloLM on the fresh shared trees against the same ground truth, behavior-only recovery falls well below weight-based recovery: under full fine-tuning PhyloLM recovers $52\%$ of clades versus $97\%$ for weights, under rank-8 LoRA it recovers $35\%$ versus $95\%$, and under rank-64 LoRA it recovers $24\%$ versus $97\%$ (Table~\ref{tab:phylolm}). Behavioral similarity is a real but attenuated and probe-dependent readout of weight distance ($|r_{\mathrm{DL}}|=0.08$--$0.33$ across interpretable held-out Llama probes), which helps explain why output-based distances can preserve some pairwise signal yet lose enough resolution to miss topology after small updates.
+The Mistral forks are large RLHF or direct-preference-optimization (DPO) weight changes that move behavior substantially. Our controlled trees are a more precise test. In the LoRA and low-update regimes fine-tuning barely shifts behavior, yet weight distance can still estimate phylogenies. Running PhyloLM on the fresh shared trees against the same ground truth, behavior-only recovery falls well below weight-based recovery: under full fine-tuning PhyloLM recovers $52\%$ of clades versus $97\%$ for weights, under rank-8 LoRA it recovers $35\%$ versus $96\%$, and under rank-64 LoRA it recovers $24\%$ versus $98\%$. Behavioral similarity is a real but attenuated and probe-dependent readout of weight distance ($|r_{\mathrm{DL}}|=0.08$--$0.33$ across interpretable held-out Llama probes), which helps explain why output-based distances can preserve some pairwise signal yet lose enough resolution to miss topology after small updates.
 
 \begin{figure}[t]
   \begin{center}
@@ -521,7 +516,7 @@ The Mistral forks are large RLHF or direct-preference-optimization (DPO) weight 
 \label{sec:discussion}
 % -----------------------------------------------------------------------
 
-We show that model family phylogeny can be estimated from weights alone, and that using the best layers---about 3\% of Flan's scalar weights in the encoder-key subset---estimates training trees as well as using all layers.  We find that clade recovery works across encoder--decoder and decoder-only models and survives LoRA training at low rank ($r=8$). Across our controlled conditions, PAER ($\mathrm{FN}=0$) ranges from 70--94\%. The label-free additivity proxy $A$ is a descriptive diagnostic associated with recovery on the plotted scale, but its weak pooled rank association means it should not be treated as a trust guarantee. In addition to estimating phylogeny and direct lineage from weights, we show that models closer in weight space tend to have more similar held-out outputs; the effect depends on the probe and ranges from $r_{\mathrm{DL}}=-0.33$ to $-0.08$ across interpretable held-out Llama probes. Finally, weight- and behavior-based estimation recover the same documented Mistral family, while weight-based estimation is substantially stronger on several controlled trees and requires no prompts.
+We show that model family phylogeny can be estimated from weights alone, and that using the best layers---about 3\% of Flan's scalar weights in the encoder-key subset---estimates training trees as well as using all layers.  We find that clade recovery works across encoder--decoder and decoder-only models and survives LoRA training at low rank ($r=8$). Across our controlled conditions, PAER ($\mathrm{FN}=0$) ranges from 70--93\%. The fitted Atteson margin is moderately associated with recovery within architecture--training groups, whereas the label-free additivity proxy $A$ is only weakly associated; neither should be treated as a trust guarantee. In addition to estimating phylogeny and direct lineage from weights, we show that models closer in weight space tend to have more similar held-out outputs; the effect depends on the probe and ranges from $r_{\mathrm{DL}}=-0.33$ to $-0.08$ across interpretable held-out Llama probes. Finally, weight- and behavior-based estimation recover the same documented Mistral family, while weight-based estimation is substantially stronger on several controlled trees and requires no prompts.
 
 
 We note that our experiments and methods have limitations.  One limitation is that our methods for phylogeny estimation using weights currently only work when the underlying architecture is identical, i.e., the weight space is the same.  This means that Llama cannot directly be compared to Mistral, for example. Another issue is that our controlled training tree generation results from a fairly simple process that may not result in the most realistic training trees.  We attempt to mitigate that with our real-world example. Future directions include better relating models across different architectures such as with CKA and further exploring the mechanism by which lineage is inherited. In summary, we hope that our work illuminates the need to consider models holistically and not as a series of benchmarks.
@@ -577,12 +572,9 @@ unrooted split enter recovery, and the same 26 enter
 ordering in every row; the other 24 trees have no cross-root-branch comparison, so ordering is
 undefined rather than missing. The fresh Llama rank-8, rank-64, and full-FT regimes reuse those same
 50 topology IDs and task/data assignments; the same 46 enter recovery and the same 26 enter ordering.
-The displayed translation-held-out row is from an earlier independent Llama sample and contributes
-46 recovery and 36 ordering runs; the shared-tree confirmation is not yet included. The historical
-PhyloLM cohort in Table~\ref{tab:phylolm} is matched to its eligible weight sample within each row.
 The fresh PhyloLM comparison generates all 50 trees in each shared-tree Llama condition, but its
 topology summaries use the common 46-tree subset after excluding four truths with no nontrivial
-unrooted split (topology IDs 015, 020, 037, and 047); matched weight values in that table and
+unrooted split (topology IDs 015, 020, 037, and 047); matched weight values in
 Table~\ref{tab:variants} are computed on those same 46 trees.
 The Flan per-layer profile in
 Fig.~\ref{fig:layertrace_grid} is a separate earlier archive and uses $n=44$: three of its 47 recovery
@@ -599,11 +591,13 @@ Two families of variants appear in the paper. \emph{LayerTrace subsets} (Table~\
 restrict the full-weight distance to a chosen set of tensors, testing which layers carry the lineage
 signal; they are defined on Flan-T5-base (12 encoder + 12 decoder blocks). \emph{LoRA variants}
 (Table~\ref{tab:lora_variants}) instead change which modules are fine-tuned, all at rank $r=8$,
-$\alpha=16$, dropout $0.05$. Their fresh controlled-tree analysis represents each leaf by its
-cumulative root-to-node low-rank update rather than by base-plus-update merged weights.
+$\alpha=16$, dropout $0.05$. Their fresh controlled-tree analysis replays and merges the full
+root-to-node adapter chain so distances are computed between standalone full-weight leaves. The
+all-projections row is retained as an explicitly marked cumulative-update ablation because its
+historical adapter checkpoints were not archived; it is excluded from the merged-weight diagnostic fit.
 
 \begin{table}[h]
-\caption{LayerTrace layer subsets (Flan-T5-base full FT; cosine; matched $n=47$). ``SA.k'' is the self-attention key projection;
+\caption{LayerTrace layer subsets (fresh shared-tree Flan-T5-base full FT; cosine; matched $n=46$). ``SA.k'' is the self-attention key projection;
 ``pre-attention LayerNorm'' is the \texttt{layer.0.layer\_norm} preceding self-attention. The table's
 percentages count tensors in the 282-tensor trained set, not scalar parameters. In particular,
 \texttt{enc\_sak} is 12/282 tensors (4.3\%) but 7,077,888/247,577,856 scalar weights (2.86\%).
@@ -617,12 +611,12 @@ percentages count tensors in the 282-tensor trained set, not scalar parameters. 
 \toprule
 Variant & Tensors included & Count & \% tensors & Clade (SE) & PAER (SE) \\
 \midrule
-\texttt{full}         & all trained tensors                                   & 282 & 100          & 90.4 (3.6) & 85.1 (5.2) \\
-\texttt{high\_signal} & SA.k $+$ pre-attention LayerNorm (encoder $+$ decoder) & 48  & $\sim$17     & 91.5 (3.2) & 85.1 (5.2) \\
-\texttt{sak}          & SA.k only (encoder $+$ decoder)                       & 24  & $\sim$8.5    & 91.5 (3.5) & 87.2 (4.9) \\
-\texttt{encoder\_h}   & encoder SA.k $+$ encoder pre-attention LayerNorm      & 24  & $\sim$8.5    & 93.6 (2.5) & 87.2 (4.9) \\
-\texttt{enc\_sak}     & encoder SA.k only                                     & 12  & 4.3           & 95.7 (2.1) & 91.5 (4.1) \\
-\texttt{low\_signal}  & post-FFN / final-block LayerNorms (control)           & 36  & $\sim$13     & 85.1 (4.0) & 74.5 (6.4) \\
+\texttt{full}         & all trained tensors                                   & 282 & 100          & 95.5 (2.0) & 89.1 (4.6) \\
+\texttt{high\_signal} & SA.k $+$ pre-attention LayerNorm (encoder $+$ decoder) & 48  & $\sim$17     & 94.9 (2.0) & 87.0 (5.0) \\
+\texttt{sak}          & SA.k only (encoder $+$ decoder)                       & 24  & $\sim$8.5    & 95.5 (2.0) & 89.1 (4.6) \\
+\texttt{encoder\_h}   & encoder SA.k $+$ encoder pre-attention LayerNorm      & 24  & $\sim$8.5    & 94.9 (2.0) & 87.0 (5.0) \\
+\texttt{enc\_sak}     & encoder SA.k only                                     & 12  & 4.3           & 95.5 (2.0) & 89.1 (4.6) \\
+\texttt{low\_signal}  & post-FFN / final-block LayerNorms (control)           & 36  & $\sim$13     & 93.5 (2.2) & 82.6 (5.7) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -683,8 +677,7 @@ model (temperature $1$, no chat template, matching PhyloLM's design), take the $
 form the per-gene allele populations, compute the Nei similarity between every pair of the ten
 checkpoints, convert to a distance ($-\log$ of the similarity), and build the tree by neighbor-joining.
 The reconstruction is scored against the same documented truth tree and with the same polytomy-aware
-scorer used for the whitebox families. The naive output-embedding baseline in the same figure instead
-uses sentence-embedding (\texttt{all-MiniLM-L6-v2}) distances between the models' translation outputs.
+scorer used for the whitebox families.
 
 The fresh controlled comparison uses the same locked PhyloLM contract ($G=128$, $N=32$, four-token
 continuations, temperature $1$) with sampling seed \texttt{20260803} on the 50 shared-tree Llama
@@ -693,7 +686,7 @@ ordered cumulative root-to-leaf adapter chain; full-FT leaves are loaded directl
 contains 50 completed reconstructions and 365 leaf populations, and all generated alleles are
 nonempty. The four trees whose truths contain no nontrivial unrooted split are valid behavioral
 reconstructions but cannot define clade recovery, PAER, RF, or FN, leaving the same $n=46$ topology
-sample in every fresh row of Table~\ref{tab:phylolm}.
+sample in every fresh row of Table~\ref{tab:variants}.
 
 \section{Additional Organic Lineage Checks}
 \label{app:organic-additional}
@@ -1032,68 +1025,6 @@ Translation    & 47 & \textbf{72\%} (6\%) & \textbf{64\%} (7\%) & 2.23 & 0.40 \\
 Summarization  & 47 & \textbf{59\%} (6\%) & \textbf{47\%} (7\%) & 2.70 & 0.64 \\
 \bottomrule
 \end{tabular}
-\end{table}
-
-\section{Behavior-Only Recovery on the Controlled Trees (PhyloLM)}
-\label{app:phylolm}
-
-We complement the organic-family comparison (Fig.~\ref{fig:real-trees},
-Sec.~\ref{sec:results:blackbox}) by running the behavior-only baseline PhyloLM~\citep{yax2025phylolm}
-on our controlled trees, where the ground-truth topology is known. PhyloLM is a decoder-only method
-(it queries each model with a fixed pool of prompts and compares the generated continuations), so the
-encoder--decoder Flan-T5 groups are out of scope. Our primary comparison uses the fresh shared-tree
-Llama rank-8 LoRA, rank-64 LoRA, and full-FT checkpoints from Table~\ref{tab:variants}: all 50 trees
-are reconstructed in each condition, and the 46 truths containing at least one nontrivial unrooted
-split enter topology scoring. The matched weight column is recomputed on exactly those same 46 tree
-IDs. We separately retain five historical causal groups as a robustness cohort; those rows use the
-exact intersection with the available weight reconstruction ($n=47,47,47,44,46$). Within every row,
-both methods therefore use identical truth trees and the same polytomy-aware topology definitions.
-Table~\ref{tab:phylolm} reports both cohorts.
-
-Behavior-only recovery falls well below weight-based recovery in every fresh condition. PhyloLM
-recovers $35\%$ of clades under rank-8 LoRA, $24\%$ under rank-64 LoRA, and $52\%$ under full fine-tuning,
-versus $95\%$, $97\%$, and $97\%$ from weights on the same trees. The historical cohort gives the same
-qualitative result: behavior-only recovery is $29$--$56\%$ versus $85$--$96\%$ from weights. These
-topology scores are the basis of the comparison. Behavior-only matrices also have lower descriptive
-diagnostics, but given $A$'s weak pooled rank association we do not treat that difference as independent
-evidence of superior topology. This sharpens the comparison in
-Sec.~\ref{sec:results:blackbox}: weights and behavior tie only when updates are large and distinctive
-(the organic RLHF/DPO forks); on small or held-out updates, weight distance recovers lineage that
-behavior alone cannot.
-
-\begin{table}[h]
-\caption{Behavior-only (PhyloLM) vs.\ weight-based recovery on the causal controlled trees (cosine,
-  eligible weight and behavior runs matched within each row; identical polytomy-aware topology
-  definitions). The fresh experiments completed all 50 reconstructions per condition; topology
-  scoring uses the 46 truths with at least one nontrivial unrooted split. \emph{Clade} is clade
-  recovery; \emph{PAER} is the fraction of runs with $\mathrm{FN}=0$; $A$ is mean four-point
-  additivity over truth-informative quartets; \emph{margin} is the fitted Atteson diagnostic. Weight
-  clade recovery is recomputed on each row's matched sample.}
-\label{tab:phylolm}
-\centering
-\scriptsize
-\setlength{\tabcolsep}{1pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{lrrrrrr}
-\toprule
- & Weight & \multicolumn{5}{c}{PhyloLM (behavior-only)} \\
-\cmidrule(lr){2-2}\cmidrule(lr){3-7}
-Group (causal) & Clade & Clade (SE) & PAER (SE) & RF (SE); FN (SE) & $A$ (SE) & margin (SE) \\
-\midrule
-\multicolumn{7}{l}{\textbf{Fresh shared-tree confirmation} ($n=46$ topology-eligible per row)} \\
-LoRA qkv ($r{=}8$)       & 95\% & 35\% (5\%) & 11\% (5\%) & 5.39 (0.35); 1.67 (0.16) & 0.57 (0.02) & 0.08 (0.02) \\
-LoRA qkv ($r{=}64$)      & 97\% & 24\% (5\%) & 9\% (4\%)  & 6.04 (0.39); 2.00 (0.16) & 0.61 (0.01) & 0.09 (0.06) \\
-Full fine-tuning         & 97\% & 52\% (5\%) & 26\% (6\%) & 4.48 (0.36); 1.22 (0.15) & 0.64 (0.02) & 0.21 (0.06) \\
-\midrule
-\multicolumn{7}{l}{\textbf{Historical robustness cohort} (row-matched samples)} \\
-LoRA qkv ($r{=}8$; $n=47$)      & 94\% & 35\% (6\%) & 28\% (7\%) & 3.85 (0.30); 1.21 (0.14) & 0.62 (0.02) & 0.71 (0.42) \\
-LoRA qkv ($r{=}64$; $n=47$)     & 96\% & 34\% (6\%) & 23\% (6\%) & 3.89 (0.29); 1.23 (0.13) & 0.58 (0.02) & 0.45 (0.23) \\
-Instruct qkv ($r{=}8$; $n=47$)  & 92\% & 29\% (6\%) & 21\% (6\%) & 4.11 (0.29); 1.34 (0.13) & 0.61 (0.02) & 0.44 (0.31) \\
-Full FT (PhyloLM-matched; $n=44$) & 85\% & 52\% (7\%) & 39\% (7\%) & 3.11 (0.31); 0.86 (0.12) & 0.59 (0.02) & 0.29 (0.07) \\
-Full FT, translation held out ($n=46$) & 95\% & 56\% (6\%) & 39\% (7\%) & 2.98 (0.26); 0.76 (0.11) & 0.60 (0.02) & 0.46 (0.15) \\
-\bottomrule
-\end{tabular}
-}
 \end{table}
 
 \end{document}
