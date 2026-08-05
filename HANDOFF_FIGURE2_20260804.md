@@ -32,9 +32,15 @@ simulations are filled circles, subsets are hollow squares, and q/k/v matrices u
 circle/triangle/square marks.
 
 Both panels now include a dark dashed pooled fractional-logit curve. The response is mean recovery
-proportion and the model is a quasi-binomial logit weighted by `n_runs` (46 for every point). The fit
-uses the 40 simulation, subset, and PhyloLM summaries. The 360 individual matrices remain visible but
-are excluded from the fit so layer multiplicity does not overwhelm the higher-level summaries.
+proportion and the model is a quasi-binomial logit weighted by `n_runs` (46 for every point). Following
+the clarified estimand, the fit uses all 400 displayed estimator summaries: simulations, subsets,
+individual matrices, and PhyloLM. Every point remains a mean over the same 46-tree distribution.
+
+For the final all-point descriptive fits, the logit slope is 1.75 per unit increase in
+`log10(Atteson)` with 62.6% of null deviance explained; the additivity slope is 15.55 per unit of
+additivity with 64.7% of null deviance explained. These are useful rough strength summaries, but their
+naive model-based standard errors are not used because the 400 estimator summaries are paired through
+the same trees.
 
 ## Scientific interpretation
 
@@ -44,9 +50,11 @@ clear positive, saturating empirical relationship with recovery. This is much mo
 a pooled correlation among ceiling-compressed weight estimates.
 
 The dashed curves are still descriptive calibration, not a formal independence-aware significance
-test. Subsets and matrices reuse the same 46 trees and are correlated. If formal inference is needed,
-the next analysis should operate on per-tree records and use a tree-clustered bootstrap or a
-mixed-effects/binomial model.
+test. Subsets and matrices reuse the same 46 trees and are correlated. This does not invalidate the
+rough calibration slope, but naive GLM standard errors would be too optimistic. If formal inference is
+needed, resample the 46 tree IDs jointly, recompute every estimator mean, and refit the fractional
+logit in each bootstrap replicate; that preserves the paired dependence and directly quantifies slope
+uncertainty.
 
 ## Source and generated files
 

@@ -447,9 +447,9 @@ Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subse
     conditions and the Flan q/k/v and Llama rank-8/rank-64 merged LoRA runs.
     Every mark is an average over the same 46 topology-eligible trees used in
     Tables~\ref{tab:variants} and~\ref{tab:phylolm}; vertical intervals on simulation, PhyloLM, and
-    subset summaries are $\pm1$ SE. Dark curves are pooled fractional-logit fits to the simulation,
-    subset, and PhyloLM summaries; individual matrices are shown as contextual estimates and do not
-    receive multiplicity-driven weight in the fit.
+    subset summaries are $\pm1$ SE. Dark dashed curves are pooled fractional-logit fits to all
+    displayed estimator summaries. Because estimators reuse the same 46 trees, the curves are
+    descriptive calibrations rather than independence-based inferential tests.
     Panel A uses a log scale.}
   \label{fig:coherence_recovery}
 \end{figure}
