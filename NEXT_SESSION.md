@@ -1,13 +1,11 @@
 # Read this first next session
 
-Open `HANDOFF_FIGURE2_20260804.md` and inspect `figures/fig4_coherence_atteson.pdf`.
+Open `HANDOFF_20260805.md`. The next large task is the reconciliation and repair of
+`WeightTraits_all_results_reproducibility.xlsx` against the current v4 paper and live result artifacts.
 
-Figure 2 is rebuilt with full-FT, merged-LoRA, subset, single-matrix, and matched PhyloLM estimates.
-The pooled fractional-logit fits are dark dashed curves through all 400 displayed estimator summaries.
-Each point averages its diagnostic and recovery over the same 46 eligible trees. Shaded bands and
-odds-ratio intervals come from 2,000 paired resamples of those tree IDs.
+Do not begin with ad hoc cell edits. Fetch `main`, back up and inventory the workbook, build the
+cell-level reconciliation ledger, then repair raw inputs, formulas, summaries, and paper-facing sheets
+in dependency order.
 
-The paired bootstrap is complete: OR 5.77 (3.18–12.18) per tenfold Atteson increase and OR 4.73
-(3.29–7.14) per 0.10 additivity increase. First task next time is to compile the manuscript and verify
-that the expanded Figure 2 paragraph and caption fit the page cleanly.
-Also compile the manuscript in a TeX-enabled environment and verify the Figure 2 caption/page layout.
+`HANDOFF_FIGURE2_20260804.md` remains the detailed source for Figure 2 and its paired-bootstrap fits.
+The paper still needs an authoritative Overleaf compile/layout check after any workbook-driven edits.

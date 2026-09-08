@@ -363,7 +363,7 @@ Besides direct lineage, we test whether our method estimates the phylogeny. From
 
 \paragraph{Predicting held-out behavior.}
 \label{sec:exp:behavioral}
-We next estimate how strongly whitebox weight distance predicts behavioral similarity on \textit{independent, held-out} probe tasks. We generate a new set of training trees in which translation is held out. For each prompt and model, we obtain three stochastic generations (temperature 1.0, top-$p$ 1.0) and embed each output with a small sentence-transformer (\texttt{all-MiniLM-L6-v2}, $384$-d). We average paired cosine similarity over the complete prompt-by-draw grid, then report the random-effects DerSimonian--Laird \citep{dersimonianlaird1986} pooled correlation $r_{\mathrm{DL}}$ between weight distance and output-embedding similarity, with both quantities $z$-scored within run (placing all models and architectures on one scale). We also probe HellaSwag, ARC-C, MMLU, and TruthfulQA which to our knowledge neither Flan nor Llama trained on. Other generation details are reported in the reproducibility appendix and workbook.
+We next estimate how strongly whitebox weight distance predicts behavioral similarity on probe tasks using the same fresh full-fine-tuning tree cohort. For translation, we obtain one deterministic greedy response per prompt and model, embed each output with a small sentence-transformer (\texttt{all-MiniLM-L6-v2}, $384$-d), and average prompt-paired cosine similarity. We evaluate HellaSwag, ARC-C, MMLU, and TruthfulQA on the same trees using the corresponding prompt-paired semantic endpoint. We then report the random-effects DerSimonian--Laird \citep{dersimonianlaird1986} pooled correlation $r_{\mathrm{DL}}$ between weight distance and output-embedding similarity, with both quantities $z$-scored within run (placing all models and architectures on one scale). Other generation details are reported in the reproducibility appendix and workbook.
 
 
 
@@ -755,7 +755,7 @@ LoRA key only: HellaSwag (held-out)  & 43 & $-0.038$ & $-0.0031$ & $-0.08$ & $0.
 
 The coefficients above use the per-run \emph{centroid} semantic DV (one embedding per node). The
 held-out bridge in the main text (Table~\ref{tab:behavior_holdout}) instead uses the \emph{paired}
-prompt-by-draw semantic similarity, which removes the shared prompt-content confound and strengthens the
+semantic similarity (prompt-paired for translation and prompt-by-draw for the multi-draw auxiliary probes), which removes the shared prompt-content confound and strengthens the
 association in every group; we report the paired DV in the main text and keep the centroid DV here for
 continuity with the per-condition effect sizes. The Llama rows here are the 8B decoder, included as an
 auxiliary decoder-only check; the headline held-out bridge in Table~\ref{tab:behavior_holdout} rests on the
@@ -776,14 +776,14 @@ $r=-0.21$, one-stage mixed model with a random slope $r=-0.136$), with genuine b
 associations underlying it are shown per condition in Fig.~\ref{fig:regression_diagnostics}.
 
 \paragraph{Per-cell heterogeneity.} Table~\ref{tab:behavior_het} gives, for every cell of the main-text
-bridge (Table~\ref{tab:behavior_holdout}, paired prompt-by-draw DV), $r_{\mathrm{DL}}$ with its $95\%$ CI,
+bridge (Table~\ref{tab:behavior_holdout}, paired semantic DV), $r_{\mathrm{DL}}$ with its $95\%$ CI,
 the Higgins $I^2$, and the number of runs $k$. Heterogeneity ranges from low to substantial ($I^2$ $7$--$66\%$).
 Every cell's CI excludes zero, but the flagged Flan degeneration probes are diagnostics of output
 collapse rather than bridge evidence; the unflagged held-out cells have the expected negative direction.
 
 \begin{table}[h]
 \caption{Per-cell heterogeneity for the weight$\to$behavior bridge (Table~\ref{tab:behavior_holdout};
-  paired prompt-by-draw semantic DV with immediate-EOS completions represented explicitly, full fine-tuning).
+  paired semantic DV with immediate-EOS completions represented explicitly, full fine-tuning).
   DerSimonian--Laird random-effects $r_{\mathrm{DL}}$ with $95\%$ CI, Higgins $I^2$,
   and number of runs $k$. $^\ddagger$degenerate Flan probe (App.~\ref{app:translation_probe}).}
 \label{tab:behavior_het}
@@ -943,7 +943,7 @@ closer in weight space produce more similar translation outputs. The effect is
 consistent in direction across all five Flan-T5 training conditions and the full-FT decoder Llama-3.2-1B
 (centroid semantic DV; translation probe), with audited standardized effects ranging from $-0.09$ to
 $-0.42$ across the five Flan conditions. The
-held-out bridge, on the paired prompt-by-draw DV and pooled by random-effects meta-analysis, is quantified
+held-out bridge, on the paired semantic DV and pooled by random-effects meta-analysis, is quantified
 separately in \S\ref{sec:results} (Table~\ref{tab:behavior_holdout}).
 
 \begin{figure}[h]
