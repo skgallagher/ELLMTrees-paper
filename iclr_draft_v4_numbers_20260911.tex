@@ -118,12 +118,12 @@ Our primary contribution is that analyzing weight changes between fine-tunings a
 \begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
   \item \textbf{Phylogeny estimation from model weights against ground truth.} Guided by the geometry of
     fine-tuning updates, our distance metric and summary-statistic choices estimate the model phylogeny from
-    weights alone. Our controlled experiments recover all true clades in $70$--$93\%$ of runs
-    ($87$--$98\%$ clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 3\% of the scalar weights can accurately estimate the known phylogenies. Treating layers as gene-like estimators also yields a separate phylogeny from each layer and localizes where lineage signal is carried. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
+    weights alone. Our controlled experiments recover all true clades in \colorbox{yellow!25}{$70$--$93\%$} of runs
+    (\colorbox{yellow!25}{$87$--$98\%$} clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 3\% of the scalar weights can accurately estimate the known phylogenies. Treating layers as gene-like estimators also yields a separate phylogeny from each layer and localizes where lineage signal is carried. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
   \item \textbf{Weight-behavior bridge.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
   \item \textbf{Controlled ground truth exposes when behavior-only lineage fails.}
-    On the same 46 topology-eligible fresh controlled trees, weights recover 96\% of clades versus 35\% for
-PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and 97\% versus 52\% under full fine-tuning.
+    On the same 46 topology-eligible fresh controlled trees, weights recover 100\% of clades versus 35\% for
+PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and \colorbox{yellow!25}{97\%} versus 52\% under full fine-tuning.
     On a documented Mistral family with large RLHF/DPO forks, both methods
     recover all three true splits. Thus behavior-only estimation can succeed after behaviorally large
     updates, while weight access remains substantially more informative for smaller updates and
