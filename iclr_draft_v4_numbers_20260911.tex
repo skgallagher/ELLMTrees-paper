@@ -223,9 +223,7 @@ LLM DNA \citep{wu2026llmdna}
 We first define our terms, notation, and statistical framework. A \emph{phylogeny} $\mathcal{P}$ is a tree
 whose leaves are the observed models and whose internal nodes are latent common ancestors; a
 \emph{clade} is the set of leaves descending from one such ancestor (one branch of the tree). We analyze
-single-root model families but observe only their terminal models. Thus, whereas MoTHer
-\citep{horwitz2025mother} reconstructs a directed spanning tree over observed root, intermediate, and
-terminal checkpoints, we estimate the unrooted leaf topology with internal ancestors latent. We form a pairwise distance matrix and apply neighbor-joining (NJ)
+single-root model families but observe only their terminal models. Thus,  we estimate the unrooted leaf topology with internal ancestors latent. We form a pairwise distance matrix and apply neighbor-joining (NJ)
 \citep{saitou1987neighbor} to estimate the phylogeny.
 
 \textbf{Phylogeny estimation.}\label{sec:framework:phylo}
@@ -257,17 +255,15 @@ similarity) throughout, for three reasons. It is bounded and scale-invariant acr
 high-magnitude layer dominates the aggregate, unlike $\ell_1$ or $\ell_2$. It is the prevailing choice in
 recent provenance and fingerprinting work \citep{zeng2024huref, behavioral2026provenance,
 zhu2025independence}, keeping our distances comparable to that literature. Finally, it has a direct geometric
-reading on merged checkpoints: descendants whose weight vectors are deflected in similar directions remain closer in angle. Each child in our fresh LoRA trees trains a new adapter on its parent's merged weights. For analysis, we replay the ordered root-to-leaf adapter chain, merging each adapter into its parent state, and compute distances on the resulting standalone full-weight leaf checkpoints. Thus both LoRA and full-fine-tuning rows use deployable full model weights; the LoRA training intervention remains low-rank even though its evaluated checkpoint is merged.
-
-
+reading on merged checkpoints: descendants whose weight vectors are deflected in similar directions remain closer in angle. When analyzing the weights from our LORA-trained trees, we first merge the adapter back in and hence used the full sized weights for each layer.
 
 
 
 \textbf{Per-layer estimated phylogenies.}
 We treat each layer as a gene-like estimator rather than collapsing immediately to a single all-layer
-distance, by analogy to biological phylogenies that must cohere across genes encoding different
+distance.  This is analogous to biological phylogenies that must cohere across genes encoding different
 information~\citep{maddison1997gene}. A model with $L$ layers therefore yields $L$ distance matrices and
-$L$ independently estimated NJ trees. We either average the distance matrices before NJ or combine the
+$L$ estimated NJ trees. We either average the distance matrices before NJ or combine the
 per-layer trees by their Billera--Holmes--Vogtmann (BHV) Fr\'echet mean, the tree minimizing the sum of
 squared BHV geodesic distances~\citep{billera2001geometry, willis2019confidence}. This layer-wise view
 both provides an aggregate estimate and lets us rank which layers recover the lineage well on their own
@@ -280,7 +276,7 @@ branch) or whole-tree recovery, the former being easier. For ordering, we pool a
 comparisons within each valid run and test with the Mann--Whitney $U$ statistic. This branch-level
 diagnostic is simpler than either pairwise parent--child detection~\citep{yu2025neural}, MoTHer's
 directed observed-node tree recovery~\citep{horwitz2025mother}, or our latent-ancestor leaf topology. Recovering the full
-\textit{phylogeny} is harder but well studied in phylogenetics: NJ is exact when the distance matrix is
+\textit{phylogeny} is harder but well studied in phylogenetics. The NJ method is exact when the distance matrix is
 additive, a condition model-weight distances satisfy only approximately. Atteson's theorem makes the
 tolerance precise.
 \begin{theorem}[\citealp{atteson1999performance}]\label{thm:atteson}
@@ -288,14 +284,13 @@ Let $D_T$ be the additive leaf metric of an edge-weighted binary tree $T$ whose 
 positive lengths $\{L_s\}$, and let $D$ be an observed dissimilarity map. If
 $\lVert D-D_T\rVert_\infty < \tfrac12\min_s L_s$, then neighbor-joining applied to $D$ returns $T$.
 \end{theorem}
-For the theorem's fixed true metric, the bottleneck ratio
-$m=\min_s L_s/(2\lVert D-D_T\rVert_\infty)>1$ is a sufficient certificate of exact recovery. It is
-conservative, so NJ can recover the topology when $m\leq1$. In our experiments the true topology is
-known but its edge lengths are not; we fit nonnegative edge lengths on that topology to obtain
+For the theorem's fixed true metric, the ratio
+$m:=\min_s L_s/(2\lVert D-D_T\rVert_\infty)>1$ is a sufficient condition of exact recovery. It is
+conservative, so NJ can recover the topology when $m\leq1$. In our controlled experiments the true topology is
+known but its edge lengths are not. We fit nonnegative edge lengths on that topology to obtain
 $D_{\mathrm{fit}}$ and report the analogous diagnostic
 $\widetilde m=\min_s\widehat L_s/(2\lVert D-D_{\mathrm{fit}}\rVert_\infty)$. Because
-$D_{\mathrm{fit}}$ is estimated from $D$ and some truth trees contain polytomies, $\widetilde m$ is a
-theorem-motivated, label-aware diagnostic rather than a literal Atteson certificate. We therefore also
+$D_{\mathrm{fit}}$ is estimated from $D$ and some truth trees contain polytomies, $\widetilde m$ is an approximation rather than the true Atteson condition.  Because of this fitting approximation, we also
 adopt a label-free proxy computed from $D$ alone, based on the classical four-point condition for tree
 metrics~\citep{sempleSteel2003phylogenetics}.
 
@@ -312,12 +307,11 @@ sums equal, the largest strictly greater). We report its complement, averaged ov
   A=\frac{1}{Q}\sum_{q=1}^{Q}\bigl(1-\delta_q\bigr)
    =\frac{1}{Q}\sum_{q=1}^{Q}\frac{s_2^{(q)}-s_3^{(q)}}{s_1^{(q)}-s_3^{(q)}}\in[0,1] ,
 \]
-so that $A=1$ is perfectly additive and larger $A$ tracks recovery (matching the direction of the
-Atteson margin, whereas $\delta$ runs the other way). Because $A$ requires no labels,
+so that $A=1$ is perfectly additive and larger $A$ is associated with more accurate phylogeny estimation. Because $A$ requires no labels,
 it serves as our proxy when the true tree is unknown. For evaluation against a known tree we
 additionally report $A$ over only the \emph{informative} quartets (those the truth resolves into two
 cherries), since quartets that fall inside a polytomy carry no split to recover and only dilute the
-all-quartet mean. We relate $A$ and the fitted Atteson diagnostic to recovery in \S\ref{sec:results}.
+all-quartet mean. We relate $A$ and the fitted Atteson diagnostic to phylogeny estimation accuracy in \S\ref{sec:results}.
 
 
 % -----------------------------------------------------------------------
