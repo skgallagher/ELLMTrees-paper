@@ -471,7 +471,7 @@ Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
 Llama-3.2-1B & \shortstack{$-0.20$\\{\scriptsize$[-.26,-.13]$}} & \shortstack{$-0.23$\\{\scriptsize$[-.29,-.17]$}} & \shortstack{$-0.17$\\{\scriptsize$[-.24,-.10]$}} & \shortstack{$-0.20$\\{\scriptsize$[-.26,-.13]$}} & \shortstack{$-0.19$\\{\scriptsize$[-.26,-.12]$}} & \shortstack{$-0.22$\\{\scriptsize$[-.27,-.16]$}} \\
 \addlinespace
-Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \cellcolor{yellow!25}\shortstack{$+0.11^{\ddagger}$\\{\scriptsize$[+.02,+.21]$}} & \shortstack{$+0.09$\\{\scriptsize$[+.05,+.14]$}} & \shortstack{$-0.14^{\ddagger}$\\{\scriptsize$[-.19,-.09]$}} & \shortstack{$-0.16^{\ddagger}$\\{\scriptsize$[-.20,-.11]$}} & \shortstack{$-0.17^{\ddagger}$\\{\scriptsize$[-.22,-.12]$}} \\
+Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \shortstack{$+0.04^{\ddagger}$\\{\scriptsize$[-.01,+.09]$}} & \shortstack{$+0.09$\\{\scriptsize$[+.05,+.14]$}} & \shortstack{$-0.14^{\ddagger}$\\{\scriptsize$[-.19,-.09]$}} & \shortstack{$-0.16^{\ddagger}$\\{\scriptsize$[-.20,-.11]$}} & \shortstack{$-0.17^{\ddagger}$\\{\scriptsize$[-.22,-.12]$}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -784,8 +784,7 @@ Llama-3.2-1B & ARC-C (held-out)                   & $-0.20$ [$-0.26,-0.13$] & 33
 Llama-3.2-1B & MMLU (held-out)                    & $-0.19$ [$-0.26,-0.12$] & 36\% & 50 \\
 Llama-3.2-1B & TruthfulQA (held-out)              & $-0.22$ [$-0.27,-0.16$] & 19\% & 50 \\
 Flan-T5-base & Translation (trained)              & $-0.10$ [$-0.16,-0.04$] & 0\% & 50 \\
-\rowcolor{yellow!25}
-Flan-T5-base & Translation (3-out)$^\ddagger$  & $+0.11$ [$+0.02,+0.21$] & 35\% & 50 \\
+Flan-T5-base & Translation (3-out)$^\ddagger$  & $+0.04$ [$-0.01,+0.09$] & 0\% & 50 \\
 Flan-T5-base & HellaSwag (held-out)               & $+0.09$ [$+0.05,+0.14$] & 0\% & 50 \\
 Flan-T5-base & ARC-C (held-out)$^\ddagger$         & $-0.14$ [$-0.19,-0.09$] & 0\% & 50 \\
 Flan-T5-base & MMLU (held-out)$^\ddagger$          & $-0.16$ [$-0.20,-0.11$] & 0\% & 50 \\
@@ -902,8 +901,8 @@ n8  & Classification & \texttt{entailment} \\
 
 Because classification-trained nodes produce degenerate outputs, pairwise semantic
 similarity between nodes is driven by whether each model can translate at all,
-not by genealogical proximity. We therefore retain the \colorbox{yellow!25}{$r_{\mathrm{DL}}=+0.11$
-[$+0.02,+0.21$]} cell as a \emph{degeneration diagnostic}, not as evidence that the
+not by genealogical proximity. We therefore retain the $r_{\mathrm{DL}}=+0.04$
+[$-0.01,+0.09$] cell as a \emph{degeneration diagnostic}, not as evidence that the
 weight--behavior bridge reverses: behavioral similarity is dominated by task identity
 (translating vs.\ emitting a trained-task label) rather than held-out translation behavior.
 
