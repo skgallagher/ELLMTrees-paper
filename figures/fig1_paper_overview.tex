@@ -40,17 +40,15 @@
 \node[draw=bannerline,fill=bannerfill,rounded corners=4pt,line width=0.8pt,
       text width=15.6cm,align=center,inner sep=5pt,
       font=\sffamily\normalsize\bfseries,text=ink] (banner) at (7.9,5.55)
-  {Fine-tuning leaves path-dependent structure in model weights. We estimate the resulting model
-   \emph{phylogeny}, score it against known training trees, and test whether weight proximity predicts
-   behavioral similarity. We evaluate four-point additivity as a label-free diagnostic of clade recovery.};
+  {Fine-tuning leaves a family history in model weights.};
 
 % ===================== PANEL A: controlled whitebox =====================
 \begin{scope}
   \node[panel,minimum width=5.05cm,minimum height=4.5cm] (PA) at (2.65,2.2){};
-  \node[ptitle,anchor=north] at (PA.north) {\,A.\ Controlled recovery \textit{(known truth)}};
+  \node[ptitle,anchor=north] at (PA.north) {\,A.\ Can weights recover the tree?};
 
   % true tree (left)
-  \node[font=\sffamily\footnotesize,text=truthc] at (1.05,3.80) {true tree $\mathcal{P}^{*}$};
+  \node[font=\sffamily\footnotesize,text=truthc] at (1.05,3.80) {known training tree};
   \coordinate (tr) at (1.05,3.05);
   \coordinate (ta) at (0.55,2.45); \coordinate (tb) at (1.55,2.45);
   \coordinate (ta1) at (0.30,1.85);\coordinate (ta2) at (0.80,1.85);
@@ -61,7 +59,7 @@
   \foreach \p in {ta1,ta2,tb1,tb2}{\node[mdl] at (\p){};}
 
   % recovered tree (right)
-  \node[font=\sffamily\footnotesize,text=estc] at (4.20,3.80) {recovered $\widehat{\mathcal{P}}$};
+  \node[font=\sffamily\footnotesize,text=estc] at (4.20,3.80) {tree from weights};
   \coordinate (er) at (4.20,3.05);
   \coordinate (ea) at (3.70,2.45); \coordinate (eb) at (4.70,2.45);
   \coordinate (ea1) at (3.45,1.85);\coordinate (ea2) at (3.95,1.85);
@@ -71,56 +69,49 @@
   \foreach \p in {ea,eb}{\node[circle,fill=estc,inner sep=0pt,minimum size=2.1mm] at (\p){};}
   \foreach \p in {ea1,ea2,eb1,eb2}{\node[mdl,draw=estc] at (\p){};}
 
-  % derive: recovered tree is built FROM model weights (true -> recovered)
+  % Build a tree from model-weight distances, then compare its branches with truth.
   \draw[->,line width=1.4pt,draw=flow] (1.80,3.12)--(3.45,3.12);
-  \node[font=\sffamily\footnotesize,text=flow] at (2.62,3.32) {weights $\to$ NJ};
-  % compare arrow + RF tag
+  \node[font=\sffamily\footnotesize,text=flow] at (2.62,3.32) {use weight distances};
   \draw[<->,line width=1.4pt,draw=flow] (2.05,2.42)--(3.25,2.42);
-  \node[font=\sffamily\footnotesize,text=ink] at (2.65,2.72) {RF\,/\,FN};
+  \node[font=\sffamily\footnotesize,text=ink] at (2.65,2.72) {compare branches};
   \node[draw=okc,rounded corners=2pt,line width=0.7pt,fill=okc!12,
         font=\sffamily\footnotesize,text=okc,inner sep=2.5pt] at (2.65,1.30)
-        {$\checkmark$ better than random tree};
-  \node[scap,anchor=north] at (2.65,0.95) {neighbor-joining estimate,\\scored against known truth};
+        {$\checkmark$ more accurate than chance};
+  \node[scap,anchor=north] at (2.65,0.95) {score recovered branches against\\the known training history};
 \end{scope}
-
-% arrow A->B
-\draw[flowarrow] (5.25,2.2)--(5.95,2.2);
 
 % ===================== PANEL B: weights -> behavior =====================
 \begin{scope}
   \node[panel,minimum width=4.55cm,minimum height=4.5cm] (PB) at (8.45,2.2){};
-  \node[ptitle,anchor=north] at (PB.north) {\,B.\ Weights predict behavior};
-  \node[font=\sffamily\footnotesize,text=truthc] at (8.45,3.92) {random-effects pooled $r_{\mathrm{DL}}<0$};
+  \node[ptitle,anchor=north] at (PB.north) {\,B.\ Do weights track behavior?};
+  \node[font=\sffamily\footnotesize,text=truthc] at (8.45,3.92) {tested across held-out tasks};
 
   % scatter axes
   \begin{scope}[shift={(6.85,1.55)}]
     \draw[->,line width=1.2pt,draw=flow] (0,0)--(3.05,0);
     \draw[->,line width=1.2pt,draw=flow] (0,0)--(0,2.05);
     \node[font=\sffamily\footnotesize,text=flow,anchor=north] at (1.55,-0.07) {weight distance};
-    \node[font=\sffamily\footnotesize,text=flow,rotate=90,anchor=south] at (-0.12,1.0) {behavioral sim.};
+    \node[font=\sffamily\footnotesize,text=flow,rotate=90,anchor=south] at (-0.12,1.0) {output similarity};
     % points (negative trend)
     \foreach \x/\y in {0.30/1.78,0.55/1.55,0.70/1.66,0.95/1.40,1.15/1.30,1.35/1.42,1.60/1.05,1.85/1.12,2.05/0.82,2.30/0.70,2.55/0.78,2.78/0.52}{
       \fill[estc!85!white] (\x,\y) circle (2.2pt);
     }
     \draw[truthc,line width=1.6pt,dashed] (0.20,1.78)--(2.85,0.52);
   \end{scope}
-  \node[scap,anchor=north] at (8.45,1.12) {closer in weights $\Rightarrow$ more\\similar outputs. This also holds on a\\held-out task (within run)};
+  \node[scap,anchor=north] at (8.45,1.12) {compare weight distance with\\output similarity};
 \end{scope}
-
-% arrow B->C
-\draw[flowarrow] (10.75,2.2)--(11.45,2.2);
 
 % ===================== PANEL C: label-free additivity flags trust, weights AND behavior =====================
 \begin{scope}
   \node[panel,minimum width=4.95cm,minimum height=4.5cm] (PC) at (13.55,2.2){};
-  \node[ptitle,anchor=north] at (PC.north) {\,C.\ Additivity and recovery};
+  \node[ptitle,anchor=north] at (PC.north) {\,C.\ When does recovery work?};
 
   \begin{scope}[shift={(11.95,1.20)}]
     % axes
     \draw[->,line width=1.2pt,draw=flow] (0,0)--(3.05,0);
     \draw[->,line width=1.2pt,draw=flow] (0,0)--(0,2.10);
-    \node[font=\sffamily\footnotesize,text=flow,anchor=north] at (1.55,-0.07) {additivity $\langle A\rangle$ (no truth)};
-    \node[font=\sffamily\footnotesize,text=flow,rotate=90,anchor=south] at (-0.12,1.05) {clade recovery};
+    \node[font=\sffamily\footnotesize,text=flow,anchor=north] at (1.55,-0.07) {more tree-like distances};
+    \node[font=\sffamily\footnotesize,text=flow,rotate=90,anchor=south] at (-0.12,1.05) {branches recovered};
     % single label-free A -> recovery trend; BOTH modalities land on it
     \draw[flow,line width=1.8pt] (0.15,0.28) .. controls (1.30,0.95) and (2.05,1.55) .. (2.90,1.92);
     % behavior points (lower A, still on the curve)
@@ -131,17 +122,8 @@
     \node[font=\sffamily\footnotesize,text=flow,anchor=west] at (0.30,1.34) {behavior};
     \node[font=\sffamily\footnotesize,text=estc,anchor=east] at (2.90,1.34) {weights};
   \end{scope}
-  \node[scap,anchor=north] at (13.55,0.74) {label-free $A$ against recovery\\(weights or behavior)};
+  \node[scap,anchor=north] at (13.55,0.74) {no true tree needed};
 \end{scope}
-
-% ===================== BOTTOM ACCESS AXIS =====================
-\draw[->,line width=1.5pt,draw=flow] (0.7,-0.15)--(15.1,-0.15);
-\node[font=\sffamily\footnotesize\itshape,text=flow,anchor=north,align=center] at (2.65,-0.30)
-  {full weight access,\\known lineage};
-\node[font=\sffamily\footnotesize\itshape,text=flow,anchor=north,align=center] at (8.45,-0.30)
-  {weight\,$\to$\,behavior link};
-\node[font=\sffamily\footnotesize\itshape,text=flow,anchor=north,align=center] at (13.7,-0.30)
-  {diagnostic without known truth};
 
 \end{tikzpicture}
 \end{document}

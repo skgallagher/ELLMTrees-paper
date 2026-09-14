@@ -101,14 +101,13 @@ dozens of versions circulate with no recorded lineage (Fig.~\ref{fig:overview}A)
 to know which to build on, where two versions diverged, and where each fails. Phylogenetic algorithms
 were built for exactly this inference in biology~\citep{saitou1987neighbor, robinson1981comparison},
 and we adapt them to neural net model weights. We estimate a phylogeny from model weights and score it against a \emph{known}
-ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights to changes in behavior (Fig.~\ref{fig:overview}B), and finally compare weight-based phylogenies to behavior-only estimates (Fig.~\ref{fig:overview}C).
+ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights to changes in behavior (Fig.~\ref{fig:overview}B), and ask whether tree-like distances indicate when recovery will succeed even without access to the true tree (Fig.~\ref{fig:overview}C).
 
 \begin{figure}[t]
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/fig1_paper_overview.pdf}
   \end{center}
-  \caption{Fine-tuning leaves a path-dependent signature in weight space
-  that we can estimate from data.}
+  \caption{Overview of our three questions: Can model weights recover known training relationships? Do nearby models behave alike? Do tree-like distances signal reliable recovery without knowing the true tree?}
   \label{fig:overview}
 \end{figure}
 
