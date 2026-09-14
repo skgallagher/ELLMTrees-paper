@@ -419,7 +419,7 @@ In addition to ordering, our methods also estimate the phylogeny, as shown in Ta
 
 Treating layers as gene-like estimators reveals that a small attention-weight subset can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime. On the same 46 fresh shared-tree Flan runs, the encoder self-attention key subset and the all-weight estimate both recover 100\% of clades with 100\% PAER (App.~\ref{app:layers}). This subset contains 7.08M of 247.58M scalar weights (2.86\%, approximately 3\%). The individual-tensor profile in App.~\ref{app:layertrace} is more diffuse: Flan key matrices and other tensors each miss about 4\% of true clades on average, whereas the earlier Llama profile remains more key-concentrated (13\% vs.\ 20\%).
 
-Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subset, and individual-matrix recovery summaries from the same full-weight trees as Table~\ref{tab:variants}, together with the matched PhyloLM estimates for the three Llama conditions. Weight-based estimation of clade recovery ranges from 92--100\%, including 100\% for Flan full fine-tuning and 100\% for Llama full fine-tuning. Layer-subset estimates recover 90--100\% of true clades. The matched PhyloLM estimates recover 24--52\% of clades. Pooled fractional-logit fits show clade recovery strongly increasing with both the fitted Atteson diagnostic $\widetilde m$ and label-free additivity proxy $A$. Under a paired 2,000-replicate bootstrap that jointly resamples the 46 tree IDs, the recovery odds ratio is 15.67 (95\% bootstrap interval 9.70--58.55) per tenfold increase in mean $\widetilde m$, and 5.94 (4.66--8.38) per 0.10 increase in mean $A$. These are strong fitted associations, although their magnitude should be interpreted with the ceiling saturation and architecture/layer composition of this panel in mind.
+Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subset, and individual-matrix recovery summaries from the same full-weight trees as Table~\ref{tab:variants}, together with the matched PhyloLM estimates for the three Llama conditions. Weight-based estimation of clade recovery ranges from 92--100\%, including 100\% for Flan full fine-tuning and 100\% for Llama full fine-tuning. Layer-subset estimates recover 90--100\% of true clades. The matched PhyloLM estimates recover 24--52\% of clades.
 
 \begin{figure}[t]
   \begin{center}
@@ -512,11 +512,8 @@ We note that our experiments and methods have limitations.  One limitation is th
 \subsection*{AI use statement}
 Generative AI assistants were used to write and debug software across the experimental
 pipeline (data processing, weight-distance computation, tree reconstruction and scoring, statistical
-analysis, figures, and tables) and to review and edit the manuscript, including providing critical
-feedback on experimental comparisons, checking consistency between numerical results and prose,
-improving readability, searching and summarizing relevant literature, and formatting citations. They
-were not used to generate datasets, formulate mathematical claims or proofs, assist with translation,
-or conduct qualitative data analysis. The research questions, experimental design,
+analysis, figures, and tables) and to review and edit the manuscript, including checking consistency between numerical results and prose,
+improving readability, searching and summarizing relevant literature, and formatting citations.  The research questions, experimental design,
 hypotheses, conceptual framework, and scientific interpretations are the authors' own. The authors
 reviewed and tested AI-assisted code and independently verified all results, figures, numerical claims,
 citations, and manuscript text. The authors take responsibility for the final content of this work,
