@@ -329,7 +329,7 @@ how behavior-based phylogeny differs from weight-based.
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
 % Controlled design enables exact evaluation against the latent-ancestor leaf topology.
 
-To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 10 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair. LoRA chains are sequentially merged so every evaluated leaf is a standalone full-weight checkpoint. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage and phylogeny estimation.
+To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in Appendix~\ref{app:details}), producing 50 trees with up to 10 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair. LoRA chains are sequentially merged so the primary LoRA leaves are standalone full-weight checkpoints; the separately marked all-projections ablation is analyzed in cumulative update space. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage and phylogeny estimation.
 
 We vary the root model, task types, and trained layers. Our primary evaluation uses an
 encoder--decoder model (Flan-T5-base, 250M) and a decoder-only model (Llama-3.2-1B), fine-tuning on
@@ -377,7 +377,7 @@ We first determine how well direct lineage estimation (e.g., parent--child or wi
 
 \begin{table}[h]
 \caption{Lineage and recovery by training regime (cosine; mean with SE). LoRA uses sequentially
-  merged full weights; $\dagger$ marks an update-space ablation whose adapters were not archived.
+  merged full weights; $\dagger$ marks the cumulative update-space all-projections ablation.
   PAER means $\mathrm{FN}=0$. Fresh Llama weight and PhyloLM values share the same $n_{\rm rec}=46$
   eligible trees; Flan is outside PhyloLM's scope. $^\star$Ceiling cells correspond to 117/117
   recovered truth splits and 46/46 PAER trees (two-sided exact 95\% binomial intervals
@@ -415,7 +415,7 @@ Variant & $n_{\rm rec}/n_{\rm ord}$ & \shortstack{Rank-bis.\\(SE)} & \shortstack
 
 \paragraph{Phylogeny estimation.}
 \label{sec:results:weighttree}
-In addition to ordering, our methods also estimate the phylogeny, as shown in Table~\ref{tab:variants}, with respect to clade recovery, polytomy-aware exact recovery (PAER; $\mathrm{FN}=0$), and RF and FN for all eligible phylogenies. In the controlled experiments, clade recovery ranges from 92--100\% and PAER from 85--100\%. The merged LoRA variants recover 92--99\% of clades for Flan and 100--100\% for Llama; full fine-tuning recovers 100\% and 100\%, respectively. On the same 46 trees with a nontrivial truth split, weights recover 100\% versus PhyloLM's 35\% under rank-8 LoRA, 100\% versus 24\% at rank 64, and 100\% versus 52\% under full fine-tuning. We see in Appendix~\ref{app:withintask} that phylogeny estimation from weights still holds when every node in a tree trains within a single task (clade recovery $59$--$87\%$); in that design, task-path distances are all zero and provide no discriminating baseline.
+In addition to ordering, our methods also estimate the phylogeny, as shown in Table~\ref{tab:variants}, with respect to clade recovery, polytomy-aware exact recovery (PAER; $\mathrm{FN}=0$), and RF and FN for all eligible phylogenies. In the controlled experiments, clade recovery ranges from 92--100\% and PAER from 85--100\%. The merged LoRA variants recover 92--99\% of clades for Flan and 100--100\% for Llama; full fine-tuning recovers 100\% and 100\%, respectively. On the same 46 trees with a nontrivial truth split, weights recover 100\% versus PhyloLM's 35\% under rank-8 LoRA, 100\% versus 24\% at rank 64, and 100\% versus 52\% under full fine-tuning. We see in Appendix~\ref{app:withintask} that phylogeny estimation from weights still holds when every node in a tree trains within a single task (clade recovery $59$--$87\%$); in that design, task-family identity provides no branch-specific cue, although path length can retain leaf-depth information.
 
 Treating layers as gene-like estimators reveals that a small attention-weight subset can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime. On the same 46 fresh shared-tree Flan runs, the encoder self-attention key subset and the all-weight estimate both recover 100\% of clades with 100\% PAER (App.~\ref{app:layers}). This subset contains 7.08M of 247.58M scalar weights (2.86\%, approximately 3\%). The individual-tensor profile in App.~\ref{app:layertrace} is more diffuse: Flan key matrices and other tensors each miss about 4\% of true clades on average, whereas the earlier Llama profile remains more key-concentrated (13\% vs.\ 20\%).
 
@@ -444,11 +444,11 @@ While estimating phylogeny from weights is useful for safety and provenance, it 
 whether models closer in weight space produce more similar outputs on held-out tasks, using translation
 (on a tree that never trained on it) along with four probe tasks that, to our knowledge, neither model
 was trained on (HellaSwag, ARC-Challenge, MMLU, TruthfulQA).
-Table~\ref{tab:behavior_holdout} reports a consistent, significant negative random-effects correlation across all held-out
-probes in Llama and for HellaSwag in Flan. Empty responses (EOS) are observed output and are represented as an
+Table~\ref{tab:behavior_holdout} reports a significant negative random-effects correlation across all held-out
+probes in Llama. Flan HellaSwag is instead significantly positive. Empty responses (EOS) are observed output and are represented as an
 explicit empty-output semantic state in the primary analysis. In the Llama full-FT production runs,
 38.64\% of HellaSwag leaf outputs were empty, versus 0.02\% for TruthfulQA and 0.00\% for ARC-C
-and MMLU. For HellaSwag, including immediate EOS gives $r_{\mathrm{DL}}=-0.17$ [$-0.24,-0.10$], whereas excluding empty completions strengthens the all-node estimate to $-0.27$ [$-0.34,-0.19$] and leaves the other probe estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). These results show that shared fine-tuning ancestry is associated with behavioral similarity on held-out probes. The positive Flan held-out-translation cell is instead a degeneration diagnostic.
+and MMLU. For HellaSwag, including immediate EOS gives $r_{\mathrm{DL}}=-0.17$ [$-0.24,-0.10$], whereas excluding empty completions strengthens the all-node estimate to $-0.27$ [$-0.34,-0.19$] and leaves the other probe estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). These results show that shared fine-tuning ancestry is associated with behavioral similarity on held-out probes. The near-zero Flan held-out-translation cell is instead a degeneration diagnostic.
 Classification-trained leaves collapse to their label vocabulary rather than translate, so similarity
 reflects whether two leaves fail in the same way, not transmission of held-out translation behavior
 (App.~\ref{app:translation_probe}).
@@ -540,14 +540,14 @@ including all text, claims, and artifacts produced with the aid of generative AI
 Training trees are generated via a Poisson branching process as follows:
 
 \begin{enumerate}
-    \item The root node (pretrained Flan-T5-base) draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children, with a minimum of 1.
+    \item The pretrained root model draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children, with a minimum of 1. We instantiate the same topology with either Flan-T5-base or Llama-3.2-1B.
     \item Each subsequent node draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children. Nodes that draw $k = 0$ naturally become leaves; no separate pruning step is needed.
     \item Breadth First Search expansion continues until either a node budget ($n_\mathrm{nodes} = 14$ training nodes, not counting the root) is exhausted or a maximum depth ($n_\mathrm{layers} = 4$) is reached. The budget cap creates the truncation; any node alive when the budget runs out becomes a leaf.
-    \item Each non-root node is assigned a task and dataset sampled without replacement from 4 task types (summarization, classification, QA, translation) and 36 datasets (9 summarization, 10 classification, 8 QA, 9 translation). The topology (parent--child structure) is fixed by a topology seed; dataset assignments vary across the 50 replications.
+    \item Each non-root node is assigned one of the 36 task/dataset pairs (9 summarization, 10 classification, 8 QA, and 9 translation). The 36 pairs are randomly permuted and sampled without replacement within a tree, so datasets do not repeat but task families can. The topology uses seeds beginning at \texttt{20260707}; assignment seeds are 1--50.
     \item Recovery excludes trees with fewer than four leaves or no nontrivial truth split, because their unrooted topology contains no clade that can be meaningfully recovered.
 \end{enumerate}
 
-This procedure yields trees with 4--8 observed leaves across the 50 replications, with variable depth and branching structure. The ground-truth topology is fully known by construction, enabling exact RF evaluation.
+This procedure yields trees with 4--10 observed leaves across the 50 accepted replications, with variable depth and branching structure. It produces 641 trained nodes in total (365 leaves and 276 internal nodes), in addition to the untrained roots. The ground-truth topology is fully known by construction, enabling exact RF evaluation.
 
 \paragraph{Sample accounting.} Each controlled grid targets 50 generated training trees, while
 recovery and direct ordering have different eligibility rules. The fresh Flan comparison clones the
@@ -556,7 +556,7 @@ unrooted split enter recovery, and the same 26 enter
 ordering in every row; the other 24 trees have no cross-root-branch comparison, so ordering is
 undefined rather than missing. The fresh Llama rank-8, rank-64, and full-FT regimes reuse those same
 50 topology IDs and task/data assignments; the same 46 enter recovery and the same 26 enter ordering.
-The fresh PhyloLM comparison generates all 50 trees in each shared-tree Llama condition, but its
+The fresh PhyloLM comparison produces a behavioral reconstruction for all 50 trees in each shared-tree Llama condition, but its
 topology summaries use the common 46-tree subset after excluding four truths with no nontrivial
 unrooted split (topology IDs 015, 020, 037, and 047); matched weight values in
 Table~\ref{tab:variants} are computed on those same 46 trees.
@@ -565,9 +565,27 @@ on the same 46 topology-eligible fresh full-fine-tuning trees. The Llama panel r
 full-fine-tuning archive with $n=47$.
 
 \subsection*{Training Configuration}
-\paragraph{Flan-T5-base.} Each node trained for exactly 2,000 steps without early stopping, with seed 42, learning rate $3 \times 10^{-4}$, batch size 8, gradient accumulation 4 (effective batch 32), warmup 200 steps, weight decay 0.01, and bf16 precision. We used up to 10,000 training examples and 1,000 evaluation examples per dataset, with a fixed dataset seed across all nodes to avoid data variation as a confound.
+\paragraph{Flan-T5-base.} We pin \texttt{google/flan-t5-base} to revision \texttt{7bcac572ce56db69c1ea7c8af255c5d7c9672fc2}. Each node trained for exactly 2,000 steps without early stopping, with seed 42, learning rate $3 \times 10^{-4}$, batch size 8, gradient accumulation 4 (effective batch 32), warmup 200 steps, weight decay 0.01, and bf16 precision. Inputs and targets are capped at 512 and 128 tokens, respectively. We used the frozen legacy-subsample cache with seed 42 and up to 10,000 training and 1,000 evaluation examples per dataset, holding the sampled data fixed across nodes assigned the same dataset.
 
 \paragraph{Llama-3.2-1B.} We used the base model (not Instruct), pinned to revision \texttt{4e20de362430cd3b72f300e6b0f18e50e7166e08}, with completion-only causal loss. Each node trained for exactly 2,000 steps without early stopping, with seed 42, batch size 8, gradient accumulation 4 (effective batch 32), 200 warmup steps, weight decay 0.01, bf16 precision, right padding, and a 1,024-token prompt-plus-completion window. Full fine-tuning used learning rate $2 \times 10^{-5}$; QKV LoRA used $3 \times 10^{-4}$, dropout 0.05, and $(r,\alpha)=(8,16)$ or $(64,128)$.
+
+\subsection*{Behavioral Probes and Analysis Population}
+The production behavioral analysis uses every trained checkpoint in each tree: 641 nodes across 50
+trees, including the 276 trained internal nodes as observed ancestors and excluding the untrained root.
+The 365 terminal leaves form a separately reported sensitivity population. Weight distances are direct
+cosine distances between the two observed checkpoints in each pair; internal nodes are not reconstructed
+from their descendants. Translation uses 200 frozen prompts with one deterministic greedy completion per
+node (up to 128 new tokens for Flan and 64 for Llama). HellaSwag, ARC-Challenge, MMLU, and TruthfulQA
+each use 100 frozen prompts and three sampled completions per prompt (seeds 42, 43, and 44; temperature
+1, $p=1$; up to 64 new tokens). Dolly, used only in the EOS sensitivity, uses 30 prompts, three draws,
+and up to 96 new tokens.
+
+Outputs are embedded with \texttt{all-MiniLM-L6-v2}, pinned to revision
+\texttt{1110a243fdf4706b3f48f1d95db1a4f5529b4d41}. We average prompt-paired cosine similarity (and
+prompt-by-draw similarity for the three-draw probes) before correlating it with weight distance within
+each tree. The inference unit is the tree. Within-tree Fisher-$z$ variances are estimated by deleting one
+trained node at a time, after which the tree correlations are pooled by DerSimonian--Laird. Pair counts
+are descriptive and are not treated as independent observations.
 
 \section{Layer Variant Definitions}
 \label{app:layers}
@@ -577,8 +595,9 @@ signal; they are defined on Flan-T5-base (12 encoder + 12 decoder blocks). \emph
 (Table~\ref{tab:lora_variants}) instead change which modules are fine-tuned, all at rank $r=8$,
 $\alpha=16$, dropout $0.05$. Their fresh controlled-tree analysis replays and merges the full
 root-to-node adapter chain so distances are computed between standalone full-weight leaves. The
-all-projections row is retained as an explicitly marked cumulative-update ablation because its
-historical adapter checkpoints were not archived; it is excluded from the merged-weight diagnostic fit.
+all-projections row is retained as an explicitly marked cumulative-update ablation: it compares the
+cumulative root-to-node adapter displacement with the shared base omitted, whereas the other LoRA rows
+use standalone merged full weights. It is therefore excluded from the merged-weight diagnostic fit.
 
 \begin{table}[h]
 \caption{LayerTrace layer subsets (fresh shared-tree Flan-T5-base full FT; cosine; matched $n=46$). ``SA.k'' is the self-attention key projection;
@@ -586,7 +605,7 @@ historical adapter checkpoints were not archived; it is excluded from the merged
 percentages count tensors in the 282-tensor trained set, not scalar parameters. In particular,
 \texttt{enc\_sak} is 12/282 tensors (4.3\%) but 7,077,888/247,577,856 scalar weights (2.86\%).
 \emph{Clade} and PAER are polytomy-aware recovery percentages with SEs over the same runs.
-\texttt{low\_signal} is a negative control (the noisiest LayerNorms).}
+\texttt{low\_signal} is the predefined LayerNorm control subset.}
 \label{tab:layer_subsets}
 \centering
 \small
@@ -600,26 +619,28 @@ Variant & Tensors included & Count & \% tensors & Clade (SE) & PAER (SE) \\
 \texttt{sak}          & SA.k only (encoder $+$ decoder)                       & 24  & $\sim$8.5    & 100.0 (0.0) & 100.0 (0.0) \\
 \texttt{encoder\_h}   & encoder SA.k $+$ encoder pre-attention LayerNorm      & 24  & $\sim$8.5    & 100.0 (0.0) & 100.0 (0.0) \\
 \texttt{enc\_sak}     & encoder SA.k only                                     & 12  & 4.3           & 100.0 (0.0) & 100.0 (0.0) \\
-\texttt{low\_signal}  & post-FFN / final-block LayerNorms (control)           & 36  & $\sim$13     & 100.0 (0.0) & 100.0 (0.0) \\
+\texttt{low\_signal}  & post-attention/cross-attention and post-FFN LayerNorms (control) & 36 & $\sim$13 & 100.0 (0.0) & 100.0 (0.0) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[h]
-\caption{LoRA target-module variants (Flan-T5-base, $r=8$, $\alpha=16$, dropout $0.05$). Modules:
-$q,k,v,o$ = attention query/key/value/output projections; $w_i,w_o$ = FFN input/output projections.
-The legacy identifier \texttt{lora\_full\_ft\_approx} means LoRA on attention+FFN projections; it is
-neither full fine-tuning nor an approximation to the training tree.}
+\caption{LoRA target-module variants in the fresh fixed-2,000-step Flan-T5-base cohort
+($r=8$, $\alpha=16$, dropout $0.05$). Modules $q,k,v,o$ are attention
+query/key/value/output projections; \texttt{wi\_0}, \texttt{wi\_1}, and \texttt{wo} are the two gated
+FFN inputs and the FFN output. Counts follow the modules actually resolved by PEFT (36 modules per
+attention projection and 24 per FFN projection); percentages use the 247,577,856 scalar-weight analysis
+denominator.}
 \label{tab:lora_variants}
 \centering
 \begin{tabular}{ll r r}
 \toprule
-Variant & Target modules & Trainable params & \% of model \\
+Variant & Target modules & Trainable params & \% scalars \\
 \midrule
-\texttt{lora\_k\_only}        & $k$                       & $\sim$98K  & 0.04 \\
-\texttt{lora\_qkv}            & $q,k,v$                   & $\sim$294K & 0.12 \\
-\texttt{lora\_full\_attn}     & $q,k,v,o$                 & $\sim$393K & 0.16 \\
-\texttt{lora\_full\_ft\_approx}& $q,k,v,o,w_i,w_o$        & $\sim$2.1M & $\sim$0.87 \\
+\texttt{lora\_k\_r8}          & $k$                                  & 442,368   & 0.18 \\
+\texttt{lora\_qkv\_r8}        & $q,k,v$                              & 1,327,104 & 0.54 \\
+\texttt{lora\_qkvo\_r8}       & $q,k,v,o$                            & 1,769,472 & 0.71 \\
+\texttt{lora\_all\_proj\_r8}  & $q,k,v,o,\mathrm{wi}_{0,1},\mathrm{wo}$ & 3,391,488 & 1.37 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -685,18 +706,21 @@ are bushy and specify no ordering within the recovered clade, so we claim recove
 split in each, not complete resolution of their descendant histories.
 
 
-\section{Behavioral Regression: Full Results}
+\section{Archival Behavioral Regression Diagnostics}
 \label{app:regression}
 
-All models regress behavioral output similarity (sentence-embedding cosine, translation probe
-unless noted) on cosine weight distance with run fixed effects and SEs clustered on run. We report
-three coefficients per condition (Table~\ref{tab:regression_betas}):
+This section preserves the centroid-DV regression diagnostics from the original ELLMTrees archive;
+they are not the fresh fixed-2,000-step all-node WeightTraits estimates reported in
+Table~\ref{tab:behavior_holdout}. These auxiliary models regress behavioral output similarity
+(sentence-embedding cosine, translation unless noted) on cosine weight distance with run fixed effects
+and SEs clustered on run. We report three coefficients per archived condition
+(Table~\ref{tab:regression_betas}):
 \begin{itemize}
   \item \textbf{Raw $\beta$}: the unscaled slope. Negative in every audited condition, although
     statistical support varies by condition. It is
     \emph{not} comparable across conditions: LoRA groups have far smaller absolute cosine distances,
-    so their raw $\beta$ is inflated by orders of magnitude (e.g.\ $-56$ for LoRA over attention+FFN
-    projections vs.\ $-0.20$ for key-only LoRA) without implying a larger effect.
+    so their raw $\beta$ is inflated by orders of magnitude (e.g.\ $-56$ for the legacy LoRA scope
+    over attention plus the FFN output vs.\ $-0.20$ for key-only LoRA) without implying a larger effect.
   \item \textbf{Semi-standardized $\beta$}: predictor $z$-scored within run; reads as ``$\Delta$
     output similarity per 1 within-run SD of weight distance.'' Interpretable within a condition,
     but still not cross-comparable because conditions differ in how much their \emph{outputs} vary
@@ -704,16 +728,18 @@ three coefficients per condition (Table~\ref{tab:regression_betas}):
     strongest correlation).
   \item \textbf{Standardized $\beta$ (within-run)}: both sides $z$-scored within run. This is the
     only cross-condition-comparable effect size, and it equals the within-run correlation. It is the
-    number reported in the main text.
+    cross-condition-comparable effect size in this archival analysis.
 \end{itemize}
 
 \begin{table}[h]
-\caption{Behavioral regression coefficients by condition ($n$ is the number of analyzed runs; run FE,
+\caption{Archival ELLMTrees behavioral regression coefficients by condition ($n$ is the number of analyzed runs; run FE,
   cluster-robust SE on run; $p$ for
   the standardized $\beta$). The standardized $\beta$ (within-run) is the comparable effect size and
   equals the within-run correlation; raw and semi-standardized $\beta$ are reported for transparency.
-  \texttt{no\_translation\_v2} is a degeneration diagnostic (Appendix~\ref{app:translation_probe}) and is
-  omitted. HellaSwag is a held-out task for Llama (never trained).}
+  The historical \texttt{no\_translation\_v2} condition is omitted; its output examples are retained
+  only as a qualitative diagnostic in Appendix~\ref{app:translation_probe}. The archived
+  \texttt{lora\_full\_ft\_approx} execution resolved $q,k,v,o,\mathrm{wo}$, not the gated FFN input
+  matrices. HellaSwag is a held-out task for the archived Llama-3.1-8B condition.}
 \label{tab:regression_betas}
 \begin{center}
 \small
@@ -726,7 +752,7 @@ Condition & $n$ & Raw $\beta$ & Semi-std $\beta$ & Std $\beta$ (within-run) & $p
 LoRA: key only                   & 33 & $-0.20$  & $-0.0004$ & $-0.42$ & $4\!\times\!10^{-12}$ \\
 LoRA: q/k/v                      & 32 & $-18.94$ & $-0.0265$ & $-0.17$ & $3\!\times\!10^{-4}$ \\
 LoRA: q/k/v/o (all attention)   & 29 & $-38.50$ & $-0.0295$ & $-0.11$ & $0.035$ \\
-LoRA: q/k/v/o + FFN projections & 28 & $-55.93$ & $-0.0296$ & $-0.11$ & $0.070$ \\
+LoRA: q/k/v/o + FFN output (legacy) & 28 & $-55.93$ & $-0.0296$ & $-0.11$ & $0.070$ \\
 Full FT: multitask trees         & 33 & $-5.68$ & $-0.0127$ & $-0.09$ & $0.038$ \\
 \midrule
 \multicolumn{6}{l}{\textit{Llama-3.1-8B (decoder-only; merged weights)}} \\
@@ -737,11 +763,10 @@ LoRA key only: HellaSwag (held-out)  & 43 & $-0.038$ & $-0.0031$ & $-0.08$ & $0.
 \end{center}
 \end{table}
 
-The coefficients above use the per-run \emph{centroid} semantic DV (one embedding per node). The
-held-out bridge in the main text (Table~\ref{tab:behavior_holdout}) instead uses the \emph{paired}
-semantic similarity (prompt-paired for translation and prompt-by-draw for the multi-draw auxiliary probes), which removes the shared prompt-content confound and strengthens the
-association in every group; we report the paired DV in the main text and keep the centroid DV here for
-continuity with the per-condition effect sizes. The Llama rows here are the 8B decoder, included as an
+The coefficients above use the per-run \emph{centroid} semantic DV (one embedding per node) on the
+archival tree sets. The fresh held-out bridge in the main text (Table~\ref{tab:behavior_holdout}) instead uses the \emph{paired}
+semantic similarity (prompt-paired for translation and prompt-by-draw for the multi-draw auxiliary probes), which removes the shared prompt-content confound. We report the paired DV in the main text and keep the centroid DV here only for
+continuity with the archived per-condition effect sizes. The Llama rows here are the 8B decoder, included as an
 auxiliary decoder-only check; the headline held-out bridge in Table~\ref{tab:behavior_holdout} rests on the
 full-FT Llama-3.2-1B and Flan-T5 models. The two agree where they overlap: held-out HellaSwag is
 negative for the 8B decoder here ($-0.08$, with a CI that includes zero) as for the 1B in the main text
@@ -751,25 +776,27 @@ and analysis endpoint.
 \paragraph{Pooling estimator.} Because each run has its own tree and hence its own weight-space scale, a
 raw pooled slope is not meaningful across runs; we therefore standardize within run (equivalently, treat
 the run as a blocking factor), at which point the slope equals the within-run correlation. To pool these
-per-run correlations we use a random-effects DerSimonian--Laird meta-analysis of the per-run Fisher-$z$
-values rather than an equal-weight mean, since runs vary in leaf count and noise. As an estimator-robustness check on a representative full-FT
-condition (Llama-3.2-1B, translation probe, centroid DV), the pooling choices agree in sign and
+per-tree correlations in the current WeightTraits analysis, we estimate within-tree variance with a
+delete-one-trained-node jackknife on Fisher $z$ and then use a DerSimonian--Laird random-effects
+meta-analysis. Pair counts are never used as an independent sample size. In an earlier centroid-DV
+estimator-robustness check on Llama-3.2-1B full FT and translation, the pooling choices agreed in sign and
 magnitude (random-effects $r_{\mathrm{DL}}=-0.161$ ($95\%$ CI $[-0.28,-0.04]$, $p=0.011$), equal-weight mean
 $r=-0.21$, one-stage mixed model with a random slope $r=-0.136$), with genuine between-run heterogeneity
-($I^2\approx54\%$) that is not explained by leaf count. We report $r_{\mathrm{DL}}$; the within-run partial
-associations underlying it are shown per condition in Fig.~\ref{fig:regression_diagnostics}.
+($I^2\approx54\%$) that is not explained by leaf count. That check and Fig.~\ref{fig:regression_diagnostics}
+are archival diagnostics rather than inputs to Table~\ref{tab:behavior_holdout}.
 
 \paragraph{Per-cell heterogeneity.} Table~\ref{tab:behavior_het} gives, for every cell of the main-text
 bridge (Table~\ref{tab:behavior_holdout}, paired semantic DV), $r_{\mathrm{DL}}$ with its $95\%$ CI,
-the Higgins $I^2$, and the number of runs $k$. Heterogeneity ranges from low to substantial ($I^2$ $0$--$36\%$).
-Every cell's CI excludes zero, but the flagged Flan degeneration probes are diagnostics of output
-collapse rather than bridge evidence; the unflagged held-out cells have the expected negative direction.
+the Higgins $I^2$, and the number of trees $k$. Heterogeneity ranges from low to substantial ($I^2$ $0$--$36\%$).
+All cells except Flan translation-withheld exclude zero. The Llama cells and three flagged Flan cells
+are negative, Flan HellaSwag is significantly positive, and Flan translation-withheld is near zero.
+Flagged Flan probes are output-degeneration diagnostics rather than clean bridge evidence.
 
 \begin{table}[h]
 \caption{Per-cell heterogeneity for the weight$\to$behavior bridge (Table~\ref{tab:behavior_holdout};
   paired semantic DV with immediate-EOS completions represented explicitly, full fine-tuning).
   DerSimonian--Laird random-effects $r_{\mathrm{DL}}$ with $95\%$ CI, Higgins $I^2$,
-  and number of runs $k$. $^\ddagger$degenerate Flan probe (App.~\ref{app:translation_probe}).}
+  and number of trees $k$. $^\ddagger$degenerate Flan probe (App.~\ref{app:translation_probe}).}
 \label{tab:behavior_het}
 \begin{center}
 \small
@@ -784,7 +811,7 @@ Llama-3.2-1B & ARC-C (held-out)                   & $-0.20$ [$-0.26,-0.13$] & 33
 Llama-3.2-1B & MMLU (held-out)                    & $-0.19$ [$-0.26,-0.12$] & 36\% & 50 \\
 Llama-3.2-1B & TruthfulQA (held-out)              & $-0.22$ [$-0.27,-0.16$] & 19\% & 50 \\
 Flan-T5-base & Translation (trained)              & $-0.10$ [$-0.16,-0.04$] & 0\% & 50 \\
-Flan-T5-base & Translation (3-out)$^\ddagger$  & $+0.04$ [$-0.01,+0.09$] & 0\% & 50 \\
+Flan-T5-base & Translation (withheld)$^\ddagger$ & $+0.04$ [$-0.01,+0.09$] & 0\% & 50 \\
 Flan-T5-base & HellaSwag (held-out)               & $+0.09$ [$+0.05,+0.14$] & 0\% & 50 \\
 Flan-T5-base & ARC-C (held-out)$^\ddagger$         & $-0.14$ [$-0.19,-0.09$] & 0\% & 50 \\
 Flan-T5-base & MMLU (held-out)$^\ddagger$          & $-0.16$ [$-0.20,-0.11$] & 0\% & 50 \\
@@ -804,7 +831,7 @@ reports the complementary sensitivity analysis that removes pairs involving an e
 matters materially only for HellaSwag, where immediate EOS is common.
 
 \begin{table}[h]
-\caption{Llama-3.2-1B full-FT semantic bridge with immediate-EOS outputs included as an explicit
+\caption{Llama-3.2-1B full-FT all-trained-node semantic bridge with immediate-EOS outputs included as an explicit
   semantic state (primary) or excluded (sensitivity). Values are $r_{\mathrm{DL}}$ [95\% CI]. Empty
   rates are pooled over all leaf outputs and all three draws.}
 \label{tab:eos-sensitivity}
@@ -848,28 +875,28 @@ TruthfulQA & 0.10\% & 0.04\% & 0.01\% & $<0.01\%$ \\
 \end{table}
 
 
-\section{Translation Probe Outputs for TaskHoldout Models}
+\section{Matched Translation Holdout and Historical Output Examples}
 \label{app:translation_probe}
 
-The \texttt{runs\_no\_translation\_v2} condition trains models on summarization,
-QA, and classification only, with translation withheld from the task pool. We use
-the translation probe to test whether weight distance predicts behavioral similarity
-even when the probe task was never trained. However, this condition reveals a
-fundamental limitation of behavioral probing on out-of-distribution tasks: models
-whose most recent fine-tuning was on classification have overwritten the base
-model's translation ability entirely, producing degenerate single-token outputs
-rather than translations.
+The current no-translation WeightTraits cohort is matched to the ordinary fresh 50-tree cohort. It
+preserves every topology, node order, and non-translation assignment, replacing only the 162 nodes
+originally assigned translation data with unused classification, QA, or summarization datasets. Thus
+479 of 641 node assignments are unchanged, no translation assignments remain, and the cohort differs
+from the ordinary full-FT cohort only where translation was removed. We use the same 200-prompt
+translation endpoint to test whether weight distance predicts behavioral similarity when translation
+was never a training task.
 
-Table~\ref{tab:translation_probe_examples} shows representative outputs for three
-leaf nodes from a single run (\texttt{run\_001}). Nodes trained most recently on
-summarization or QA retain the base model's translation ability and produce
-coherent (if imperfect) French output. Nodes trained most recently on
-classification output only the label vocabulary of their fine-tuning task,
-regardless of input.
+Table~\ref{tab:translation_probe_examples} is a qualitative diagnostic from the earlier ELLMTrees
+\texttt{runs\_no\_translation\_v2} archive, not a sample from the fresh WeightTraits cohort. It shows
+representative outputs for three leaves in archived \texttt{run\_001}. In that run, a leaf last trained
+on summarization or QA retained some translation ability, whereas two classification-trained leaves
+emitted only their label vocabularies. We retain the example because it demonstrates a concrete failure
+mode that can dominate a held-out semantic endpoint, while keeping its provenance separate from the
+current quantitative estimate.
 
 \begin{table}[h]
-\caption{Translation probe outputs for three leaf nodes in \texttt{run\_001}
-  (TaskHoldout condition, translation withheld from training).
+\caption{Historical ELLMTrees translation-probe outputs for three leaf nodes in
+  \texttt{runs\_no\_translation\_v2/run\_001} (translation withheld from training).
   The same three English source sentences are shown for each node.
   Classification-trained nodes output label tokens only.}
 \label{tab:translation_probe_examples}
@@ -899,26 +926,23 @@ n8  & Classification & \texttt{entailment} \\
 \end{center}
 \end{table}
 
-Because classification-trained nodes produce degenerate outputs, pairwise semantic
-similarity between nodes is driven by whether each model can translate at all,
-not by genealogical proximity. We therefore retain the $r_{\mathrm{DL}}=+0.04$
-[$-0.01,+0.09$] cell as a \emph{degeneration diagnostic}, not as evidence that the
-weight--behavior bridge reverses: behavioral similarity is dominated by task identity
-(translating vs.\ emitting a trained-task label) rather than held-out translation behavior.
+In the fresh matched WeightTraits cohort, the primary all-trained-node estimate is
+$r_{\mathrm{DL}}=+0.04$ [$-0.01,+0.09$] across 50 trees, so its interval includes zero. We retain this
+cell as a \emph{degeneration diagnostic}, not as evidence that the weight--behavior bridge reverses.
+The historical example illustrates why: pairwise semantic similarity can be driven by whether models
+fail on the held-out task in the same task-specific way rather than by genealogical proximity.
 
-This degenerate-output collapse is specific to the encoder--decoder Flan-T5 TaskHoldout condition,
-where classification-trained nodes overwrite translation entirely. It is \emph{not} a general property
-of held-out probes. In the matched full-fine-tuning held-out conditions of
-Table~\ref{tab:behavior_holdout} the nodes remain capable on the held-out task, and there the
-weight$\to$behavior bridge is interpretable for Llama-3.2-1B: it is negative and strengthens when
-translation is withheld. The weakly positive Flan-T5 result remains the degeneration diagnostic
-described here rather than a clean reversal of the bridge.
+The demonstrated label-output collapse is specific to the archived encoder--decoder Flan-T5
+TaskHoldout example; it is \emph{not} evidence that all nodes or all held-out probes fail this way. In
+the current matched Llama-3.2-1B full-fine-tuning cohort, the translation bridge is negative and
+strengthens when translation is withheld (Table~\ref{tab:behavior_holdout}). The near-zero Flan-T5
+result remains the diagnostic described here rather than a clean reversal of the bridge.
 
 
 \section{Behavioral Regression Diagnostics}
 \label{app:regression_diagnostics}
 
-Figure~\ref{fig:regression_diagnostics} shows the within-run partial association
+Figure~\ref{fig:regression_diagnostics} preserves the archival centroid-DV within-run partial association
 between cosine weight distance and semantic output similarity for each fine-tuning
 condition. Points are within-run demeaned (run fixed effects removed); the orange line
 maps the Fisher $z$-averaged within-run correlation back onto each panel's pooled centered scales.
@@ -927,20 +951,21 @@ closer in weight space produce more similar translation outputs. The effect is
 consistent in direction across all five Flan-T5 training conditions and the full-FT decoder Llama-3.2-1B
 (centroid semantic DV; translation probe), with audited standardized effects ranging from $-0.09$ to
 $-0.42$ across the five Flan conditions. The
-held-out bridge, on the paired semantic DV and pooled by random-effects meta-analysis, is quantified
+This figure is not computed from the fresh all-node WeightTraits receipts. The current held-out bridge,
+on the paired semantic DV and pooled by random-effects meta-analysis, is quantified
 separately in \S\ref{sec:results} (Table~\ref{tab:behavior_holdout}).
 
 \begin{figure}[h]
   \begin{center}
     \includegraphics[width=\linewidth]{\figpath/regression_diagnostics_semantic.pdf}
   \end{center}
-  \caption{Within-run partial association between cosine weight distance and
+  \caption{Archival centroid-DV within-run partial association between cosine weight distance and
     semantic output similarity (translation probe), for the five Flan-T5 fine-tuning
     conditions and the full-FT decoder Llama-3.2-1B (bottom right). Points are
     within-run demeaned; Fisher $z$-averaged within-run $r$ and run count are shown per
     panel, and the orange line visualizes that same summary association on the panel's
-    centered scales. All six associations are negative, confirming that weight proximity predicts
-    behavioral similarity across training regimes and architectures.}
+    centered scales. All six archival associations are negative; the current paired all-node estimates
+    are reported separately in Table~\ref{tab:behavior_holdout}.}
   \label{fig:regression_diagnostics}
 \end{figure}
 
@@ -948,20 +973,20 @@ separately in \S\ref{sec:results} (Table~\ref{tab:behavior_holdout}).
 \section{Task-Metadata Baseline}
 \label{app:taskbaseline}
 
-To test whether weight-based recovery merely reflects task identity, we build a baseline that uses
-\emph{only} task labels and no weights, and run it through the same neighbor-joining pipeline. For each
+To test whether weight-based recovery merely reflects task identity, we define a baseline that uses
+\emph{only} task-family labels and no weights. In the fresh controlled cohort, every edge receives one
+task/dataset pair; datasets are unique within a tree, but the four task families can repeat. For each
 leaf we read its root-to-leaf sequence of task types from the manifest (e.g.\ summarization $\to$
 summarization $\to$ translation). The metadata distance between two leaves is the length of the two
 task-type sequences not covered by their shared prefix, $d(i,j)=(\lvert s_i\rvert-p)+(\lvert
 s_j\rvert-p)$ with $p$ the shared-prefix length, an ancestry analog in which leaves sharing a longer
-initial training-task sequence are placed closer. We apply neighbor-joining to this distance and score
-the reconstruction against the same ground-truth trees with the same polytomy-aware metric as the
-weight reconstructions.
+initial training-task sequence are placed closer.
 
-Many leaves share identical task paths, so this metadata distance contains extensive ties and its NJ
+Many leaves share identical task paths, so this metadata distance contains extensive ties and any NJ
 reconstruction depends on tie handling. We therefore use it only as a qualitative diagnostic and do
-not report a quantitative task-path benchmark. The within-task design below provides the stricter
-task-control: every task-path distance is exactly zero, so task metadata has no discriminating power.
+not report a quantitative task-path benchmark. In the within-task design below, task-family identity is
+constant; the sequence distance can retain differences in leaf depth, but it contains neither dataset
+identity nor branch-specific task-family variation.
 
 \paragraph{Verifying the organic reference lineages.} For the real HuggingFace families
 (\S\ref{sec:results:weighttree}), the documented reference tree is taken from the checkpoints' model cards and
@@ -975,23 +1000,24 @@ We treat the reference as a documented-and-verified lineage, not as unverified m
 \section{Within-Task Recovery}
 \label{app:withintask}
 
-The controlled trees in the main text assign a distinct task type to each edge, so a reconstruction
-could in principle exploit task identity (App.~\ref{app:taskbaseline}). To remove task structure as a
-cue entirely, we repeat the experiment with every node in a tree fine-tuned on the \emph{same} task
-type, varying only the dataset per node (Flan-T5-base, full fine-tuning; datasets drawn without
-replacement within one of summarization, QA, classification, or translation). Because all leaves then
-share an identical task-type path, the task-path distance of App.~\ref{app:taskbaseline} is identically
-zero and provides no discriminating information; any recovery must come from within-task,
-dataset-level displacement in the weights.
+The fresh controlled trees in the main text assign a task/dataset pair to each edge, so a reconstruction
+could in principle exploit repeated task-family labels (App.~\ref{app:taskbaseline}). The separate
+original ELLMTrees within-task experiment fixes every node in a tree to the \emph{same} task family and
+varies the dataset per node (Flan-T5-base, full fine-tuning; one of summarization, QA, classification, or
+translation). All task-path elements are therefore identical labels. Paths of different lengths still
+encode leaf depth under the sequence distance above, but task-family metadata contains no dataset
+identity or branch-specific task variation; recovery beyond a depth-only cue must come from
+within-task, dataset-level displacement in the weights.
 
-Table~\ref{tab:withintask} reports polytomy-aware recovery ($\geq 4$ leaves, cosine). Recovery persists
+Table~\ref{tab:withintask} reports this historical auxiliary cohort, kept separate from the fresh
+shared-topology WeightTraits reruns (polytomy-aware recovery, $\geq 4$ leaves, cosine). Recovery persists
 without task diversity, though it is weaker and more task-dependent than the multi-task setting
 ($92$--$100\%$ clade, Table~\ref{tab:variants}): classification, QA, and translation recover $72$--$87\%$
 of clades, while summarization is the weakest at $59\%$.
 Since the leaves are task-identical, this recovery shows that lineage signal can still be estimated even within similar task settings.
 
 \begin{table}[h]
-\caption{Within-task phylogeny recovery (Flan-T5-base full fine-tuning, one task type per tree with
+\caption{Historical ELLMTrees within-task phylogeny recovery (Flan-T5-base full fine-tuning, one task family per tree with
   datasets varying per node; cosine, $\geq 4$ leaves). Polytomy-aware, as in
   Table~\ref{tab:variants}; SEs over runs (binomial for PAER).}
 \label{tab:withintask}
