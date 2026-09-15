@@ -92,7 +92,7 @@ labs constantly releasing updated versions, most models are
 fine-tuned descendants of a few ancestors.  Very few of those models transparently document their full model lineage. Benchmarks can reveal how a model performs on a task, but not how a model originated, how it differs from its sibling models, or how it may
 fail. In contrast, training lineage can reveal much about model provenance, auditing, and safety~\citep{behavioral2026provenance, nikolic2026model, tensorguard2025}.
 
-We, like other prior works~\citep{horwitz2025mother, yu2025neural, wu2026llmdna}, observe that fine-tuning is a path-dependent, branching process. Each
+We, like other prior works~\citep{horwitz2025mother, yu2025neural, wu2026llmdna,gallagher2026}, observe that fine-tuning is a path-dependent, branching process. Each
 child model inherits its parent's  updated weights, nudged towards a certain loss and/or data set. This is
 precisely an evolutionary process, as described in \cite{yax2025phylolm}, and moreover, the evolutionary path leaves signal in weight space. We treat a line or genealogy of fine-tuned models
 as a phylogeny (i.e. an evolutionary tree~\cite{saitou1987neighbor}) and ask whether this phylogeny can be \emph{estimated} from the model weights alone.
@@ -102,7 +102,7 @@ dozens of versions circulate with no recorded lineage (Fig.~\ref{fig:overview}A)
 to know which to build on, where two versions diverged, and where each fails. Phylogenetic algorithms
 were built for exactly this inference in biology~\citep{saitou1987neighbor, robinson1981comparison},
 and we adapt them to neural net model weights. We estimate a phylogeny from model weights and score it against a \emph{known}
-ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights to changes in behavior (Fig.~\ref{fig:overview}B), and ask whether tree-like distances indicate when recovery will succeed even without access to the true tree (Fig.~\ref{fig:overview}C).
+ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights to changes in behavior (Fig.~\ref{fig:overview}B), and ask whether diagnostic statistics indicate when phylogeny estimation will succeed even without access to the true tree (Fig.~\ref{fig:overview}C).
 
 \begin{figure}[t]
   \begin{center}
