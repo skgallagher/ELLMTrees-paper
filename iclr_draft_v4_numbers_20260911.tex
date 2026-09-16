@@ -674,7 +674,9 @@ prominent local maxima in both architectures.
     occupies one x-position; gray points show the remaining tensors without connecting unrelated
     tensor families. Flan key matrices and other tensors each average about 4\% missed clades, whereas
     the Llama profile is more key-concentrated (1.1\% vs.\ 24.0\%). Color and shape highlight
-    self-attention keys, cross-attention keys, and \textsc{LayerNorm}.}
+    self-attention keys, cross-attention keys, and \textsc{LayerNorm}. The two Flan block-0
+    relative-attention-bias tensors (32.8\% encoder; 55.4\% decoder) are omitted from the plot;
+    panel y-axes are 0--5\%, 0--30\%, and 0--100\%, respectively.}
   \label{fig:layertrace_grid}
 \end{figure}
 
