@@ -1,0 +1,39 @@
+\section{Related Work}
+\label{sec:related}
+
+Deep learning lineage studies broadly infer model relationships from either \emph{model weights} or \emph{behavior}. These methods have been driven by different applications including provenance and IP \citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment \citep{cloud2025subliminal}, trait inheritance \citep{cloud2025subliminal, agents2026same}, and data auditing \citep{zhu2025independence}. Table~\ref{tab:related} compares our approach with some of the closest lineage-estimation methods.
+
+\textbf{Model weights:} Several works trace weight changes from fine-tuning or reinforcement learning with human feedback (RLHF) back to parent models. MoTHer \citep{horwitz2025mother} recovers directed model trees from weight similarity via a directed minimum spanning tree and evaluates against controlled, known model hierarchies; \citet{yu2025neural} recover parent--child and grandparent--child lineage with both a learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. Unlike MoTHer, which reconstructs relationships among observed parent and descendant checkpoints, we observe only terminal models and infer a phylogeny with unobserved ancestral branching points. This setting is relevant to LLM family reconstruction, where intermediate or parent checkpoints may not be available.
+
+REEF \citep{zhang2025reef} compares internal representations using centered kernel alignment (CKA; \citealp{kornblith2019similarity}) to identify model derivation, while TensorGuard \citep{tensorguard2025} uses gradient-response fingerprints for pairwise model similarity and family classification.
+
+Other works examine \emph{why} lineage is detectable in models. Models fine-tuned from a shared initialization stay within a single low-error basin and are robust to SGD noise \citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance can approximate genealogical distance. Additionally, task vectors \citep{ilharco2023editing} are near-orthogonal across tasks, so distinct lineages contribute independent directions. LoRA \citep{hu2022lora} and intrinsic-dimensionality results \citep{aghajanyan2021intrinsic} demonstrate that meaningful adaptation can occur in low-dimensional parameter subspaces. Together, these results motivate the possibility that lineage information remains detectable after fine-tuning.
+
+\textbf{Behavior:} Black-box approaches infer model relationships using only API access or model outputs, without requiring access to model weights \citep{yax2025phylolm,wu2026llmdna}. PhyloLM \citep{yax2025phylolm} builds LLM phylogenies from output similarity and predicts benchmark performance, while LLM DNA \citep{wu2026llmdna} defines a functional ``DNA'' representation carrying lineage information; both reconstruct phylogenies over hundreds of models. Other output-only methods test pairwise provenance from next-token distributions \citep{nikolic2026model} or output independence \citep{zhu2025independence}. A key advantage of behavioral methods is that they can compare models across architectures and sizes, whereas weight-based comparisons generally require compatible parameterizations. Conversely, weight-based lineage estimates do not depend on the choice of prompts or behavioral probes.
+
+\textbf{Our Approach:} We bridge these two approaches, determine where phylogenetic signal can be recovered, and evaluate the resulting phylogenies against known ground-truth trees. Our findings are consistent with prior work showing that inherited behavioral signals can be preserved under sufficient training signal \citep{cloud2025subliminal}, as well as phylogenetic results showing that the underlying tree can be correctly estimated when certain conditions on the estimated distances are satisfied \citep{atteson1999performance}.
+
+\begin{table}[t]
+\caption{Comparison with the closest lineage-estimation methods.}
+\label{tab:related}
+\begin{center}
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcccc}
+\toprule
+Method & Access & \shortstack{Latent\\ancestors} & \shortstack{Known-lineage\\eval} & \shortstack{Real\\checkpoints} \\
+\midrule
+MoTHer \citep{horwitz2025mother}
+  & weights  & \ding{55}  & \checkmark & \checkmark \\
+Neural Phylogeny \citep{yu2025neural}
+  & weights  & \ding{55}   & \checkmark & \checkmark \\
+PhyloLM \citep{yax2025phylolm}
+  & behavior & \checkmark  & \ding{55}  & \checkmark \\
+LLM DNA \citep{wu2026llmdna}
+  & behavior & \checkmark  & \ding{55}  & \checkmark \\
+\textbf{Ours}
+  & \textbf{both} & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
