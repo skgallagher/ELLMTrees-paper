@@ -76,7 +76,7 @@
 
 % -----------------------------------------------------------------------
 \begin{abstract}
-While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 85--100\% of runs.  We treat individual weight tensors as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each tensor to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using about 3\% of Flan's scalar weights, suggesting that lineage can be recovered from a small, architecture-specific weight subset. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Beyond phylogeny estimation, we report two additional empirical findings. First, weight-space proximity predicts behavioral similarity on several held-out tasks involving truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe. Second, weight-based phylogeny estimation can match or outperform behavior-based estimation, particularly after low-rank updates. We finally compare our weight-based method to a state-of-the-art behavior-based method on both our controlled experiments and a real, albeit small, modern model phylogeny. On the matched controlled trees, weights recover 100\% of clades versus PhyloLM's 35\% under rank-8 LoRA and 100\% versus 52\% under full fine-tuning, while both methods recover all three documented splits in the real Mistral family.
+While over a million deep learning models are hosted online, most are fine-tuned descendants from a small set of ancestors.  The lineage of these models is only sometimes documented fully, even though provenance, auditing, and safe deployment all depend on proper documentation. In response to this issue, we hypothesize that fine-tuning acts as an evolutionary process that leaves signal in weight space, and show that a model \textit{phylogeny} (evolutionary tree) can be estimated from model weights alone and scored against a known ground-truth phylogeny, recovering all true clades (branches) in 85--100\% of runs.  We treat individual weight tensors as gene-like estimators of lineage, revealing where evolutionary signal is concentrated and allowing each tensor to produce its own phylogeny.  We are able to show that we can accurately estimate the phylogeny using only a percent of weights (1-3\% in our experiments), suggesting that lineage can be recovered from a small, architecture-specific weight subset. Moreover, we show that this phylogeny estimation is associated with known mathematical concepts from phylogenetics: the Atteson margin and four-point additivity. Beyond phylogeny estimation, we report two additional empirical findings. First, weight-space proximity predicts behavioral similarity on several held-out tasks involving truthfulness, knowledge, reasoning, and common sense, though the strength and statistical support depend on the probe. Second, weight-based phylogeny estimation can match or outperform behavior-based estimation, particularly after low-rank updates. We finally compare our weight-based method to a state-of-the-art behavior-based method on both our controlled experiments and a real, albeit small, modern model phylogeny. On the matched controlled trees, weights recover 100\% of clades versus PhyloLM's 35\% under rank-8 LoRA and 100\% versus 52\% under full fine-tuning, while both methods recover all three documented splits in the real Mistral family.
 
 \end{abstract}
 
@@ -89,7 +89,7 @@ While over a million deep learning models are hosted online, most are fine-tuned
 
 While there are over one million models available on HuggingFace for deep learning and a handful of frontier
 labs constantly releasing updated versions, most models are
-fine-tuned descendants of a few ancestors.  Very few of those models transparently document their full model lineage. Benchmarks can reveal how a model performs on a task, but not how a model originated, how it differs from its sibling models, or how it may
+fine-tuned descendants of a few ancestors.  Very few of those models transparently document their full model lineage \citep{horwitz2025chartatlasworldsmodels}. Benchmarks can reveal how a model performs on a task, but not how a model originated, how it differs from its sibling models, or how it may
 fail. In contrast, training lineage can reveal much about model provenance, auditing, and safety~\citep{behavioral2026provenance, nikolic2026model, tensorguard2025}.
 
 We, like other prior works~\citep{horwitz2025mother, yu2025neural, wu2026llmdna,gallagher2026}, observe that fine-tuning is a path-dependent, branching process. Each
@@ -114,20 +114,22 @@ ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights t
 
 
 
-Our primary contribution is that analyzing weight changes between fine-tunings allows accurate phylogeny estimation. We use a fitted Atteson diagnostic and label-free four-point additivity as empirical diagnostics to characterize when phylogeny estimation succeeds. As a result of these weight-based estimates, we can further show two behavior-related consequences. In summary we show:
+Our primary contribution is that analyzing weight changes between fine-tunings allows accurate phylogeny estimation under the assumption of latent ancestors. We use a fitted Atteson diagnostic and label-free four-point additivity as empirical diagnostics to characterize when phylogeny estimation succeeds. As a result of these weight-based estimates, we can show two behavior-related consequences. In summary we show:
 \begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
-  \item \textbf{Phylogeny estimation from model weights against ground truth.} Guided by the geometry of
+  \item \textbf{Phylogeny estimation from leaf model weights against ground truth.} Guided by the geometry of
     fine-tuning updates, our distance metric and summary-statistic choices estimate the model phylogeny from
     weights alone. Our controlled experiments recover \textit{all} true clades (branches) in $85$--$100\%$ of runs
-    ($92$--$100\%$ clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 3\% of the scalar weights can accurately estimate the known phylogenies. Treating weight tensors as gene-like estimators also yields a separate phylogeny from each tensor and localizes where lineage signal is carried. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
-  \item \textbf{Weight-behavior bridge.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
-  \item \textbf{Scenarios where weight-based estimation outperforms behavior-based estimation.}
+    ($92$--$100\%$ clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 1-3\% of the scalar weights can accurately estimate the known phylogenies. Treating weight tensors as gene-like estimators also yields a separate phylogeny from each tensor and signals where lineage signal is prominent. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
+
+\item \textbf{Scenarios where weight-based estimation outperforms behavior-based estimation.}
     On the same 46 controlled trees, weights recover 100\% of clades versus 35\% for
 PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and 100\% versus 52\% under full fine-tuning.
     On a documented Mistral family with large RLHF/DPO forks, both methods
     recover all three true splits. Thus behavior-only estimation can succeed after behaviorally large
     updates, while weight access remains substantially more informative for smaller updates and
     requires no output sampling.
+  \item \textbf{Evidence of similar weights signaling similar behavior.} Changes in weights can be used to predict similarity in model behavior.  In particular, we show that models that are closer in weight-space behave more similarly in behavior-space on \textit{held-out} tasks such as truthfulness, reasoning, knowledge, and common sense.
+
 \end{itemize}
 % Submission TODO: add the anonymous code-and-artifact URL here once the blind snapshot exists.
 Our main controlled topology results cover Flan-T5-base (250M) and Llama-3.2-1B, with both full
@@ -143,11 +145,10 @@ fine-tuning and variants of LoRA.
 \label{sec:related}
 % ----------------------------------------------------------------------
 
-Deep learning lineage studies take three broad forms: \emph{model weights}, \emph{weight--behavior},
-and \emph{behavior only}, driven by applications in provenance and IP
+Deep learning lineage studies take three broad forms: \emph{lineage from model weights}, \emph{lineage from behavior}, and \emph{connections between weight and behavior changes}. Table~\ref{tab:related} compares some of the closest methods. These studies are driven by applications in provenance and IP
 \citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
 \citep{cloud2025subliminal}, trait inheritance \citep{cloud2025subliminal, agents2026same}, and data
-auditing \citep{zhu2025independence}. Table~\ref{tab:related} compares some of the closest methods.
+auditing \citep{zhu2025independence}.
 
 \textbf{Model weights.} Several works trace weight changes from fine-tuning or reinforcement learning with human feedback (RLHF) back to parent models. MoTHer
 \citep{horwitz2025mother} recovers directed model trees from weight similarity via a directed minimum
@@ -155,14 +156,26 @@ spanning tree and evaluates against controlled, known model hierarchies; \citet{
 learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct
 lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral
 DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. Our setting
-differs from MoTHer's observed-node model tree in that we observe only terminal checkpoints and estimate a
-leaf phylogeny with latent rather than explicit internal ancestors.
+differs from MoTHer's observed-node model tree in that we observe only terminal nodes and estimate a
+leaf phylogeny with latent rather than explicit internal ancestors.  This allows for estimation of phylogenies as opposed to directed spanning trees, both of which can have practical applications in the field.
 
 Other works examine \emph{why} lineage is detectable in models. Models fine-tuned from a shared initialization stay
 within a single low-error basin and are robust to SGD noise
 \citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance can approximate genealogical distance. Additionally, task vectors \citep{ilharco2023editing} are near-orthogonal across tasks, so
 distinct lineages contribute independent directions. LoRA \citep{hu2022lora} and intrinsic-dimensionality
 results \citep{aghajanyan2021intrinsic} help explain why small-rank updates suffice and why rank matters.
+
+
+
+\textbf{Model behavior.} An advantage of behavior only studies is they need only API access or benchmark outputs
+\citep{yax2025phylolm, wu2026llmdna} as opposed to full model access. For example, PhyloLM \citep{yax2025phylolm} builds LLM phylogenies from output
+similarity and predicts benchmark performance; LLM DNA \citep{wu2026llmdna} defines a functional
+``DNA'' representation carrying lineage. Both methods reconstruct phylogenies over hundreds (or many more) of models. Other
+output-only methods test pairwise provenance from next-token distributions \citep{nikolic2026model} or
+output independence \citep{zhu2025independence}. These behavior-only methods are advantageous as they do not require shared
+architecture and can compare models across families and sizes, an advantage weight-based methods currently lack.
+These studies, however, are typically unsupervised and prompt-dependent, with no ground-truth phylogeny to score
+against, making it difficult to quantify their success.
 
 \textbf{Model weights $\leftrightarrow$ behavior.} A second group links weight changes to
 behavior. \citet{cloud2025subliminal} show child models inherit ``subliminal'' traits even when every
@@ -172,21 +185,7 @@ internal representations (via centered kernel alignment CKA~\citep{kornblith2019
 \citep{tensorguard2025} classify families from how weights react to probes. These establish that
 weight closeness are linked to behavioral similarity, but only pairwise, not as a full phylogeny.
 
-\textbf{Behavior only.} An advantage of behavior only studies is they need only API access or benchmark outputs
-\citep{yax2025phylolm, wu2026llmdna} as opposed to full model access. For example, PhyloLM \citep{yax2025phylolm} builds LLM phylogenies from output
-similarity and predicts benchmark performance; LLM DNA \citep{wu2026llmdna} defines a functional
-``DNA'' representation carrying lineage. Both methods reconstruct phylogenies over hundreds (or many more) of models. Other
-output-only methods test pairwise provenance from next-token distributions \citep{nikolic2026model} or
-output independence \citep{zhu2025independence}. These behavior-only methods are advantageous as they do not require shared
-architecture and can compare models across families and sizes, an advantage weight-based methods currently lack.
-These studies, however, are typically unsupervised and prompt-dependent, with no ground-truth phylogeny to score
-against.
-
-We bridge weight- and behavior-based lineage, determine wheen the phylogeny
-can be estimated, and evaluate against ground-truth trees. This makes explicit an analogy to
-\citet{cloud2025subliminal}, whose guarantee that a parent's preference survives ``a large enough training
-signal'' has a phylogenetic counterpart in Atteson's theorem: for a fixed additive tree metric,
-neighbor-joining provably recovers the tree when distance error is less than half its shortest edge.
+We bridge weight- and behavior-based lineage, determine where the phylogeny can be estimated, and evaluate against ground-truth trees. Our findings are consistent with prior work showing that inherited behavioral signals can be preserved under sufficient training signal \citep{cloud2025subliminal}, as well as phylogenetic results showing that the underlying tree can be correctly reconstructed when certain conditions on the estimated distances are satisfied \citep{atteson1999performance}.
 
 \begin{table}[t]
 \caption{Comparison with the closest lineage-estimation methods.}
