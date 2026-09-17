@@ -140,82 +140,10 @@ we therefore use both as descriptive diagnostics rather than trust guarantees.
 
 
 
-% -----------------------------------------------------------------------
-\section{Related Work}
-\label{sec:related}
-% ----------------------------------------------------------------------
-
-Deep learning lineage studies take three broad forms: \emph{model weights}, \emph{weight--behavior},
-and \emph{behavior only}, driven by applications in provenance and IP
-\citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
-\citep{cloud2025subliminal}, trait inheritance \citep{cloud2025subliminal, agents2026same}, and data
-auditing \citep{zhu2025independence}. Table~\ref{tab:related} compares some of the closest methods.
-
-\textbf{Model weights.} Several works trace weight changes from fine-tuning or reinforcement learning with human feedback (RLHF) back to parent models. MoTHer
-\citep{horwitz2025mother} recovers directed model trees from weight similarity via a directed minimum
-spanning tree and evaluates against controlled, known model hierarchies; \citet{yu2025neural} recover parent--child and grandparent--child lineage with both a
-learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct
-lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral
-DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. Our setting
-differs from MoTHer's observed-node model tree: we observe only terminal checkpoints and estimate a
-leaf phylogeny whose internal ancestors are latent.
-
-Other works examine \emph{why} lineage is detectable in models. Models fine-tuned from a shared initialization stay
-within a single low-error basin and are robust to SGD noise
-\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance can approximate genealogical distance. Additionally, task vectors \citep{ilharco2023editing} are near-orthogonal across tasks, so
-distinct lineages contribute independent directions. LoRA \citep{hu2022lora} and intrinsic-dimensionality
-results \citep{aghajanyan2021intrinsic} explain why small-rank updates suffice and why rank matters.
-
-\textbf{Model weights $\leftrightarrow$ behavior.} A second group links weight changes to
-behavior. \citet{cloud2025subliminal} show child models inherit ``subliminal'' traits even when every
-reference to the trait is filtered from training text, and prove a parent's preference is preserved
-under a large enough training signal given a shared initialization. REEF \citep{zhang2025reef} compares
-internal representations (via centered kernel alignment, CKA~\citep{kornblith2019similarity}) to decide lineage, and gradient-response fingerprints
-\citep{tensorguard2025} classify families from how weights react to probes. These establish that
-weight closeness tracks behavioral similarity, but only pairwise, not as a full phylogeny.
-
-\textbf{Behavior only.} An advantage of blackbox studies is they need only API access or benchmark outputs
-\citep{yax2025phylolm, wu2026llmdna} as opposed to full model access. PhyloLM \citep{yax2025phylolm} builds LLM phylogenies from output
-similarity and predicts benchmark performance; LLM DNA \citep{wu2026llmdna} defines a functional
-``DNA'' representation carrying lineage; both reconstruct phylogenies over hundreds of models. Other
-output-only methods test pairwise provenance from next-token distributions \citep{nikolic2026model} or
-output independence \citep{zhu2025independence}. These methods are advantageous as they do not require shared
-architecture and can compare models across families and sizes, an advantage weight-based methods currently lack.
-These studies, however, are typically unsupervised and prompt-dependent, with no ground-truth topology to score
-against.
-
-We bridge weight- and behavior-based lineage, determine where the phylogeny
-can be estimated, and evaluate against ground-truth trees. This makes explicit an analogy to
-\citet{cloud2025subliminal}, whose guarantee that a parent's preference survives ``a large enough training
-signal'' has a phylogenetic counterpart in Atteson's theorem: for a fixed additive tree metric,
-neighbor-joining provably recovers the tree when distance error is less than half its shortest edge.
-
-\begin{table}[t]
-\caption{Comparison with the closest lineage-estimation methods.}
-\label{tab:related}
-\begin{center}
-\small
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{lcccc}
-\toprule
-Method & Access & \shortstack{Latent\\ancestors} & \shortstack{Known-lineage\\eval} & \shortstack{Real\\checkpoints} \\
-\midrule
-MoTHer \citep{horwitz2025mother}
-  & weights  & \ding{55}  & \checkmark & \checkmark \\
-Neural Phylogeny \citep{yu2025neural}
-  & weights  & \ding{55}   & \checkmark & \checkmark \\
-PhyloLM \citep{yax2025phylolm}
-  & behavior & \checkmark  & \ding{55}  & \checkmark \\
-LLM DNA \citep{wu2026llmdna}
-  & behavior & \checkmark  & \ding{55}  & \checkmark \\
-\textbf{Ours}
-  & \textbf{both} & \checkmark & \checkmark & \checkmark \\
-\bottomrule
-\end{tabular}
-\end{center}
-\end{table}
 
 
+%\input{old_related}
+\input{new_related}
 
 % -----------------------------------------------------------------------x
 \section{Framework}
@@ -233,13 +161,11 @@ terminal checkpoints, we estimate the unrooted leaf topology with internal ances
 \textbf{Phylogeny estimation.}\label{sec:framework:phylo}
 Assume we have a model $g(\theta)$ where $\theta$ is composed of multiple layers $\theta_\ell$. To estimate $\widehat{\mathcal{P}}$: (1) choose a set of layers $\theta_\mathcal{L}$ and a distance metric $d$;
 (2) for each layer $\ell$ compute $D_{i,j}^{(\ell)} = d(\theta^{(\ell)}_i, \theta^{(\ell)}_j)$ between models
-$i,j$; (3) assemble $\widehat{\mathbf{D}}$ as a function of the $D_{i,j}^{(\ell)}$ (e.g.\ the across-layer
-average); and (4) estimate $\widehat{\mathcal{P}} = f(\widehat{\mathbf{D}})$ with $f$ as the NJ method.
+$i,j$; (3) assemble the pairwise distance matrix $\widehat{\mathbf{D}}^{(\ell)}$ from the $D_{i,j}^{(\ell)}$ for each layer $\ell$; and (4) estimate $\widehat{\mathcal{P}} = f(\widehat{\mathbf{D}})$ with $f$ as the NJ method.
 
 Step (3) lets different layers yield different estimates of $\widehat{\mathcal{P}}$, which we use to
-assess each layer's lineage signal. We score an estimated phylogeny against the known truth with the
-Robinson--Foulds (RF) distance \citep{robinson1981comparison}, the number of bipartitions on which the
-two trees disagree, which decomposes into false positives (FP) and false negatives (FN). Because NJ
+assess each layer's lineage signal. We compare estimated and true phylogenies using Robinson--Foulds (RF) distance \citep{robinson1981comparison}, which counts disagreeing bipartitions as false positives (FP) and false negatives (FN).
+ Because NJ
 returns strictly binary trees while our ground-truth phylogenies contain \textit{polytomies} (nodes with
 more than two children), NJ is forced to add resolving edges. As a result, RF is never zero even for a correct binary
 reconstruction. These forced edges inflate FP without being genuine errors. We therefore treat FN, the

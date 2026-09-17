@@ -1,0 +1,74 @@
+% -----------------------------------------------------------------------
+\section{Related Work}
+\label{sec:related}
+% ----------------------------------------------------------------------
+
+Deep learning lineage studies take three broad forms: \emph{model weights}, \emph{weight--behavior},
+and \emph{behavior only}, driven by applications in provenance and IP
+\citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment
+\citep{cloud2025subliminal}, trait inheritance \citep{cloud2025subliminal, agents2026same}, and data
+auditing \citep{zhu2025independence}. Table~\ref{tab:related} compares some of the closest methods.
+
+\textbf{Model weights.} Several works trace weight changes from fine-tuning or reinforcement learning with human feedback (RLHF) back to parent models. MoTHer
+\citep{horwitz2025mother} recovers directed model trees from weight similarity via a directed minimum
+spanning tree and evaluates against controlled, known model hierarchies; \citet{yu2025neural} recover parent--child and grandparent--child lineage with both a
+learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct
+lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral
+DeTuning \citep{horwitz2024spectral} recovers base weights from shared LoRA variants. Our setting
+differs from MoTHer's observed-node model tree: we observe only terminal checkpoints and estimate a
+leaf phylogeny whose internal ancestors are latent.
+
+Other works examine \emph{why} lineage is detectable in models. Models fine-tuned from a shared initialization stay
+within a single low-error basin and are robust to SGD noise
+\citep{neyshabur2020,wortsman2022model,frankle2020linear}, so pairwise weight distance can approximate genealogical distance. Additionally, task vectors \citep{ilharco2023editing} are near-orthogonal across tasks, so
+distinct lineages contribute independent directions. LoRA \citep{hu2022lora} and intrinsic-dimensionality
+results \citep{aghajanyan2021intrinsic} explain why small-rank updates suffice and why rank matters.
+
+\textbf{Model weights $\leftrightarrow$ behavior.} A second group links weight changes to
+behavior. \citet{cloud2025subliminal} show child models inherit ``subliminal'' traits even when every
+reference to the trait is filtered from training text, and prove a parent's preference is preserved
+under a large enough training signal given a shared initialization. REEF \citep{zhang2025reef} compares
+internal representations (via centered kernel alignment, CKA~\citep{kornblith2019similarity}) to decide lineage, and gradient-response fingerprints
+\citep{tensorguard2025} classify families from how weights react to probes. These establish that
+weight closeness tracks behavioral similarity, but only pairwise, not as a full phylogeny.
+
+\textbf{Behavior only.} An advantage of blackbox studies is they need only API access or benchmark outputs
+\citep{yax2025phylolm, wu2026llmdna} as opposed to full model access. PhyloLM \citep{yax2025phylolm} builds LLM phylogenies from output
+similarity and predicts benchmark performance; LLM DNA \citep{wu2026llmdna} defines a functional
+``DNA'' representation carrying lineage; both reconstruct phylogenies over hundreds of models. Other
+output-only methods test pairwise provenance from next-token distributions \citep{nikolic2026model} or
+output independence \citep{zhu2025independence}. These methods are advantageous as they do not require shared
+architecture and can compare models across families and sizes, an advantage weight-based methods currently lack.
+These studies, however, are typically unsupervised and prompt-dependent, with no ground-truth topology to score
+against.
+
+We bridge weight- and behavior-based lineage, determine where the phylogeny
+can be estimated, and evaluate against ground-truth trees. This makes explicit an analogy to
+\citet{cloud2025subliminal}, whose guarantee that a parent's preference survives ``a large enough training
+signal'' has a phylogenetic counterpart in Atteson's theorem: for a fixed additive tree metric,
+neighbor-joining provably recovers the tree when distance error is less than half its shortest edge.
+
+\begin{table}[t]
+\caption{Comparison with the closest lineage-estimation methods.}
+\label{tab:related}
+\begin{center}
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcccc}
+\toprule
+Method & Access & \shortstack{Latent\\ancestors} & \shortstack{Known-lineage\\eval} & \shortstack{Real\\checkpoints} \\
+\midrule
+MoTHer \citep{horwitz2025mother}
+  & weights  & \ding{55}  & \checkmark & \checkmark \\
+Neural Phylogeny \citep{yu2025neural}
+  & weights  & \ding{55}   & \checkmark & \checkmark \\
+PhyloLM \citep{yax2025phylolm}
+  & behavior & \checkmark  & \ding{55}  & \checkmark \\
+LLM DNA \citep{wu2026llmdna}
+  & behavior & \checkmark  & \ding{55}  & \checkmark \\
+\textbf{Ours}
+  & \textbf{both} & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
