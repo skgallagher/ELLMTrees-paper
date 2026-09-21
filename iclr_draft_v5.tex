@@ -176,7 +176,7 @@ zhu2025independence}, keeping our distances comparable to that literature. Final
 
 \textbf{Per-tensor estimated phylogenies.}
 Rather than averaging distances across tensors before estimating a phylogeny, we first treat each weight tensor as an independent estimator of lineage, analogous to using individual genes to estimate biological phylogenies~\citep{maddison1997gene}. For each tensor, we compute a cosine-distance matrix across models and use NJ to estimate a tensor-level tree. We exclude tensors for which all pairwise cosine distances are zero, since they provide no lineage information under this distance metric.
-To obtain a single aggregate topology, we compute the Billera--Holmes--Vogtmann (BHV) Fr'echet mean of the tensor-level trees~\citep{billera2001geometry, willis2019confidence}, which identifies the tree that is closest overall to the individual tensor trees under BHV tree distance. Our primary analysis uses the original cosine distances; we additionally normalize each tensor by its mean pairwise distance as a sensitivity analysis.
+To obtain a single aggregate topology, we compute the Billera--Holmes--Vogtmann (BHV) Fr\'echet mean of the tensor-level trees~\citep{billera2001geometry, willis2019confidence}, which identifies the tree that is closest overall to the individual tensor trees under BHV tree distance. Our primary analysis uses the original cosine distances; we additionally normalize each tensor by its mean pairwise distance as a sensitivity analysis.
 For analyses that require a pairwise distance matrix rather than a tree, including pairwise lineage, four-point additivity, and the Atteson diagnostic, we use the arithmetic mean of the nonzero tensor-level distance matrices. This tensor-wise approach therefore provides both an aggregate phylogeny and a way to assess which tensors carry the strongest lineage signal (\S\ref{sec:results:weighttree}).
 
 
@@ -383,7 +383,7 @@ $r_{\mathrm{DL}}$ [95\% CI] & \multicolumn{2}{c}{Translation} & HellaSwag & ARC-
 \cmidrule(lr){2-3}
 Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
-Llama-3.2-1B & \shortstack{$-0.20$\\{\scriptsize$[-.26,-.13]$}} & \shortstack{$-0.23$\\{\scriptsize$[-.29,-.17]$}} & \shortstack{$-0.17$\\{\scriptsize$[-.24,-.10]$}} & \shortstack{$-0.20$\\{\scriptsize$[-.26,-.13]$}} & \shortstack{$-0.19$\\{\scriptsize$[-.26,-.12]$}} & \shortstack{$-0.22$\\{\scriptsize$[-.27,-.16]$}} \\
+Llama-3.2-1B & \shortstack{$-0.20$\\{\scriptsize$[-.26,-.13]$}} & \shortstack{$-0.23$\\{\scriptsize$[-.29,-.17]$}} & \shortstack{$-0.17$\\{\scriptsize$[-.24,-.10]$}} & \shortstack{$-0.20$\\{\scriptsize$[-.26,-.13]$}} & \shortstack{$-0.19$\\{\scriptsize$[-.26,-.12]$}} & \shortstack{$-0.22$\\{\scriptsize$[-.26,-.16]$}} \\
 \addlinespace
 Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \shortstack{$+0.04^{\ddagger}$\\{\scriptsize$[-.01,+.09]$}} & \shortstack{$+0.09$\\{\scriptsize$[+.05,+.14]$}} & \shortstack{$-0.14^{\ddagger}$\\{\scriptsize$[-.19,-.09]$}} & \shortstack{$-0.16^{\ddagger}$\\{\scriptsize$[-.20,-.11]$}} & \shortstack{$-0.17^{\ddagger}$\\{\scriptsize$[-.22,-.12]$}} \\
 \bottomrule
