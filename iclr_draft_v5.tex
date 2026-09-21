@@ -530,11 +530,14 @@ Table~\ref{tab:training_config} summarizes the audited configurations for
 \nolinkurl{4e20de362430cd3b72f300e6b0f18e50e7166e08}.} Each child is initialized
 from its parent and trained under the configuration for its cohort.
 
-\newpage
-\begin{table}[!ht]
-\caption{Training configuration for the controlled Flan and Llama cohorts.}
-\label{tab:training_config}
+\begin{center}
+\begin{minipage}{\linewidth}
 \centering
+\refstepcounter{table}
+\label{tab:training_config}
+\textbf{Table \thetable:} Training configuration for the controlled Flan and Llama cohorts.
+\vspace{4pt}
+
 \small
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}p{0.19\linewidth}p{0.38\linewidth}p{0.38\linewidth}@{}}
@@ -553,19 +556,22 @@ LoRA & $r=8$, $\alpha=16$, dropout 0.05; module scopes in Table~\ref{tab:lora_va
 Data sample & At most 10,000 train and 1,000 evaluation examples per dataset & At most 10,000 train and 1,000 evaluation examples per dataset \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{minipage}
+\end{center}
 
 Training and dataset subsampling are seeded and held fixed across matched conditions and across
 nodes assigned the same dataset. Topology generation and task/dataset assignment use separate seed
 streams, as described above.
 
 \subsection*{Behavioral Probes and Analysis Population}
-The behavioral analysis uses every trained checkpoint in each tree: 641 nodes across 50
-trees, including the 276 trained internal nodes as observed ancestors and excluding the untrained root.
-The 365 terminal leaves form a separately reported sensitivity population. Weight distances are direct
-cosine distances between the two observed checkpoints in each pair; internal nodes are not reconstructed
-from their descendants. Translation uses 200 frozen prompts with one deterministic greedy completion per
-node (up to 128 new tokens for Flan and 64 for Llama). HellaSwag, ARC-Challenge, MMLU, and TruthfulQA
+Within each behavioral cohort, the primary analysis uses all 641 trained, non-root checkpoints
+across 50 trees: 276 trained internal nodes and 365 terminal leaves. Each internal node is an actual
+checkpoint saved during training, not a latent ancestor inferred from its descendants; we evaluate
+its weights and outputs directly, just as we do for a leaf. The leaf-only analysis is reported
+separately as a sensitivity check. For each within-tree checkpoint pair, weight distance is the mean
+active-layer cosine distance described above. Translation uses 200 frozen prompts with one
+deterministic greedy completion per checkpoint (up to 128 new tokens for Flan and 64 for Llama).
+HellaSwag, ARC-Challenge, MMLU, and TruthfulQA
 each use 100 frozen prompts and three sampled completions per prompt, with a distinct generation seed
 for each draw (temperature 1, $p=1$; up to 64 new tokens). Dolly, used only in the
 end-of-sequence (EOS) sensitivity, uses 30 prompts, three draws, and up to 96 new tokens.
