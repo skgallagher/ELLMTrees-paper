@@ -376,7 +376,11 @@ We first determine how well shared lineage estimation (e.g., parent--child or wi
   distance matrix.
   $\dagger$ marks the cumulative update-space all-projections experiment.
   PAER means $\mathrm{FN}=0$.  Flan is outside PhyloLM's scope. $^\star$Ceiling cells correspond to 117/117
-  recovered truth splits and 46/46 PAER trees.}
+  recovered truth splits and 46/46 PAER trees; for reference, a uniformly random binary tree would
+  recover 8.7\% (SE 1.1) of clades and 3.2\% PAER on these 46 trees.
+  $^\ddagger$Distinct cohorts (separate adapters, checkpoints, and distance matrices) whose estimated
+  trees differ only in a polytomy-resolving split on five of the 50 trees, so every statistic
+  coincides at display precision.}
 \label{tab:variants}
 \begin{center}
 \scriptsize
@@ -389,8 +393,8 @@ Variant & \shortstack{Rank-bis.\\(SE)} & \shortstack{$r_{\mathrm{branch}}$\\(SE)
 \multicolumn{7}{l}{\textbf{Encoder--decoder: Flan-T5-base} ($d=768$)} \\
 \multicolumn{7}{l}{\quad\textit{LoRA adapter scope}} \\
 \quad LoRA: key only                    & 0.52 (0.09) & $-0.53$ (0.07) & \textbf{92\%} (3\%) & n/a & \textbf{85\%} (5\%) & 2.39 (0.25); 0.17 (0.06) \\
-\quad LoRA: q/k/v                       & 0.56 (0.09) & $-0.62$ (0.07) & \textbf{99\%} (1\%) & n/a & \textbf{98\%} (2\%) & 2.09 (0.21); 0.02 (0.02) \\
-\quad LoRA: q/k/v/o (all attention)     & 0.56 (0.09) & $-0.62$ (0.07) & \textbf{99\%} (1\%) & n/a & \textbf{98\%} (2\%) & 2.09 (0.21); 0.02 (0.02) \\
+\quad LoRA: q/k/v$^\ddagger$            & 0.56 (0.09) & $-0.62$ (0.07) & \textbf{99\%} (1\%) & n/a & \textbf{98\%} (2\%) & 2.09 (0.21); 0.02 (0.02) \\
+\quad LoRA: q/k/v/o (all attention)$^\ddagger$ & 0.56 (0.09) & $-0.62$ (0.07) & \textbf{99\%} (1\%) & n/a & \textbf{98\%} (2\%) & 2.09 (0.21); 0.02 (0.02) \\
 \quad LoRA: q/k/v/o + FFN projections$^\dagger$ & 1.00 (0.00) & $-0.91$ (0.02) & \textbf{96\%} (2\%) & n/a & \textbf{89\%} (5\%) & 2.26 (0.21); 0.11 (0.05) \\
 \multicolumn{7}{l}{\quad\textit{Full fine-tuning}} \\
 \quad Full fine-tuning                  & 0.69 (0.08) & $-0.71$ (0.06) & \textbf{100\%}$^\star$ & n/a & \textbf{100\%}$^\star$ & 2.04 (0.19); 0.00 (0.00) \\
