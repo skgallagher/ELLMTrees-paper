@@ -335,13 +335,7 @@ auxiliary ordering analysis instead works at the branch level among observed lea
 training tree, two leaves are labeled ``same branch'' when their first ancestor below the root is
 the same; all other leaf pairs are labeled ``cross branch.'' We test whether cross-branch distances
 are larger with a one-sided Mann--Whitney $U$ test and report the corresponding rank-biserial effect
-$r_{\mathrm{rb}}=2U/(n_{\mathrm{cross}}n_{\mathrm{same}})-1$. Thus $r_{\mathrm{rb}}=1$ means that
-every cross-branch pair is farther apart than every same-branch pair, whereas zero indicates no
-rank separation. We also report the point-biserial correlation
-$r_{\mathrm{branch}}=\operatorname{Cor}(\mathbf{1}\{\mathrm{same\ branch}\},d)$; stronger lineage
-signal is negative because same-branch pairs are expected to be closer. Both statistics are first
-computed separately within each of the 26 trees that contain both pair classes, so trees with more
-leaves do not dominate through having more pairs. Across trees, we report the arithmetic mean and
+$r_{\mathrm{rb}}=2U/(n_{\mathrm{cross}}n_{\mathrm{same}})-1$. We also report the point-biserial correlation. Across trees, we report the arithmetic mean and
 sample SE of $r_{\mathrm{rb}}$, and Fisher $z$-average $r_{\mathrm{branch}}$\footnote{For each run we
 compute $z=\operatorname{arctanh}(r)$, average on the $z$ scale, and back-transform with
 $r=\tanh(\bar z)$.}.
@@ -382,8 +376,7 @@ We first determine how well shared lineage estimation (e.g., parent--child or wi
   distance matrix.
   $\dagger$ marks the cumulative update-space all-projections experiment.
   PAER means $\mathrm{FN}=0$.  Flan is outside PhyloLM's scope. $^\star$Ceiling cells correspond to 117/117
-  recovered truth splits and 46/46 PAER trees (two-sided exact 95\% binomial intervals
-  96.9--100\% and 92.3--100\%, respectively).}
+  recovered truth splits and 46/46 PAER trees.}
 \label{tab:variants}
 \begin{center}
 \scriptsize
