@@ -441,7 +441,7 @@ Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \shortstack{$+
 When weights are unavailable or different architectures need to be compared, lineage must be inferred from behavior alone. We compare our weight-based
 estimation to PhyloLM~\citep{yax2025phylolm}, scored against the
 same documented lineage. On the real Mistral family (Fig.~\ref{fig:real-trees}), PhyloLM and our approach
-both recover all three forks. Their informative-quartet additivity differs ($A=0.84$ vs.\ $0.98$, respectively), indicating that the weight-based distance matrix has a stronger additive signal.
+both recover all three forks. Their informative-quartet additivity differs ($A=0.83$ vs.\ $0.98$, respectively), indicating that the weight-based distance matrix has a stronger additive signal.
 
 The Mistral forks are large RLHF or direct-preference-optimization (DPO) weight changes that move behavior substantially. Our controlled trees are a more precise test. In some of the LoRA and low-update regimes fine-tuning barely shifts behavior, yet weight distance can still estimate phylogenies. Running PhyloLM on the shared trees against the same ground truth, behavior-only recovery falls well below weight-based recovery. Under full fine-tuning PhyloLM recovers $52\%$ of clades versus $100\%$ for weights, under rank-8 LoRA it recovers $35\%$ versus $100\%$, and under rank-64 LoRA it recovers $24\%$ versus $100\%$. This indicates that behavior-based distances can preserve some lineage signal but not all in some settings. Overall, our weight-based estimation matches behavior-based estimation on this real family and substantially outperforms it in the controlled experiments.
 
