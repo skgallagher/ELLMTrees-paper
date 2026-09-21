@@ -156,7 +156,10 @@ single-root model families but observe only their terminal models. Thus,  we est
 \textbf{Phylogeny estimation.}\label{sec:framework:phylo}
 Assume we have a model $g(\theta)$ where $\theta$ is composed of multiple layers $\theta_\ell$. To estimate $\widehat{\mathcal{P}}$: (1) choose a set of layers $\theta_\mathcal{L}$ and a distance metric $d$;
 (2) for each layer $\ell$ compute $D_{i,j}^{(\ell)} = d(\theta^{(\ell)}_i, \theta^{(\ell)}_j)$ between models
-$i,j$; (3) assemble a pairwise distance matrix $\widehat{\mathbf{D}}$ either from one layer's distances or by aggregating across layers (e.g.\ the across-layer average); and (4) estimate $\widehat{\mathcal{P}} = f(\widehat{\mathbf{D}})$ with $f$ as the NJ method.
+$i,j$; and (3) apply NJ to each selected layer's matrix to obtain a layer-level tree. We either
+analyze these layer-level trees separately or combine them in tree space, as described below. Analyses
+that require one pairwise weight distance instead use the arithmetic mean of the active layer-level
+distance matrices.
 
 Step (3) lets different layers yield different estimates of $\widehat{\mathcal{P}}$, which we use to
 assess each layer's lineage signal. We compare estimated and true phylogenies using Robinson--Foulds (RF) distance \citep{robinson1981comparison}, which counts disagreeing bipartitions as false positives (FP) and false negatives (FN). We restrict our analysis to unrooted phylogenies with at least four leaves, since three leaves have only one possible unrooted topology and therefore no nontrivial internal split to recover. We compare estimated and ground-truth phylogenies using Robinson--Foulds (RF) distance \citep{robinson1981comparison}, which measures disagreement between their splits. Because NJ returns binary trees while our ground-truth phylogenies may contain \textit{polytomies} (nodes with more than two children), NJ must introduce additional splits to resolve them. RF counts a split present in the estimated tree but absent from the ground-truth tree as a false positive (FP); thus, splits introduced solely to resolve a polytomy may be counted as FPs even though they do not contradict the known lineage. We therefore focus on false negatives (FN), which count ground-truth clades missed by the reconstruction. We also report clade recovery, $1-\mathrm{FN}/|\text{true splits}|$, the fraction of ground-truth clades recovered, and polytomy-aware exact recovery (PAER), the fraction of runs in which all ground-truth clades are recovered ($\mathrm{FN}=0$). Separately, we report the standardized within-run branch correlation $r_{\mathrm{branch}}$ between weight distance and a same-branch indicator to assess whether weight distance reflects lineage relationships.
@@ -175,9 +178,26 @@ zhu2025independence}, keeping our distances comparable to that literature. Final
 
 
 \textbf{Per-layer estimated phylogenies.}
-Rather than averaging distances across layers before estimating a phylogeny, we first treat each weight layer as an independent estimator of lineage, analogous to using individual genes to estimate biological phylogenies~\citep{maddison1997gene}. For each layer, we compute a cosine-distance matrix across models and use NJ to estimate a layer-level tree. We exclude layers for which all pairwise cosine distances are zero, since they provide no lineage information under this distance metric.
-To obtain a single aggregate topology, we compute the Billera--Holmes--Vogtmann (BHV) Fr\'echet mean of the layer-level trees~\citep{billera2001geometry, willis2019confidence}, which identifies the tree that is closest overall to the individual layer trees under BHV tree distance. Our primary analysis uses the original cosine distances; we additionally normalize each layer by its mean pairwise distance as a sensitivity analysis.
-For analyses that require a pairwise distance matrix rather than a tree, including pairwise lineage, four-point additivity, and the Atteson diagnostic, we use the arithmetic mean of the nonzero layer-level distance matrices. This layer-wise approach therefore provides both an aggregate phylogeny and a way to assess which layers carry the strongest lineage signal (\S\ref{sec:results:weighttree}).
+We treat each weight layer as an independent estimator of lineage, analogous to using individual
+genes to estimate biological phylogenies~\citep{maddison1997gene}. For a given training tree and
+layer, we compute the cosine-distance matrix across its observed models and apply NJ, producing one
+estimated phylogeny for that layer. The per-layer profile keeps these estimates separate: it scores
+each layer's tree against the known training tree and then, for each aligned layer, averages the
+resulting FN rate across the 46 trees retained for topology recovery. It never averages distance
+matrices across layers or combines different layers' trees. We exclude layers for which all pairwise
+cosine distances are zero, since they provide no lineage information under this metric.
+
+When one aggregate topology is required, we instead compute the Billera--Holmes--Vogtmann (BHV)
+Fr\'echet mean of the layer-level trees~\citep{billera2001geometry, willis2019confidence}. This is a
+tree-space mean: it returns the point in BHV tree space that minimizes the summed squared distance
+to the individual layer-level trees, rather than first averaging their distance matrices. Our
+primary analysis uses the original cosine distances; we additionally normalize each layer by its
+mean pairwise distance as a sensitivity analysis. For analyses that require a single pairwise
+weight-distance matrix---including direct lineage, four-point additivity, the Atteson diagnostic,
+and weight--behavior associations---we use the arithmetic mean of the nonzero active-layer distance
+matrices. Behavioral similarity is likewise the arithmetic mean of prompt-paired output-embedding
+cosine similarities. Thus the per-layer profile, aggregate topology, and pairwise behavioral
+analysis use separate, explicit aggregation rules.
 
 
 
@@ -254,7 +274,20 @@ main text and report the other two in App.~\ref{app:organic-additional}.
 \paragraph{Direct lineage.}
 MoTHer~\citep{horwitz2025mother} assembles pairwise relatedness and direction scores into a directed
 model tree, while Neural Phylogeny~\citep{yu2025neural} identifies parent--child relationships. Our
-auxiliary ordering analysis instead works at the branch level among observed leaves. For each run we test whether same-branch leaf pairs are closer in weight space than cross-branch pairs with a one-sided Mann--Whitney $U$ test, summarize the effect with the rank-biserial correlation, and report the within-run branch correlation $r_{\mathrm{branch}}$ (Fisher $z$-averaged across runs)\footnote{For each run we compute $z=\operatorname{arctanh}(r)$, average on the $z$ scale, and back-transform with $r=\tanh(\bar z)$.} between weight distance and the same-branch indicator.
+auxiliary ordering analysis instead works at the branch level among observed leaves. Within each
+training tree, two leaves are labeled ``same branch'' when their first ancestor below the root is
+the same; all other leaf pairs are labeled ``cross branch.'' We test whether cross-branch distances
+are larger with a one-sided Mann--Whitney $U$ test and report the corresponding rank-biserial effect
+$r_{\mathrm{rb}}=2U/(n_{\mathrm{cross}}n_{\mathrm{same}})-1$. Thus $r_{\mathrm{rb}}=1$ means that
+every cross-branch pair is farther apart than every same-branch pair, whereas zero indicates no
+rank separation. We also report the point-biserial correlation
+$r_{\mathrm{branch}}=\operatorname{Cor}(\mathbf{1}\{\mathrm{same\ branch}\},d)$; stronger lineage
+signal is negative because same-branch pairs are expected to be closer. Both statistics are first
+computed separately within each of the 26 trees that contain both pair classes, so trees with more
+leaves do not dominate through having more pairs. Across trees, we report the arithmetic mean and
+sample SE of $r_{\mathrm{rb}}$, and Fisher $z$-average $r_{\mathrm{branch}}$\footnote{For each run we
+compute $z=\operatorname{arctanh}(r)$, average on the $z$ scale, and back-transform with
+$r=\tanh(\bar z)$.}.
 
 \paragraph{Phylogeny estimation.}
 \label{sec:exp:weights}
@@ -460,20 +493,21 @@ Training trees are generated via a Poisson branching process as follows:
 
 This procedure accepts and trains 50 trees with 4--10 observed leaves and variable depth and branching structure; the recovery analyses use the eligible 46-tree subset described above. Across all 50 trees there are 641 trained nodes (365 leaves and 276 internal nodes), in addition to the untrained roots. The ground-truth topology is fully known by construction, enabling exact RF evaluation.
 
-\paragraph{Sample accounting.} Each controlled grid targets 50 generated training trees, while
-recovery and direct ordering have different eligibility rules. The Flan comparison clones the
-same 50 topology IDs across all five training regimes. The 46 truths with at least one nontrivial
-unrooted split enter recovery, and the same 26 enter
-ordering in every row; the other 24 trees have no cross-root-branch comparison, so ordering is
-undefined rather than missing. The Llama rank-8, rank-64, and full-FT regimes reuse those same
-50 topology IDs and task/data assignments; the same 46 enter recovery and the same 26 enter ordering.
-The PhyloLM comparison produces a behavioral reconstruction for all 50 trees in each matched-topology Llama condition, but its
-topology summaries use the common 46-tree subset after excluding four truths with no nontrivial
-unrooted split (topology IDs 015, 020, 037, and 047); matched weight values in
-Table~\ref{tab:variants} are computed on those same 46 trees.
-The Flan per-layer profile in Fig.~\ref{fig:layertrace_grid} uses the same 46 topology-eligible
-full-fine-tuning trees; the Llama panel uses the matched 46-tree
-full-fine-tuning cohort.
+\paragraph{Experiment structure.} All topology-recovery comparisons use the same 46 retained
+unlabeled tree topologies, with node identities aligned across conditions. In the ordinary Flan
+and Llama cohorts, every aligned node also retains the same task/dataset label across root models
+and fine-tuning interventions. The matched no-translation cohorts preserve those topologies
+and node identities, but replace translation assignments with unused classification, QA, or
+summarization datasets (App.~\ref{app:translation_probe}). Thus, comparisons are paired by tree and,
+except for the intended translation-removal intervention, by node label.
+
+Different analyses use fixed eligible subsets of these shared trees. Topology recovery uses the
+common 46 trees with at least one nontrivial unrooted truth split (excluding topology IDs 015, 020,
+037, and 047), while direct ordering uses the common 26 trees with a defined cross-root-branch
+comparison. PhyloLM produces a behavioral reconstruction for every tree in each matched Llama
+condition, and its topology summaries and the matched weight values in
+Table~\ref{tab:variants} use the same 46-tree recovery subset. The Flan and Llama per-layer profiles
+in Fig.~\ref{fig:layertrace_grid} likewise use their matched 46-tree full-fine-tuning cohorts.
 
 \subsection*{Training Configuration}
 \paragraph{Flan-T5-base.} We pin \texttt{google/flan-t5-base} to revision \texttt{7bcac572ce56\allowbreak db69c1ea7c8a\allowbreak f255c5d7c9672fc2}. Each node trained for exactly 2,000 steps without early stopping, with seed 42, learning rate $3 \times 10^{-4}$, batch size 8, gradient accumulation 4 (effective batch 32), warmup 200 steps, weight decay 0.01, and bf16 precision. Inputs and targets are capped at 512 and 128 tokens, respectively. We used a frozen subsample with seed 42 and up to 10,000 training and 1,000 evaluation examples per dataset, holding the sampled data fixed across nodes assigned the same dataset.
