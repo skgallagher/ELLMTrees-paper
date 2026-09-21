@@ -588,56 +588,70 @@ independent observations.
 \label{app:layers}
 Two families of variants appear in the paper. \emph{layer subsets} (Table~\ref{tab:layer_subsets})
 restrict the full-weight distance to a chosen set of layers, testing which layers carry the lineage
-signal; they are defined on Flan-T5-base (12 encoder + 12 decoder blocks). \emph{LoRA variants}
-(Table~\ref{tab:lora_variants}) instead change which modules are fine-tuned, all at rank $r=8$,
-$\alpha=16$, dropout $0.05$. Their controlled-tree analysis merges the full
+signal. For each subset, we average the selected per-layer cosine-distance matrices before neighbor
+joining. ``SA.k'' denotes the self-attention key projection, and ``pre-attention LayerNorm'' denotes
+\texttt{layer.0.layer\_norm} in Flan-T5-base and \texttt{input\_layernorm} in Llama-3.2-1B.
+Counts and percentages are relative to the 282 Flan layers or 146 Llama layers in the analysis.
+The \texttt{low\_signal} control contains post-attention, cross-attention, and post-FFN LayerNorms
+for Flan and post-attention LayerNorms for Llama.
+
+\emph{LoRA variants} (Table~\ref{tab:lora_variants}) instead change which modules are fine-tuned.
+All use dropout $0.05$; the Flan variants and Llama rank-8 variant use $\alpha=16$, while the Llama
+rank-64 variant uses $\alpha=128$. Their controlled-tree analysis merges the full
 root-to-node adapter chain so distances are computed between standalone full-weight leaves. The
 all-projections row is retained as an explicitly marked cumulative-update ablation: it compares the
 cumulative root-to-node adapter displacement with the shared base omitted, whereas the other LoRA rows
 use standalone merged full weights. It is therefore excluded from the merged-weight diagnostic fit.
+In Table~\ref{tab:lora_variants}, $q,k,v,o$ denote the attention projections; $\mathrm{wi}_{0,1}$
+and $\mathrm{wo}$ denote the two gated FFN inputs and the FFN output.
 
 \begin{table}[h]
-\caption{layer subsets (matched-topology Flan-T5-base full FT; cosine; $n=46$). ``SA.k'' is the self-attention key projection;
-``pre-attention LayerNorm'' is the \texttt{layer.0.layer\_norm} preceding self-attention. The table's
-percentages count layers in the 282-layer trained set, not scalar parameters. In particular,
-\texttt{enc\_sak} is 12/282 layers (4.3\%) but 7,077,888/247,577,856 scalar weights (2.86\%).
-\emph{Clade} and PAER are polytomy-aware recovery percentages with SEs over the same runs.
-\texttt{low\_signal} is the predefined LayerNorm control subset.}
+\caption{Full-FT layer-subset recovery on the matched 46-tree cohorts (cosine). Values are
+percentages reported as mean (SE); PAER is polytomy-aware exact recovery.}
 \label{tab:layer_subsets}
 \centering
 \scriptsize
 \setlength{\tabcolsep}{2pt}
-\begin{tabular}{llrrrr}
+\begin{tabular}{lllrrrr}
 \toprule
-Variant & layers included & Count & \% layers & Clade (SE) & PAER (SE) \\
+Model & Variant & Layers included & Count & \% layers & Clade (SE) & PAER (SE) \\
 \midrule
-\texttt{full}         & all trained layers                                   & 282 & 100          & 100.0 (0.0) & 100.0 (0.0) \\
-\texttt{high\_signal} & SA.k $+$ pre-attn LN (encoder $+$ decoder)            & 48  & $\sim$17     & 100.0 (0.0) & 100.0 (0.0) \\
-\texttt{sak}          & SA.k only (encoder $+$ decoder)                       & 24  & $\sim$8.5    & 100.0 (0.0) & 100.0 (0.0) \\
-\texttt{encoder\_h}   & encoder SA.k $+$ pre-attn LN                          & 24  & $\sim$8.5    & 100.0 (0.0) & 100.0 (0.0) \\
-\texttt{enc\_sak}     & encoder SA.k only                                     & 12  & 4.3           & 100.0 (0.0) & 100.0 (0.0) \\
-\texttt{low\_signal}  & post-attn/cross-attn/post-FFN LNs (control)           & 36 & $\sim$13 & 100.0 (0.0) & 100.0 (0.0) \\
+Flan & \texttt{full}         & all layers                                  & 282 & 100.0 & 100.0 (0.0) & 100.0 (0.0) \\
+     & \texttt{high\_signal} & SA.k $+$ pre-attn LN                        & 48  & 17.0  & 100.0 (0.0) & 100.0 (0.0) \\
+     & \texttt{sak}          & SA.k only                                    & 24  & 8.5   & 100.0 (0.0) & 100.0 (0.0) \\
+     & \texttt{encoder\_h}   & encoder SA.k $+$ pre-attn LN                 & 24  & 8.5   & 100.0 (0.0) & 100.0 (0.0) \\
+     & \texttt{enc\_sak}     & encoder SA.k only                            & 12  & 4.3   & 100.0 (0.0) & 100.0 (0.0) \\
+     & \texttt{low\_signal}  & LayerNorm control                            & 36  & 12.8  & 100.0 (0.0) & 100.0 (0.0) \\
+\midrule
+Llama & \texttt{full}         & all layers                                  & 146 & 100.0 & 100.0 (0.0) & 100.0 (0.0) \\
+      & \texttt{high\_signal} & SA.k $+$ pre-attn LN                        & 32  & 21.9  & 100.0 (0.0) & 100.0 (0.0) \\
+      & \texttt{sak}          & SA.k only                                    & 16  & 11.0  & 100.0 (0.0) & 100.0 (0.0) \\
+      & \texttt{low\_signal}  & LayerNorm control                            & 16  & 11.0  & 53.3 (5.0)  & 21.7 (6.1) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+The zero SEs are exact rather than rounded: every Flan subset and each of the three signal-bearing
+Llama subsets recovers all 46 eligible topologies. The Llama LayerNorm control does not, showing that
+the ceiling result is specific to the informative subsets rather than an artifact of the evaluation.
+
 \begin{table}[h]
-\caption{LoRA target-module variants in the fixed-2,000-step Flan-T5-base cohort
-($r=8$, $\alpha=16$, dropout $0.05$). Modules $q,k,v,o$ are attention
-query/key/value/output projections; \texttt{wi\_0}, \texttt{wi\_1}, and \texttt{wo} are the two gated
-FFN inputs and the FFN output. Counts follow the modules actually resolved by PEFT (36 modules per
-attention projection and 24 per FFN projection); percentages use the 247,577,856 scalar-weight analysis
-denominator.}
+\caption{LoRA configurations used in the fixed-2,000-step cohorts. Percentages compare trainable
+LoRA parameters with the analyzed base-model weights.}
 \label{tab:lora_variants}
 \centering
-\begin{tabular}{ll r r}
+\scriptsize
+\begin{tabular}{lllrrrr}
 \toprule
-Variant & Target modules & Trainable params & \% scalars \\
+Model & Variant & Target modules & $r$ & $\alpha$ & Trainable params & \% weights \\
 \midrule
-\texttt{lora\_k\_r8}          & $k$                                  & 442,368   & 0.18 \\
-\texttt{lora\_qkv\_r8}        & $q,k,v$                              & 1,327,104 & 0.54 \\
-\texttt{lora\_qkvo\_r8}       & $q,k,v,o$                            & 1,769,472 & 0.71 \\
-\texttt{lora\_all\_proj\_r8}  & $q,k,v,o,\mathrm{wi}_{0,1},\mathrm{wo}$ & 3,391,488 & 1.37 \\
+Flan & \texttt{lora\_k}         & $k$                                      & 8  & 16  & 442,368   & 0.18 \\
+     & \texttt{lora\_qkv}       & $q,k,v$                                  & 8  & 16  & 1,327,104 & 0.54 \\
+     & \texttt{lora\_qkvo}      & $q,k,v,o$                                & 8  & 16  & 1,769,472 & 0.71 \\
+     & \texttt{lora\_all\_proj} & $q,k,v,o,\mathrm{wi}_{0,1},\mathrm{wo}$ & 8  & 16  & 3,391,488 & 1.37 \\
+\midrule
+Llama & \texttt{lora\_qkv}      & $q,k,v$                                  & 8  & 16  & 1,179,648 & 0.10 \\
+      & \texttt{lora\_qkv}      & $q,k,v$                                  & 64 & 128 & 9,437,184 & 0.76 \\
 \bottomrule
 \end{tabular}
 \end{table}
