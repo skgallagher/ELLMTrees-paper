@@ -451,14 +451,14 @@ including all text, claims, and artifacts produced with the aid of generative AI
 Training trees are generated via a Poisson branching process as follows:
 
 \begin{enumerate}
-    \item The pretrained root model draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children, with a minimum of 1. We instantiate the same topology with either Flan-T5-base or Llama-3.2-1B.
-    \item Each subsequent node draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children. Nodes that draw $k = 0$ naturally become leaves; no separate pruning step is needed.
-    \item Breadth First Search expansion continues until either a node budget ($n_\mathrm{nodes} = 14$ training nodes, not counting the root) is exhausted or a maximum depth ($n_\mathrm{layers} = 4$) is reached. The budget cap creates the truncation; any node alive when the budget runs out becomes a leaf.
-    \item Each non-root node is assigned one of the 36 task/dataset pairs (9 summarization, 10 classification, 8 QA, and 9 translation). The 36 pairs are randomly permuted and sampled without replacement within a tree, so datasets do not repeat but task families can. The topology uses seeds beginning at \texttt{20260707}; assignment seeds are 1--50.
-    \item Recovery excludes trees with fewer than four leaves or no nontrivial truth split, because their unrooted topology contains no clade that can be meaningfully recovered.
+    \item The virtual root draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children, with a minimum of 1. We instantiate the same accepted topologies and task/data assignments with either Flan-T5-base or Llama-3.2-1B.
+    \item Each queued node below the depth limit draws $k \sim \mathrm{Poisson}(\lambda = 1.5)$ children while node budget remains. Nodes that draw $k = 0$ naturally become leaves; no separate pruning step is applied.
+    \item Expansion is breadth-first, with a budget of at most $n_\mathrm{nodes} = 14$ training nodes (not counting the root) and maximum depth $n_\mathrm{layers} = 4$. Reaching depth 4 on one branch prevents only those depth-4 nodes from expanding; shallower nodes already in the queue can still produce children while budget remains. Growth ends when the queue is empty or the node budget is exhausted. Candidate trees with fewer than four leaves are rejected, and seeded draws continue until 50 trees are accepted.
+    \item Each non-root node is assigned one of 36 task/dataset pairs (9 summarization, 10 classification, 8 QA, and 9 translation). The pairs are sampled without replacement within a tree, so datasets do not repeat but task families can. Topology generation and task/dataset assignment are seeded separately.
+    \item Topology recovery uses only accepted trees with at least one nontrivial unrooted truth split---an internal edge that partitions the leaves into two groups of at least two. Four accepted trees each have four leaves but reduce to unresolved stars, with only trivial one-versus-three splits; this leaves 46 trees for recovery. Four leaves alone is not exclusionary.
 \end{enumerate}
 
-This procedure yields trees with 4--10 observed leaves across the 50 accepted replications, with variable depth and branching structure. It produces 641 trained nodes in total (365 leaves and 276 internal nodes), in addition to the untrained roots. The ground-truth topology is fully known by construction, enabling exact RF evaluation.
+This procedure accepts and trains 50 trees with 4--10 observed leaves and variable depth and branching structure; the recovery analyses use the eligible 46-tree subset described above. Across all 50 trees there are 641 trained nodes (365 leaves and 276 internal nodes), in addition to the untrained roots. The ground-truth topology is fully known by construction, enabling exact RF evaluation.
 
 \paragraph{Sample accounting.} Each controlled grid targets 50 generated training trees, while
 recovery and direct ordering have different eligibility rules. The Flan comparison clones the
