@@ -371,16 +371,12 @@ We examine the results of our controlled and real data experiments with our enco
 We first determine how well shared lineage estimation (e.g., parent--child or within-branch) performs under different conditions. There are $n_{ord}=26$ eligible trees for this analysis that contain at least one pair of leaves from the same root branch and at least one pair from different root branches. Table~\ref{tab:variants} reports the Mann--Whitney rank-biserial effect and the within-run branch correlation $r_{\mathrm{branch}}$ between cosine distance and a same-branch indicator. Every mean rank-biserial effect is positive and every $r_{\mathrm{branch}}$ is negative. This implies that ordering in a tree has a strong signal in the weights in our experiments.
 
 \begin{table}[h]
-\caption{Lineage and recovery by training regime. Topology recovery uses the
-  BHV Fr\'echet mean of per-layer NJ trees; pairwise lineage statistics use the mean active-layer
-  distance matrix.
-  $\dagger$ marks the cumulative update-space all-projections experiment.
-  PAER means $\mathrm{FN}=0$.  Flan is outside PhyloLM's scope. $^\star$Ceiling cells correspond to 117/117
-  recovered truth splits and 46/46 PAER trees; for reference, a uniformly random binary tree would
-  recover 8.7\% (SE 1.1) of clades and 3.2\% PAER on these 46 trees.
-  $^\ddagger$Distinct cohorts (separate adapters, checkpoints, and distance matrices) whose estimated
-  trees differ only in a polytomy-resolving split on five of the 50 trees, so every statistic
-  coincides at display precision.}
+\caption{Lineage and recovery by training regime (46 trees). Topology: BHV Fr\'echet mean of
+  per-layer NJ trees; pairwise statistics: mean active-layer distance matrix. PAER: all true clades
+  recovered ($\mathrm{FN}=0$). Flan is outside PhyloLM's scope. $^\dagger$Cumulative update-space
+  all-projections ablation. $^\star$At ceiling: 117/117 truth splits, 46/46 trees.
+  $^\ddagger$Distinct cohorts whose statistics coincide at display precision (App.~\ref{app:details}).
+  Chance level for a random binary tree: 8.7\% clade recovery, 3.2\% PAER (App.~\ref{app:details}).}
 \label{tab:variants}
 \begin{center}
 \scriptsize
@@ -593,7 +589,10 @@ common 46 trees with at least one nontrivial unrooted truth split (excluding top
 037, and 047), while direct ordering uses the common 26 trees with a defined cross-root-branch
 comparison. PhyloLM produces a behavioral reconstruction for every tree in each matched Llama
 condition, and its topology summaries and the matched weight values in
-Table~\ref{tab:variants} use the same 46-tree recovery subset. The Flan and Llama per-layer profiles
+Table~\ref{tab:variants} use the same 46-tree recovery subset. The Flan q/k/v and q/k/v/o LoRA cohorts are
+trained and analyzed separately (separate adapters, checkpoints, and distance matrices); their
+estimated trees differ only by a polytomy-resolving split on five of the 50 trees, so their
+Table~\ref{tab:variants} rows coincide at display precision. The Flan and Llama per-layer profiles
 in Fig.~\ref{fig:layertrace_grid} likewise use their matched 46-tree full-fine-tuning cohorts.
 
 \subsection*{Training Configuration}
