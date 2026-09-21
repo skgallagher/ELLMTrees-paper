@@ -31,6 +31,8 @@
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Var}{\mathrm{Var}}
 \newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\sigci}[1]{$\mathbf{#1}$}
+\newcommand{\sigrow}[5]{\textbf{#1} & \textbf{#2} & \sigci{#3} & \textbf{#4} & \textbf{#5} \\}
 
 % Tighten float/caption spacing to fit the 9-page limit (formatting only).
 \setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
@@ -406,15 +408,15 @@ probes in Llama. Flan HellaSwag is instead significantly positive. Empty, immedi
 end-of-sequence (EOS) responses are observed output and are represented as an explicit empty-output
 semantic state in the primary analysis. In the Llama full-FT runs,
 38.64\% of HellaSwag leaf outputs were empty, versus 0.02\% for TruthfulQA and 0.00\% for ARC-C
-and MMLU. For HellaSwag, including immediate EOS gives $r_{\mathrm{DL}}=-0.17$ [$-0.24,-0.10$], whereas excluding empty completions strengthens the all-node estimate to $-0.27$ [$-0.34,-0.19$] and leaves the other probe estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). These results show that shared fine-tuning ancestry is associated with an increase in behavioral similarity on held-out probes. The near-zero Flan held-out-translation cell is instead a degeneration diagnostic along with three other probes for Flan (App.~\ref{app:translation_probe}).
-For Flan especially, classification-trained leaves collapse to their label vocabulary after repeated fine-tuning and so we mark them as degenerate outputs.
+and MMLU. For HellaSwag, including immediate EOS gives $r_{\mathrm{DL}}=-0.17$ [$-0.24,-0.10$], whereas excluding empty completions strengthens the all-node estimate to $-0.27$ [$-0.34,-0.19$] and leaves the other probe estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). These results show that shared fine-tuning ancestry is associated with an increase in behavioral similarity on held-out probes. The near-zero Flan held-out-translation cell is not evidence of a reversal (App.~\ref{app:regression}).
+Across the Flan probes, some outputs instead revert to label vocabularies inherited from fine-tuning tasks; we therefore interpret the entire Flan row as behavioral association rather than probe competence (App.~\ref{app:regression}).
 
 
 
 \begin{table}[t]
 \caption{Weight$\to$behavior bridge under full fine-tuning: random-effects pooled
-  $r_{\mathrm{DL}}$ with 95\% CI. Immediate EOS is represented explicitly; $^\ddagger$degenerate
-  Flan probe. Heterogeneity is in App.~\ref{app:regression}.}
+  $r_{\mathrm{DL}}$ with 95\% CI. Immediate EOS is represented explicitly. Flan output-form
+  contamination and heterogeneity are detailed in App.~\ref{app:regression}.}
 \label{tab:behavior_holdout}
 \centering
 \small
@@ -427,7 +429,7 @@ Model & trained & held-out & held-out & held-out & held-out & held-out \\
 \midrule
 Llama-3.2-1B & \shortstack{$-0.20$\\{\scriptsize$[-.26,-.13]$}} & \shortstack{$-0.23$\\{\scriptsize$[-.29,-.17]$}} & \shortstack{$-0.17$\\{\scriptsize$[-.24,-.10]$}} & \shortstack{$-0.20$\\{\scriptsize$[-.26,-.13]$}} & \shortstack{$-0.19$\\{\scriptsize$[-.26,-.12]$}} & \shortstack{$-0.22$\\{\scriptsize$[-.26,-.16]$}} \\
 \addlinespace
-Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \shortstack{$+0.04^{\ddagger}$\\{\scriptsize$[-.01,+.09]$}} & \shortstack{$+0.09$\\{\scriptsize$[+.05,+.14]$}} & \shortstack{$-0.14^{\ddagger}$\\{\scriptsize$[-.19,-.09]$}} & \shortstack{$-0.16^{\ddagger}$\\{\scriptsize$[-.20,-.11]$}} & \shortstack{$-0.17^{\ddagger}$\\{\scriptsize$[-.22,-.12]$}} \\
+Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \shortstack{$+0.04$\\{\scriptsize$[-.01,+.09]$}} & \shortstack{$+0.09$\\{\scriptsize$[+.05,+.14]$}} & \shortstack{$-0.14$\\{\scriptsize$[-.19,-.09]$}} & \shortstack{$-0.16$\\{\scriptsize$[-.20,-.11]$}} & \shortstack{$-0.17$\\{\scriptsize$[-.22,-.12]$}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -511,7 +513,7 @@ unlabeled tree topologies, with node identities aligned across conditions. In th
 and Llama cohorts, every aligned node also retains the same task/dataset label across root models
 and fine-tuning interventions. The matched no-translation cohorts preserve those topologies
 and node identities, but replace translation assignments with unused classification, QA, or
-summarization datasets (App.~\ref{app:translation_probe}). Thus, comparisons are paired by tree and,
+summarization datasets. Thus, comparisons are paired by tree and,
 except for the intended translation-removal intervention, by node label.
 
 Different analyses use fixed eligible subsets of these shared trees. Topology recovery uses the
@@ -686,19 +688,20 @@ prominent local maxima in both architectures.
 
 \paragraph{PhyloLM reproduction.} For the behavior-only comparison on the documented Mistral family
 (Fig.~\ref{fig:real-trees}), we reproduce PhyloLM \citep{yax2025phylolm} faithfully using its released
-\texttt{math} gene bank and its published Nei-similarity genetic distance (upstream commit
-\texttt{8c70edf}). We sample $G=128$ genes and, for each, draw $N=32$ raw completions of $4$ tokens per
-model (temperature $1$, no chat template, matching PhyloLM's design), take the $4$-character allele,
-form the per-gene allele populations, compute the Nei similarity between every pair of the ten
-checkpoints, convert to a distance ($-\log$ of the similarity), and build the tree by neighbor-joining.
+\texttt{math} gene bank\footnote{Pinned PhyloLM revision:
+\nolinkurl{8c70edf062a0adce2a3e6c8c79cd23a645fd0905}.} and its published Nei-similarity genetic
+distance. We sample $G=128$ genes and, for each, draw $N=32$ raw completions of $4$ tokens per model
+(temperature $1$, no chat template, matching PhyloLM's design), take the first $4$ characters as the
+allele, form the per-gene allele populations, compute the Nei similarity $S$ between every pair of the
+ten checkpoints, convert it to $-\log\max(S,10^{-3})$, and build the tree by neighbor-joining.
 The reconstruction is scored against the same documented truth tree and with the same polytomy-aware
 scorer used for the whitebox families.
 
 The controlled comparison uses the same locked PhyloLM contract ($G=128$, $N=32$, four-token
-continuations, temperature $1$) with sampling seed \texttt{20260803} on the 50 matched-topology Llama
+continuations, temperature $1$) with seeded sampling on the 50 matched-topology Llama
 rank-8 LoRA, rank-64 LoRA, and full-FT conditions. For LoRA leaves, we reconstruct and query the
 ordered cumulative root-to-leaf adapter chain; full-FT leaves are loaded directly. Each condition
-contains 50 completed reconstructions and 365 leaf populations, and all generated alleles are
+contains generated populations for all 365 leaves across the 50 trees, and all generated alleles are
 nonempty. The four trees whose truths contain no nontrivial unrooted split are valid behavioral
 reconstructions but cannot define clade recovery, PAER, RF, or FN, leaving the same $n=46$ topology
 sample in every row of Table~\ref{tab:variants}.
@@ -715,8 +718,27 @@ mean recover the sole documented Flan-Alpaca descendant clade (FN $=0/1$); its c
 Fr\'echet estimate likewise recovers the sole documented seven-model chat-descendant clade (FN
 $=0/1$), with 95.2\% support for the complementary base/Nous-Hermes/Vicuna split. These two references
 are bushy and specify no ordering within the recovered clade, so we claim recovery of one documented
-split in each, not complete resolution of their descendant histories.
+split in each, not complete resolution of their descendant histories. Figures~\ref{fig:organic-flan}
+and~\ref{fig:organic-llama} show the documented families alongside their reconstructions.
 
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/hf_flan_trees_vs_truth.png}
+  \end{center}
+  \caption{Flan-T5-base organic family. The cosine Fr\'echet reconstruction recovers the documented
+  Flan-Alpaca split. Relationships not specified by the reference polytomy are not treated as ground
+  truth.}
+  \label{fig:organic-flan}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/hf_llama2_trees_vs_truth.png}
+  \end{center}
+  \caption{Llama-2-7B organic family. The cosine Fr\'echet reconstruction recovers the documented
+  chat-descendant split; additional resolution within that clade is not claimed.}
+  \label{fig:organic-llama}
+\end{figure}
 
 \section{Behavioral Meta-Analysis Diagnostics}
 \label{app:regression}
@@ -729,16 +751,29 @@ independent observations.
 
 \paragraph{Per-cell heterogeneity.} Table~\ref{tab:behavior_het} gives, for every cell of the main-text
 bridge (Table~\ref{tab:behavior_holdout}, paired semantic DV), $r_{\mathrm{DL}}$ with its $95\%$ CI,
-the Higgins $I^2$, and the number of trees $k$. Heterogeneity ranges from low to substantial ($I^2$ $0$--$36\%$).
-All cells except Flan translation-withheld exclude zero. The Llama cells and three flagged Flan cells
-are negative, Flan HellaSwag is significantly positive, and Flan translation-withheld is near zero.
-Flagged Flan probes are output-degeneration diagnostics rather than clean bridge evidence.
+Higgins' $I^2$~\citep{higgins2003measuring}, and the number of trees $k$. The statistic estimates the
+proportion of observed effect variation attributable to between-tree heterogeneity rather than
+sampling error; here it ranges from none to moderate ($I^2$ $0$--$36\%$). All cells except Flan
+translation-withheld exclude zero. The Llama cells are negative, Flan HellaSwag is significantly
+positive, the other significant Flan cells are negative, and Flan translation-withheld is near zero.
+
+\paragraph{Flan output-form audit.} We re-audited the finalized full-fine-tuning response sets: 641
+trained nodes in the ordinary Flan cohort and a separate 641 in the matched translation-withheld
+cohort. ARC-C and MMLU prompts display answer choices, so valid option-only answers are not counted as
+contamination; HellaSwag is rendered as a free completion and TruthfulQA as a concise free response.
+Even after separating valid option labels, outputs that exactly match unrelated fine-tuning-task
+labels (e.g., \texttt{entailment}, \texttt{positive}, or \texttt{sci/tech}) comprise 20.4\% of ARC-C
+outputs and 22.9\% of MMLU outputs. The same contamination appears throughout the Flan panel: 14.7\%
+for trained translation, 22.6\% for held-out translation, 21.3\% for HellaSwag, and 30.3\% for
+TruthfulQA. Selective probe-level ``degenerate'' flags would therefore be misleading. We report every
+cell but interpret the Flan row as associations among generated outputs, not as evidence of probe
+competence.
 
 \begin{table}[h]
 \caption{Per-cell heterogeneity for the weight$\to$behavior bridge (Table~\ref{tab:behavior_holdout};
   paired semantic DV with immediate-EOS completions represented explicitly, full fine-tuning).
   DerSimonian--Laird random-effects $r_{\mathrm{DL}}$ with $95\%$ CI, Higgins $I^2$,
-  and number of trees $k$. $^\ddagger$degenerate Flan probe (App.~\ref{app:translation_probe}).}
+  and number of trees $k$. Bold rows have 95\% CIs excluding zero.}
 \label{tab:behavior_het}
 \begin{center}
 \small
@@ -746,18 +781,18 @@ Flagged Flan probes are output-degeneration diagnostics rather than clean bridge
 \toprule
 Model & Probe & $r_{\mathrm{DL}}$ [95\% CI] & $I^2$ & $k$ \\
 \midrule
-Llama-3.2-1B & Translation (trained)              & $-0.20$ [$-0.26,-0.13$] & 13\% & 50 \\
-Llama-3.2-1B & Translation (held-out)             & $-0.23$ [$-0.29,-0.17$] & 0\% & 50 \\
-Llama-3.2-1B & HellaSwag (held-out)               & $-0.17$ [$-0.24,-0.10$] & 26\% & 50 \\
-Llama-3.2-1B & ARC-C (held-out)                   & $-0.20$ [$-0.26,-0.13$] & 33\% & 50 \\
-Llama-3.2-1B & MMLU (held-out)                    & $-0.19$ [$-0.26,-0.12$] & 36\% & 50 \\
-Llama-3.2-1B & TruthfulQA (held-out)              & $-0.22$ [$-0.27,-0.16$] & 19\% & 50 \\
-Flan-T5-base & Translation (trained)              & $-0.10$ [$-0.16,-0.04$] & 0\% & 50 \\
-Flan-T5-base & Translation (withheld)$^\ddagger$ & $+0.04$ [$-0.01,+0.09$] & 0\% & 50 \\
-Flan-T5-base & HellaSwag (held-out)               & $+0.09$ [$+0.05,+0.14$] & 0\% & 50 \\
-Flan-T5-base & ARC-C (held-out)$^\ddagger$         & $-0.14$ [$-0.19,-0.09$] & 0\% & 50 \\
-Flan-T5-base & MMLU (held-out)$^\ddagger$          & $-0.16$ [$-0.20,-0.11$] & 0\% & 50 \\
-Flan-T5-base & TruthfulQA (held-out)$^\ddagger$    & $-0.17$ [$-0.22,-0.12$] & 3\% & 50 \\
+\sigrow{Llama-3.2-1B}{Translation (trained)}{-0.20\ [-0.26,-0.13]}{13\%}{50}
+\sigrow{Llama-3.2-1B}{Translation (held-out)}{-0.23\ [-0.29,-0.17]}{0\%}{50}
+\sigrow{Llama-3.2-1B}{HellaSwag (held-out)}{-0.17\ [-0.24,-0.10]}{26\%}{50}
+\sigrow{Llama-3.2-1B}{ARC-C (held-out)}{-0.20\ [-0.26,-0.13]}{33\%}{50}
+\sigrow{Llama-3.2-1B}{MMLU (held-out)}{-0.19\ [-0.26,-0.12]}{36\%}{50}
+\sigrow{Llama-3.2-1B}{TruthfulQA (held-out)}{-0.22\ [-0.27,-0.16]}{19\%}{50}
+\sigrow{Flan-T5-base}{Translation (trained)}{-0.10\ [-0.16,-0.04]}{0\%}{50}
+Flan-T5-base & Translation (withheld)             & $+0.04$ [$-0.01,+0.09$] & 0\% & 50 \\
+\sigrow{Flan-T5-base}{HellaSwag (held-out)}{+0.09\ [+0.05,+0.14]}{0\%}{50}
+\sigrow{Flan-T5-base}{ARC-C (held-out)}{-0.14\ [-0.19,-0.09]}{0\%}{50}
+\sigrow{Flan-T5-base}{MMLU (held-out)}{-0.16\ [-0.20,-0.11]}{0\%}{50}
+\sigrow{Flan-T5-base}{TruthfulQA (held-out)}{-0.17\ [-0.22,-0.12]}{3\%}{50}
 \bottomrule
 \end{tabular}
 \end{center}
@@ -793,7 +828,7 @@ TruthfulQA & $-0.218$ [$-0.275,-0.161$] & $-0.219$ [$-0.275,-0.161$] & $0.02\%$ 
 \end{table}
 
 Table~\ref{tab:eos-depth} reports the same empty-output rate by leaf depth. HellaSwag empties increase
-with depth, from 16.72\% at depth 1 to 40.25\% at depth 4. Immediate termination is therefore itself
+from 16.72\% at depth 1 to 41.13\% at depth 3, then remain essentially level at 40.25\% at depth 4. Immediate termination is therefore itself
 associated with accumulated fine-tuning depth; excluding these outputs nevertheless strengthens the
 negative all-node semantic association, as shown in Table~\ref{tab:eos-sensitivity}.
 
@@ -815,27 +850,6 @@ TruthfulQA & 0.10\% & 0.04\% & 0.01\% & $<0.01\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-
-\section{Matched Translation Holdout}
-\label{app:translation_probe}
-
-The no-translation cohort is matched to the ordinary 50-tree cohort. It
-preserves every topology, node order, and non-translation assignment, replacing only the 162 nodes
-originally assigned translation data with unused classification, QA, or summarization datasets. Thus
-479 of 641 node assignments are unchanged, no translation assignments remain, and the cohort differs
-from the ordinary full-FT cohort only where translation was removed. We use the same 200-prompt
-translation endpoint to test whether weight distance predicts behavioral similarity when translation
-was never a training task.
-
-The primary all-trained-node estimate is
-$r_{\mathrm{DL}}=+0.04$ [$-0.01,+0.09$] across 50 trees, so its interval includes zero. We retain this
-cell as a \emph{degeneration diagnostic}, not as evidence that the weight--behavior bridge reverses.
-Pairwise semantic similarity can be driven by whether models fail on the held-out task in the same
-task-specific way rather than by genealogical proximity. In the matched Llama-3.2-1B
-full-fine-tuning cohort, the translation bridge is negative and
-strengthens when translation is withheld (Table~\ref{tab:behavior_holdout}). The near-zero Flan-T5
-result remains the diagnostic described here rather than a clean reversal of the bridge.
 
 
 \end{document}
