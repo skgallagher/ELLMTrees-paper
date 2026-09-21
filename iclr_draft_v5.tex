@@ -565,6 +565,21 @@ unrooted truth split. Across these 46 trees, there are 609 trained nodes (349 le
 nodes), in addition to 46 untrained roots. The ground-truth topology is fully known by construction,
 enabling exact RF evaluation.
 
+\paragraph{Chance baseline.} The chance level quoted in the caption of Table~\ref{tab:variants} is an
+exact expectation rather than a simulation. There are $(2n-5)!!$ unrooted binary topologies on $n$
+labelled leaves \citep{sempleSteel2003phylogenetics}. A fixed split whose sides contain $a$ and
+$b=n-a$ leaves is present in $(2a-3)!!\,(2b-3)!!$ of them, because contracting the split edge
+leaves a rooted binary tree on each side and there are $(2k-3)!!$ rooted binary trees on $k$ leaves.
+A uniformly random binary tree therefore contains the split with probability
+$(2a-3)!!\,(2b-3)!!/(2n-5)!!$: one third for a four-leaf quartet, and $0.5\%$ for a balanced
+$5\,|\,5$ split of ten leaves. Averaging this probability over the truth splits of each of the 46
+topology-eligible trees, and then over trees exactly as clade recovery is averaged in
+Table~\ref{tab:variants}, gives an expected chance clade recovery of $8.7\%$ (SE $1.1$ across
+trees). A random tree recovers every split of a truth tree $T$ (PAER) only if it refines $T$; a
+multifurcating $T$ has $\prod_v (2d_v-5)!!$ binary refinements, the product running over its
+internal vertices $v$ of degree $d_v$, so the chance PAER is the mean over trees of
+$\prod_v (2d_v-5)!!/(2n-5)!!$, which is $3.2\%$.
+
 \paragraph{Experiment structure.} All topology-recovery comparisons use the same 46 retained
 unlabeled tree topologies, with node identities aligned across conditions. In the ordinary Flan
 and Llama cohorts, every aligned node also retains the same task/dataset label across root models
