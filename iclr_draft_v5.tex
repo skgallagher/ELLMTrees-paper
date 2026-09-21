@@ -501,6 +501,25 @@ We note that our experiments and methods have limitations.  One limitation is th
 % -----------------------------------------------------------------------
 % Author acknowledgments omitted for double-blind review; add at camera-ready.
 
+\subsection*{Reproducibility statement}
+All controlled experiments follow seeded, fully specified procedures. Appendix~\ref{app:details}
+describes the tree-generation process (Poisson branching, node budget, depth limit, and acceptance
+rule), the 36 task/dataset pairs and their assignment, the training configuration of both base models
+(pinned HuggingFace revisions, learning rates, batching, schedules, precision, sequence limits, and
+LoRA hyperparameters; Table~\ref{tab:training_config}), and the behavioral-probe protocol (prompt
+counts, decoding settings, generation seeds, and the pinned sentence-embedding model).
+Appendix~\ref{app:layers} defines every layer subset and LoRA variant (Tables~\ref{tab:layer_subsets}
+and~\ref{tab:lora_variants}); Appendix~\ref{app:blackbox} gives the PhyloLM configuration and pinned
+commit used for the behavior-only comparison; and Appendix~\ref{app:organic-additional} names the
+checkpoints in the three documented HuggingFace families. The scoring and statistical procedures
+(polytomy-aware RF/FN/PAER scoring, the BHV Fr\'echet mean, the four-point and fitted Atteson
+diagnostics, and jackknife variances pooled by DerSimonian--Laird) are specified in
+Sections~\ref{sec:framework}--\ref{sec:experiments} and Appendix~\ref{app:regression}. Code for tree
+generation, training, distance computation, reconstruction, scoring, and analysis, together with the
+tree manifests, ground-truth trees, and per-tree distance matrices needed to regenerate every table
+and figure, will be released publicly upon publication.
+% Submission TODO: add the anonymous repository link to the sentence above once the blind snapshot exists.
+
 \subsection*{AI use statement}
 Generative AI assistants were used to write and debug software across the experimental
 pipeline (data processing, weight-distance computation, tree reconstruction and scoring, statistical
