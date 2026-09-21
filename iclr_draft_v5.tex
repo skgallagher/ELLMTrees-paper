@@ -119,12 +119,12 @@ ground-truth phylogeny (Fig.~\ref{fig:overview}A), link the changes in weights t
 Our primary contribution is that analyzing weight changes between fine-tunings allows accurate phylogeny estimation with latent ancestors. We use a fitted Atteson diagnostic and label-free four-point additivity as empirical diagnostics to characterize when phylogeny estimation succeeds. As a result of these weight-based estimates, we can further show two behavior-related consequences. In summary we show:
 \begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt,parsep=0pt]
   \item \textbf{Phylogeny estimation from leaf model weights against ground truth.} Guided by the geometry of
-    fine-tuning updates, our distance metric and summary-statistic choices estimate the model phylogeny from
+    fine-tuning updates, our distance metric and summary-statistic choices such as the Fr\'echet mean of trees estimate the model phylogeny from
     weights alone. Our controlled experiments recover \textit{all} true clades (branches) in $85$--$100\%$ of runs
-    ($92$--$100\%$ clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 1--3\% of the scalar weights can accurately estimate the known phylogenies. Treating weight tensors as gene-like estimators also yields a separate phylogeny from each tensor and highlights where lineage signal is strongest. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
+    ($92$--$100\%$ clade recovery). We evaluate against known ground-truth phylogenies and show that a subset containing about 1--3\% of the scalar weights can accurately estimate the known phylogenies. Treating weight layers as gene-like estimators also yields a separate phylogeny from each tensor and highlights where lineage signal is strongest. We show that our weight-based method accurately recovers all the splits in a small but real Mistral phylogeny.
   \item \textbf{Scenarios where weight-based estimation outperforms behavior-based estimation.}
     On the same 46 controlled trees, weights recover 100\% of clades versus 35\% for
-PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and 100\% versus 52\% under full fine-tuning.
+PhyloLM~\citep{yax2025phylolm} under rank-8 LoRA, and 100\% versus 52\% under full fine-tuning.  Moreover, we show that the Atteson diagnostic and label-free diagnostic also predict this association.
     On a documented Mistral family with large RLHF/DPO forks, both methods
     recover all three true splits. Thus behavior-only estimation can succeed after behaviorally large
     updates, while weight access remains substantially more informative for smaller updates and
