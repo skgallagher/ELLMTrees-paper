@@ -436,8 +436,7 @@ Finally, Figure~\ref{fig:coherence_recovery} shows simulation-level, layer-subse
 
 While estimating phylogeny from weights is useful for safety and provenance, it can be of even more use if similarity in weights signals similarity in behavior. Inspired by \citet{cloud2025subliminal}'s subliminal-learning experiment, we test
 whether models closer in weight space produce more similar outputs on \textit{held-out} tasks, using translation
-(on a new set of trees that never trained on it) along with four probe tasks that, to our knowledge, neither model
-was trained on (HellaSwag, ARC-Challenge, MMLU, TruthfulQA).
+(on a new set of trees that never trained on it) along with four probe tasks HellaSwag, ARC-Challenge, MMLU, TruthfulQA that are not in the fine-tuning data sets.
 Table~\ref{tab:behavior_holdout} reports a significant negative random-effects correlation across all held-out
 probes in Llama. Flan HellaSwag is instead significantly positive. Empty, immediate
 end-of-sequence (EOS) responses are observed output and are represented as an explicit empty-output
