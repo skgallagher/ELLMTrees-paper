@@ -260,7 +260,15 @@ how behavior-based phylogeny differs from weight-based.
 % 2000 steps, lr=3e-4, batch=8, grad_accum=4, bf16.
 % Controlled design enables exact evaluation against the latent-ancestor leaf topology.
 
-To create a controlled experiment, we generate stochastic model training trees beginning from a root model (process detailed in App.~\ref{app:details}), producing 50 trees with up to 10 leaf nodes. We randomly assign a task/dataset pair to each edge, and at each split fine-tune a child model from its parent on that pair. LoRA chains are sequentially merged so the primary LoRA leaves are standalone full-weight checkpoints; the separately marked all-projections ablation is analyzed in cumulative update space. We then estimate a phylogeny from the \textit{model leaves} and compare it to the known training tree, testing both direct lineage and phylogeny estimation.
+To create a controlled experiment, we generate stochastic model training trees beginning from a root
+model (process detailed in App.~\ref{app:details}). The topology-recovery cohort contains the 46 trees
+with a nontrivial unrooted truth split, each with 4--10 observed leaves; the behavioral analysis uses
+all 50 generated trees. We randomly assign a task/dataset pair to each edge, and at each split
+fine-tune a child model from its parent on that pair. LoRA chains are sequentially merged so the
+primary LoRA leaves are standalone full-weight checkpoints; the separately marked all-projections
+ablation is analyzed in cumulative update space. We then estimate a phylogeny from the \textit{model
+leaves} and compare it to the known training tree, testing both direct lineage and phylogeny
+estimation.
 
 We vary the root model, task types, and trained layers. Our primary evaluation uses an
 encoder--decoder model (Flan-T5-base, 250M) and a decoder-only model (Llama-3.2-1B), fine-tuning on
@@ -394,8 +402,9 @@ whether models closer in weight space produce more similar outputs on \textit{he
 (on a new set of trees that never trained on it) along with four probe tasks that, to our knowledge, neither model
 was trained on (HellaSwag, ARC-Challenge, MMLU, TruthfulQA).
 Table~\ref{tab:behavior_holdout} reports a significant negative random-effects correlation across all held-out
-probes in Llama. Flan HellaSwag is instead significantly positive. Empty responses (EOS) are observed output and are represented as an
-explicit empty-output semantic state in the primary analysis. In the Llama full-FT runs,
+probes in Llama. Flan HellaSwag is instead significantly positive. Empty, immediate
+end-of-sequence (EOS) responses are observed output and are represented as an explicit empty-output
+semantic state in the primary analysis. In the Llama full-FT runs,
 38.64\% of HellaSwag leaf outputs were empty, versus 0.02\% for TruthfulQA and 0.00\% for ARC-C
 and MMLU. For HellaSwag, including immediate EOS gives $r_{\mathrm{DL}}=-0.17$ [$-0.24,-0.10$], whereas excluding empty completions strengthens the all-node estimate to $-0.27$ [$-0.34,-0.19$] and leaves the other probe estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). These results show that shared fine-tuning ancestry is associated with an increase in behavioral similarity on held-out probes. The near-zero Flan held-out-translation cell is instead a degeneration diagnostic along with three other probes for Flan (App.~\ref{app:translation_probe}).
 For Flan especially, classification-trained leaves collapse to their label vocabulary after repeated fine-tuning and so we mark them as degenerate outputs.
@@ -491,7 +500,11 @@ Training trees are generated via a Poisson branching process as follows:
     \item Topology recovery uses only accepted trees with at least one nontrivial unrooted truth split---an internal edge that partitions the leaves into two groups of at least two. Four accepted trees each have four leaves but reduce to unresolved stars, with only trivial one-versus-three splits; this leaves 46 trees for recovery. Four leaves alone is not exclusionary.
 \end{enumerate}
 
-This procedure accepts and trains 50 trees with 4--10 observed leaves and variable depth and branching structure; the recovery analyses use the eligible 46-tree subset described above. Across all 50 trees there are 641 trained nodes (365 leaves and 276 internal nodes), in addition to the untrained roots. The ground-truth topology is fully known by construction, enabling exact RF evaluation.
+This procedure produces trees with 4--10 observed leaves and variable depth and branching
+structure. In our recovery experiments, we use the 46 trees that have at least one nontrivial
+unrooted truth split. Across these 46 trees, there are 609 trained nodes (349 leaves and 260 internal
+nodes), in addition to 46 untrained roots. The ground-truth topology is fully known by construction,
+enabling exact RF evaluation.
 
 \paragraph{Experiment structure.} All topology-recovery comparisons use the same 46 retained
 unlabeled tree topologies, with node identities aligned across conditions. In the ordinary Flan
@@ -510,9 +523,41 @@ Table~\ref{tab:variants} use the same 46-tree recovery subset. The Flan and Llam
 in Fig.~\ref{fig:layertrace_grid} likewise use their matched 46-tree full-fine-tuning cohorts.
 
 \subsection*{Training Configuration}
-\paragraph{Flan-T5-base.} We pin \texttt{google/flan-t5-base} to revision \texttt{7bcac572ce56\allowbreak db69c1ea7c8a\allowbreak f255c5d7c9672fc2}. Each node trained for exactly 2,000 steps without early stopping, with seed 42, learning rate $3 \times 10^{-4}$, batch size 8, gradient accumulation 4 (effective batch 32), warmup 200 steps, weight decay 0.01, and bf16 precision. Inputs and targets are capped at 512 and 128 tokens, respectively. We used a frozen subsample with seed 42 and up to 10,000 training and 1,000 evaluation examples per dataset, holding the sampled data fixed across nodes assigned the same dataset.
+Table~\ref{tab:training_config} summarizes the audited configurations for
+\texttt{google/flan-t5-base}\footnote{Pinned revision:
+\nolinkurl{7bcac572ce56db69c1ea7c8af255c5d7c9672fc2}.} and the base, non-Instruct
+\texttt{meta-llama/Llama-3.2-1B}\footnote{Pinned revision:
+\nolinkurl{4e20de362430cd3b72f300e6b0f18e50e7166e08}.} Each child is initialized
+from its parent and trained under the configuration for its cohort.
 
-\paragraph{Llama-3.2-1B.} We used the base model (not Instruct), pinned to revision \texttt{4e20de362430\allowbreak cd3b72f300e6\allowbreak b0f18e50e7166e08}, with completion-only causal loss. Each node trained for exactly 2,000 steps without early stopping, with seed 42, batch size 8, gradient accumulation 4 (effective batch 32), 200 warmup steps, weight decay 0.01, bf16 precision, right padding, and a 1,024-token prompt-plus-completion window. Full fine-tuning used learning rate $2 \times 10^{-5}$; QKV LoRA used $3 \times 10^{-4}$, dropout 0.05, and $(r,\alpha)=(8,16)$ or $(64,128)$.
+\newpage
+\begin{table}[!ht]
+\caption{Training configuration for the controlled Flan and Llama cohorts.}
+\label{tab:training_config}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{0.19\linewidth}p{0.38\linewidth}p{0.38\linewidth}@{}}
+\toprule
+Setting & Flan-T5-base & Llama-3.2-1B \\
+\midrule
+Objective & Sequence-to-sequence & Completion-only causal language modeling \\
+Training length & 2,000 steps; no early stopping & 2,000 steps; no early stopping \\
+Learning rate & $3\times10^{-4}$ (full FT and LoRA) & $2\times10^{-5}$ (full FT); $3\times10^{-4}$ (LoRA) \\
+Batching & Batch size 8; gradient accumulation 4; effective batch 32 & Batch size 8; gradient accumulation 4; effective batch 32 \\
+Schedule & 200 warmup steps; weight decay 0.01 & 200 warmup steps; weight decay 0.01 \\
+Precision & bfloat16 & bfloat16 \\
+Sequence limits & 512 input tokens; 128 target tokens & 1,024 tokens total for prompt plus completion \\
+Padding & Right & Right \\
+LoRA & $r=8$, $\alpha=16$, dropout 0.05; module scopes in Table~\ref{tab:lora_variants} & QKV; $(r,\alpha)=(8,16)$ or $(64,128)$; dropout 0.05 \\
+Data sample & At most 10,000 train and 1,000 evaluation examples per dataset & At most 10,000 train and 1,000 evaluation examples per dataset \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Training and dataset subsampling are seeded and held fixed across matched conditions and across
+nodes assigned the same dataset. Topology generation and task/dataset assignment use separate seed
+streams, as described above.
 
 \subsection*{Behavioral Probes and Analysis Population}
 The behavioral analysis uses every trained checkpoint in each tree: 641 nodes across 50
@@ -521,16 +566,17 @@ The 365 terminal leaves form a separately reported sensitivity population. Weigh
 cosine distances between the two observed checkpoints in each pair; internal nodes are not reconstructed
 from their descendants. Translation uses 200 frozen prompts with one deterministic greedy completion per
 node (up to 128 new tokens for Flan and 64 for Llama). HellaSwag, ARC-Challenge, MMLU, and TruthfulQA
-each use 100 frozen prompts and three sampled completions per prompt (seeds 42, 43, and 44; temperature
-1, $p=1$; up to 64 new tokens). Dolly, used only in the EOS sensitivity, uses 30 prompts, three draws,
-and up to 96 new tokens.
+each use 100 frozen prompts and three sampled completions per prompt, with a distinct generation seed
+for each draw (temperature 1, $p=1$; up to 64 new tokens). Dolly, used only in the
+end-of-sequence (EOS) sensitivity, uses 30 prompts, three draws, and up to 96 new tokens.
 
-Outputs are embedded with \texttt{all-MiniLM-L6-v2}, pinned to revision
-\texttt{1110a243fdf4706b3f48f1d95db1a4f5529b4d41}. We average prompt-paired cosine similarity (and
+Outputs are embedded with \texttt{all-MiniLM-L6-v2}\footnote{Pinned revision:
+\nolinkurl{1110a243fdf4706b3f48f1d95db1a4f5529b4d41}.}. We average prompt-paired cosine similarity (and
 prompt-by-draw similarity for the three-draw probes) before correlating it with weight distance within
 each tree. The inference unit is the tree. Within-tree Fisher-$z$ variances are estimated by deleting one
-trained node at a time, after which the tree correlations are pooled by DerSimonian--Laird. Pair counts
-are descriptive and are not treated as independent observations.
+trained node at a time, after which the tree correlations are pooled by
+DerSimonian--Laird~\citep{dersimonianlaird1986}. Pair counts are descriptive and are not treated as
+independent observations.
 
 \section{Layer Variant Definitions}
 \label{app:layers}
@@ -698,7 +744,7 @@ Flan-T5-base & TruthfulQA (held-out)$^\ddagger$    & $-0.17$ [$-0.22,-0.12$] & 3
 \end{table}
 
 
-\section{Immediate-EOS Sensitivity and Depth}
+\section{Immediate End-of-Sequence (EOS) Sensitivity and Depth}
 \label{app:empty-sensitivity}
 
 An immediate EOS is an observed model response rather than a missing observation. The primary semantic
