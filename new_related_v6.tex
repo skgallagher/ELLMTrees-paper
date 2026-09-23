@@ -17,22 +17,22 @@ Other works examine \emph{why} lineage is detectable in models. Models fine-tune
 \caption{Closest lineage-estimation methods. \emph{Controlled trees}: families the authors fine-tuned.}
 \label{tab:related}
 \begin{center}
-\footnotesize
-\setlength{\tabcolsep}{3.9pt}
-\begin{tabular}{lcccccc}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lccccc}
 \toprule
-Method & Access & \shortstack{Latent\\ancestors} & \shortstack{Controlled\\trees} & \shortstack{Documented\\lineage} & \shortstack{Weight--\\behavior} & \shortstack{Cross-\\arch.} \\
+Method & Access & \shortstack{Latent\\ancestors} & \shortstack{Controlled\\trees} & \shortstack{Weight--\\behavior} & \shortstack{Cross-\\arch.} \\
 \midrule
 MoTHer \citep{horwitz2025mother}
-  & weights  & \ding{55}  & ViT        & \checkmark & \ding{55}  & \ding{55} \\
+  & weights  & \ding{55}  & vision     & \ding{55}  & \ding{55} \\
 Neural Phylogeny \citep{yu2025neural}
-  & weights  & \ding{55}  & vision     & \checkmark & \ding{55}  & \ding{55} \\
+  & weights  & \ding{55}  & vision     & \ding{55}  & \ding{55} \\
 PhyloLM \citep{yax2025phylolm}
-  & behavior & \checkmark & \ding{55}  & \checkmark & \ding{55}  & \checkmark \\
+  & behavior & \checkmark & \ding{55}  & \ding{55}  & \checkmark \\
 LLM DNA \citep{wu2026llmdna}
-  & behavior & \checkmark & \ding{55}  & \checkmark & \ding{55}  & \checkmark \\
+  & behavior & \checkmark & \ding{55}  & \ding{55}  & \checkmark \\
 \textbf{Ours}
-  & \textbf{weights} & \checkmark & \textbf{LLM} & \checkmark & \checkmark & \ding{55} \\
+  & \textbf{weights} & \checkmark & \textbf{LLM} & \checkmark & \ding{55} \\
 \bottomrule
 \end{tabular}
 \end{center}
