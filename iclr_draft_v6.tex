@@ -492,8 +492,10 @@ common 46 trees with at least one clade that can be identified without the root 
 037, and 047), while the shared-lineage analysis uses the common 26 trees with both same- and cross-branch leaf pairs. PhyloLM produces a behavioral tree for every tree in each matched Llama
 condition, and its summaries and the matched weight values in
 Table~\ref{tab:variants} use the same 46 trees. The Flan q/k/v and q/k/v/o LoRA cohorts are
-trained and analyzed separately (separate adapters, checkpoints, and distance matrices); their
-estimated trees differ only by a polytomy-resolving split on five of the 50 trees, so their
+trained and analyzed separately (separate adapters, checkpoints, and distance matrices). Their
+all-weight (BHV) trees differ on 8 of the 46 scored trees, and the NJ trees on their averaged distance
+matrices differ on 5 of the 50 trees. In every case the differing splits only resolve polytomies in the true
+tree: both conditions miss no true clade on those trees and add the same number of extra splits, so their
 Table~\ref{tab:variants} rows coincide at display precision. The Flan and Llama per-layer profiles
 in Fig.~\ref{fig:layertrace_grid} likewise use their matched 46-tree full fine-tuning cohorts.
 
