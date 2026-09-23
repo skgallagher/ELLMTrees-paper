@@ -37,12 +37,12 @@
 \node[draw=bannerline,fill=bannerfill,rounded corners=4pt,line width=0.8pt,
       text width=15.55cm,align=center,inner sep=5pt,
       font=\sffamily\normalsize\bfseries,text=ink] (banner) at (8.05,5.40)
-  {Fine-tuning leaves a recoverable family history in model weights.};
+  {Fine-tuning leaves a traceable family history in model weights.};
 
 % ===================== PANEL A: primary contribution =====================
 \begin{scope}
   \node[panel,minimum width=6.3cm,minimum height=4.5cm] (PA) at (3.25,2.2){};
-  \node[ptitle,anchor=north] at (PA.north) {\,A.\ Can weights recover the tree?};
+  \node[ptitle,anchor=north] at (PA.north) {\,A.\ Can weights estimate the tree?};
 
   % true tree: only the leaves are observed; ancestors are latent
   \node[lab,text=truthc] at (1.10,3.72) {true tree};
@@ -77,9 +77,9 @@
   % headline result
   \node[draw=okc,rounded corners=2pt,line width=0.7pt,fill=okc!12,
         font=\sffamily\footnotesize,text=okc,inner sep=2.5pt] at (3.25,0.94)
-        {$\checkmark$ every true branch recovered in 85--100\% of runs};
+        {$\checkmark$ every true clade estimated in 85--100\% of trees};
   \node[scap,anchor=north] at (3.25,0.66)
-        {(3\% for a random tree); one attention key matrix,\\0.1--0.2\% of the weights, suffices};
+        {(3\% for a random tree); one weight matrix,\\0.1--0.2\% of the weights, suffices};
 \end{scope}
 
 % ===================== PANEL B: weights -> held-out behavior =====================
@@ -107,13 +107,13 @@
 % ===================== PANEL C: label-free additivity; weights vs behavior =====================
 \begin{scope}
   \node[panel,minimum width=4.65cm,minimum height=4.5cm] (PC) at (13.675,2.2){};
-  \node[ptitle,anchor=north] at (PC.north) {\,C.\ When does recovery work?};
+  \node[ptitle,anchor=north] at (PC.north) {\,C.\ When does estimation work?};
 
   \begin{scope}[shift={(12.10,1.78)}]
     \draw[->,line width=1.2pt,draw=flow] (0,0)--(3.20,0);
     \draw[->,line width=1.2pt,draw=flow] (0,0)--(0,1.85);
     \node[lab,text=flow,anchor=north] at (1.60,-0.07) {more tree-like distances};
-    \node[lab,text=flow,rotate=90,anchor=south] at (-0.12,0.98) {branches recovered};
+    \node[lab,text=flow,rotate=90,anchor=south] at (-0.12,0.98) {clades estimated};
     % nonlinear (logistic) association, as in the fractional-logit curve of Fig. 4B
     \draw[flow,line width=1.8pt] (0.15,0.20) .. controls (1.35,0.27) and (1.55,1.72) .. (3.05,1.79);
     % behavior-only (PhyloLM) distances: less tree-like, fewer branches
@@ -127,7 +127,7 @@
   \node[draw=okc,rounded corners=2pt,line width=0.7pt,fill=okc!12,
         font=\sffamily\footnotesize,text=okc,inner sep=2.5pt] at (13.675,0.94)
         {$\checkmark$ label-free: no true tree needed};
-  \node[scap,anchor=north] at (13.675,0.66) {recovery odds $\times$5.9 per\\+0.1 in tree-likeness $A$};
+  \node[scap,anchor=north] at (13.675,0.66) {estimation odds $\times$5.9 per\\+0.1 in tree-likeness $A$};
 \end{scope}
 
 \end{tikzpicture}
