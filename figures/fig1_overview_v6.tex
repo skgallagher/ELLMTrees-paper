@@ -88,17 +88,20 @@
   \node[ptitle,anchor=north] at (PB.north) {\,B.\ Do weights track behavior?};
   \node[lab,text=truthc] at (8.875,3.84) {on held-out tasks};
 
-  \begin{scope}[shift={(7.35,1.55)}]
+  \begin{scope}[shift={(7.35,1.80)}]
     \draw[->,line width=1.2pt,draw=flow] (0,0)--(3.05,0);
-    \draw[->,line width=1.2pt,draw=flow] (0,0)--(0,2.05);
+    \draw[->,line width=1.2pt,draw=flow] (0,0)--(0,1.85);
     \node[lab,text=flow,anchor=north] at (1.55,-0.07) {weight distance};
-    \node[lab,text=flow,rotate=90,anchor=south] at (-0.12,1.0) {output similarity};
-    \foreach \x/\y in {0.30/1.78,0.55/1.55,0.70/1.66,0.95/1.40,1.15/1.30,1.35/1.42,1.60/1.05,1.85/1.12,2.05/0.82,2.30/0.70,2.55/0.78,2.78/0.52}{
+    \node[lab,text=flow,rotate=90,anchor=south] at (-0.12,0.92) {output similarity};
+    \foreach \x/\y in {0.30/1.62,0.55/1.41,0.70/1.51,0.95/1.27,1.15/1.18,1.35/1.29,1.60/0.95,1.85/1.02,2.05/0.75,2.30/0.64,2.55/0.71,2.78/0.47}{
       \fill[estc!85!white] (\x,\y) circle (2.2pt);
     }
-    \draw[truthc,line width=1.6pt,dashed] (0.20,1.78)--(2.85,0.52);
+    \draw[truthc,line width=1.6pt,dashed] (0.20,1.62)--(2.85,0.47);
   \end{scope}
-  \node[scap,anchor=north] at (8.875,1.12) {closer in weights,\\more similar outputs};
+  \node[draw=okc,rounded corners=2pt,line width=0.7pt,fill=okc!12,
+        font=\sffamily\footnotesize,text=okc,inner sep=2.5pt] at (8.875,0.94)
+        {$\checkmark$ closer weights, closer outputs};
+  \node[scap,anchor=north] at (8.875,0.66) {significant on every held-out\\task for Llama; mixed for Flan};
 \end{scope}
 
 % ===================== PANEL C: label-free additivity; weights vs behavior =====================
@@ -106,22 +109,25 @@
   \node[panel,minimum width=4.65cm,minimum height=4.5cm] (PC) at (13.675,2.2){};
   \node[ptitle,anchor=north] at (PC.north) {\,C.\ When does recovery work?};
 
-  \begin{scope}[shift={(12.10,1.20)}]
+  \begin{scope}[shift={(12.10,1.78)}]
     \draw[->,line width=1.2pt,draw=flow] (0,0)--(3.20,0);
-    \draw[->,line width=1.2pt,draw=flow] (0,0)--(0,2.10);
+    \draw[->,line width=1.2pt,draw=flow] (0,0)--(0,1.85);
     \node[lab,text=flow,anchor=north] at (1.60,-0.07) {more tree-like distances};
-    \node[lab,text=flow,rotate=90,anchor=south] at (-0.12,1.05) {branches recovered};
+    \node[lab,text=flow,rotate=90,anchor=south] at (-0.12,0.98) {branches recovered};
     % nonlinear (logistic) association, as in the fractional-logit curve of Fig. 4B
-    \draw[flow,line width=1.8pt] (0.15,0.22) .. controls (1.35,0.30) and (1.55,1.85) .. (3.05,1.93);
+    \draw[flow,line width=1.8pt] (0.15,0.20) .. controls (1.35,0.27) and (1.55,1.72) .. (3.05,1.79);
     % behavior-only (PhyloLM) distances: less tree-like, fewer branches
-    \foreach \x/\y in {0.55/0.30,0.80/0.38,1.05/0.55}{
+    \foreach \x/\y in {0.55/0.28,0.80/0.36,1.05/0.52}{
       \fill[nullc] (\x,\y) circle (2.8pt); \draw[flow,line width=0.7pt] (\x,\y) circle (2.8pt);}
     % weight distances: more tree-like, nearly all branches
-    \foreach \x/\y in {2.30/1.82,2.60/1.87,2.90/1.91}{\fill[estc] (\x,\y) circle (2.8pt);}
-    \node[lab,text=flow,align=left,anchor=south west] at (0.30,0.62) {behavior\\only};
-    \node[lab,text=estc,anchor=north] at (2.60,1.72) {weights};
+    \foreach \x/\y in {2.30/1.69,2.60/1.74,2.90/1.77}{\fill[estc] (\x,\y) circle (2.8pt);}
+    \node[lab,text=flow,align=left,anchor=south west] at (0.30,0.58) {behavior\\only};
+    \node[lab,text=estc,anchor=north] at (2.60,1.60) {weights};
   \end{scope}
-  \node[scap,anchor=north] at (13.675,0.74) {no true tree needed};
+  \node[draw=okc,rounded corners=2pt,line width=0.7pt,fill=okc!12,
+        font=\sffamily\footnotesize,text=okc,inner sep=2.5pt] at (13.675,0.94)
+        {$\checkmark$ label-free: no true tree needed};
+  \node[scap,anchor=north] at (13.675,0.66) {recovery odds $\times$5.9 per\\+0.1 in tree-likeness $A$};
 \end{scope}
 
 \end{tikzpicture}
