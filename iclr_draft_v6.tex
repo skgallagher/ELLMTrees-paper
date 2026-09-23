@@ -270,8 +270,8 @@ Q\&A, classification, translation, and summarization. For Flan-T5, we run full f
 scopes (key only; query/key/value; query/key/value/output; all attention and feed-forward projections).
 For Llama-3.2-1B, we run full fine-tuning and query/key/value LoRA at ranks 8 and 64. For each base
 model, we use the same task instructions. We also
-validate our method on three documented model lineages from HuggingFace. We highlight one in the
-main text and report the other two in App.~\ref{app:organic-additional}.
+validate our method on three documented model lineages from HuggingFace. We summarize them in the
+main text and show all three in App.~\ref{app:organic-additional}.
 
 \paragraph{Shared lineage.}
 To determine shared lineage, MoTHer~\citep{horwitz2025mother} assembles pairwise relatedness and direction scores into a directed
@@ -418,18 +418,10 @@ Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \shortstack{$+
 \paragraph{Weight- versus behavior-based estimation.}
 \label{sec:results:blackbox}
 
-When weights are unavailable or architectures differ, lineage must be inferred from behavior alone. Table~\ref{tab:variants} already compares our estimates with the behavior-only PhyloLM~\citep{yax2025phylolm} on the controlled trees. Here we repeat the comparison on a real, documented family and score both methods against the same reference lineage. On the Mistral family (Fig.~\ref{fig:real-trees}), PhyloLM and our approach both recover all three forks, although the weight-based distances are more additive (informative-quartet $A=0.98$ vs.\ $0.83$).
+When weights are unavailable or architectures differ, lineage must be inferred from behavior alone. Table~\ref{tab:variants} already compares our estimates with the behavior-only PhyloLM~\citep{yax2025phylolm} on the controlled trees. We also score both approaches against documented HuggingFace families. On three such families (Mistral-7B, Llama-2-7B, and Flan-T5-base), our weight-based estimates recover every documented split (App.~\ref{app:organic-additional}). On the ten-model Mistral family, PhyloLM also recovers all three forks, although the weight-based distances are more additive (informative-quartet $A=0.98$ vs.\ $0.83$, Fig.~\ref{fig:real-trees}).
 
 The Mistral forks are large RLHF or direct-preference-optimization (DPO) updates that shift behavior substantially. Our controlled fine-tunings are smaller, and there PhyloLM recovers only 24--52\% of clades versus 100\% for weights (Table~\ref{tab:variants}). Behavior thus carries some, but not all, of the lineage signal in the weights, and weight-based estimation does not depend on a choice of prompts. Overall, weight-based estimation matches behavior-based estimation on this real family and substantially outperforms it in the controlled experiments.
 
-\begin{figure}[t]
-  \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/hf_mistral_hero_3panel.pdf}
-  \end{center}
-  \caption{\textbf{Documented Mistral lineage:} truth (left), our weight-based estimate (middle),
-    and PhyloLM's output-based estimate (right)~\citep{yax2025phylolm}. Both recover all three splits.}
-  \label{fig:real-trees}
-\end{figure}
 % -----------------------------------------------------------------------
 \section{Discussion}
 \label{sec:discussion}
@@ -438,7 +430,9 @@ The Mistral forks are large RLHF or direct-preference-optimization (DPO) updates
 We show that model family phylogeny can be estimated from weights alone, and that using a single attention key matrix---0.1--0.2\% of the scalar weights---estimates training trees as well as using all analyzed layers. We also find that clade estimation works across encoder--decoder and decoder-only models and survives LoRA training at low rank ($r=8$). Across our controlled conditions, PAER ($\mathrm{FN}=0$) ranges from 85--100\%. The label-free additivity proxy $A$ is associated with increased clade recovery in our experiments, although the relationship depends on architecture and layer subset. In addition to estimating phylogeny and shared lineage from weights, we show that models closer in weight space tend to have more similar outputs on held-out tasks. The effect depends on the task and ranges from $r_{\mathrm{DL}}=-0.23$ to $-0.17$ across the held-out Llama tasks. Finally, weight- and behavior-based estimation recover the same documented Mistral family, while weight-based estimation is substantially stronger on several controlled trees and requires no prompts.
 
 
-We note that our experiments and methods have limitations.  One limitation is that our methods for phylogeny estimation using weights currently only work when the underlying architecture is identical, i.e., the weight space is the same.  This means that Llama cannot directly be compared to Mistral, for example. Moreover, our method assumes that all models are leaves unlike \cite{horwitz2025mother}. Another issue is that our controlled training tree generation results from a fairly simple process that may not result in the most realistic training trees.  We attempt to mitigate that with our real-world example. Future directions include better relating models across different architectures such as with CKA and further exploring the mechanism by which lineage is inherited. In summary, we hope that our work continues to illuminate the need to consider models holistically rather than only as a collection of benchmark scores, and shows how analyzing weight space can shed light on model behavior, especially as traits passed through fine-tuning.
+\paragraph{Implications.} Our results suggest three uses beyond reconstructing controlled trees. First, weight-based phylogenies can fingerprint models and help chart the largely undocumented atlas of fine-tuned models on public hubs \citep{horwitz2025chartatlasworldsmodels}, at least within a shared architecture. Second, four-point additivity offers a label-free confidence check. Because clade recovery rises sharply with $A$ (odds ratio 5.9 per $0.10$), a practitioner without a ground-truth tree can use $A$ to judge how far to trust an estimated lineage, which brings a classical idea from phylogenetics to model auditing. Third, a tiny, architecture-dependent fraction of the weights suffices. A single attention key matrix, 0.1--0.2\% of the weights, matches the all-weight estimate, which makes lineage audits cheap even for large models.
+
+\paragraph{Limitations.} One limitation is that our methods for phylogeny estimation using weights currently only work when the underlying architecture is identical, i.e., the weight space is the same.  This means that Llama cannot directly be compared to Mistral, for example. Moreover, our method assumes that all models are leaves unlike \cite{horwitz2025mother}. Another issue is that our controlled training tree generation results from a fairly simple process that may not result in the most realistic training trees.  We attempt to mitigate that with three documented real-world families. Future directions include better relating models across different architectures such as with CKA and further exploring the mechanism by which lineage is inherited. In summary, we hope that our work continues to illuminate the need to consider models holistically rather than only as a collection of benchmark scores, and shows how analyzing weight space can shed light on model behavior, especially as traits passed through fine-tuning.
 
 
 % -----------------------------------------------------------------------
@@ -722,9 +716,9 @@ sample in every row of Table~\ref{tab:variants}.
 \label{app:organic-additional}
 
 The paper evaluates three documented organic HuggingFace lineages in total. The ten-checkpoint
-Mistral-7B family is the main-text example because it contains three documented nontrivial splits and
-supports the matched PhyloLM comparison. Two smaller checks establish that its whitebox result is not
-unique to Mistral. In a seven-checkpoint Flan-T5-base lineage, averaged-matrix NJ and the BHV Fr\'echet
+Mistral-7B family contains three documented nontrivial splits and supports the matched PhyloLM
+comparison (Fig.~\ref{fig:real-trees}). Weights and PhyloLM both recover all three splits. Two smaller
+checks establish that the weight-based result is not unique to Mistral. In a seven-checkpoint Flan-T5-base lineage, averaged-matrix NJ and the BHV Fr\'echet
 mean recover the sole documented Flan-Alpaca descendant clade (FN $=0/1$); its complementary split has
 98.2\% Fr\'echet support under cosine distance. In a ten-checkpoint Llama-2-7B lineage, the cosine
 Fr\'echet estimate likewise recovers the sole documented seven-model chat-descendant clade (FN
@@ -732,6 +726,15 @@ $=0/1$), with 95.2\% support for the complementary base/Nous-Hermes/Vicuna split
 are bushy and specify no ordering within the recovered clade, so we claim recovery of one documented
 split in each, not complete resolution of their descendant histories. Figures~\ref{fig:organic-flan}
 and~\ref{fig:organic-llama} show the documented families alongside their reconstructions.
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/hf_mistral_hero_3panel.pdf}
+  \end{center}
+  \caption{\textbf{Documented Mistral lineage:} truth (left), our weight-based estimate (middle),
+    and PhyloLM's output-based estimate (right)~\citep{yax2025phylolm}. Both recover all three splits.}
+  \label{fig:real-trees}
+\end{figure}
 
 \begin{figure}[h]
   \begin{center}
