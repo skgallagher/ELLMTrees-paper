@@ -359,7 +359,7 @@ In addition to ordering, the BHV Fr\'echet means estimate the phylogeny, as show
 
 Treating pairwise layer distance as gene-like estimators reveals that a single attention key matrix can estimate the phylogeny as well as the all-layer aggregate in the full-fine-tuning regime: on the same 46 matched-topology runs, each of the 12 Flan encoder self-attention key matrices on its own (0.24\% of the scalar weights) recovers 100\% of clades with 100\% PAER, as do 10 of the 16 Llama key matrices (0.085\% each), matching the all-weight estimate (App.~\ref{app:layertrace}; Table~\ref{tab:layer_subsets} reports the corresponding layer subsets). The signal also survives low-rank training: q/k/v LoRA adapters that train only 0.54\% of Flan's parameters yield 99\% clade recovery and 98\% PAER, and for Llama at rank 8 the merged q/k/v matrices that carry the update (8.1\% of the weights) yield 100\% and 100\% (Table~\ref{tab:variants}). The individual-layer profile in App.~\ref{app:layertrace} shows that some of the attention layers are strong carriers of lineage signal, although this is architecture dependent.
 
-Finally, we ask whether the diagnostics of \S\ref{sec:framework:theory} predict when estimation succeeds. Figure~\ref{fig:coherence_recovery} plots clade recovery against the fitted Atteson diagnostic $\widetilde m$ and the label-free additivity $A$ for every estimator on the same 46 trees: whole-weight runs, layer subsets, single attention matrices, and the matched PhyloLM runs. Both diagnostics predict success, nonlinearly: recovery rises steeply with more tree-like distances and then levels off near 100\%. In a fractional-logit fit, $\operatorname{logit}(\text{recovery})=\beta_0+\beta_1x$, the odds of recovering a clade grow 5.9-fold per $0.10$ increase in $A$ (95\% CI 4.7--8.4; paired bootstrap over trees) and 15.7-fold per tenfold increase in $\widetilde m$ (9.7--58.5). Every weight-based estimator has $A\ge0.82$ and recovers at least 84\% of clades (at least 90\% for whole-weight runs and layer subsets, all of which have $\widetilde m>1$), whereas PhyloLM's behavioral distances have $A=0.58$--$0.63$ and $\widetilde m<0.25$, and recover 24--52\%. Because $A$ needs no labels, it can indicate how far to trust an estimated phylogeny when the true tree is unknown.
+Finally, we ask whether the diagnostics of \S\ref{sec:framework:theory} predict when estimation succeeds. Figure~\ref{fig:coherence_recovery} plots clade recovery against the fitted Atteson diagnostic $\widetilde m$ and the label-free additivity $A$ for every weight- and behavior-based estimator on the same 46 trees. Both diagnostics predict success. Recovery rises steeply as the distances become more tree-like and then levels off near 100\%. We fit a fractional-logit model to clade estimation $p_c$, the fraction of true clades recovered, with $\operatorname{logit}(p_c)=\beta_0+\beta_1x$. The odds of recovering a clade grow 5.9-fold per $0.10$ increase in $A$ (95\% CI 4.7--8.4, paired bootstrap over trees) and 15.7-fold per tenfold increase in $\widetilde m$ (95\% CI 9.7--58.5). Every weight-based estimator has $A\ge0.82$ and recovers at least 84\% of clades, and the whole-weight runs and layer subsets, all of which have $\widetilde m>1$, recover at least 90\%. In contrast, PhyloLM's behavioral distances have $A=0.58$--$0.63$ and $\widetilde m<0.25$, and they recover 24--52\% of clades. Because $A$ needs no labels, it can indicate how far to trust an estimated phylogeny when the true tree is unknown.
 
 \begin{figure}[t]
   \begin{center}
@@ -371,7 +371,7 @@ Finally, we ask whether the diagnostics of \S\ref{sec:framework:theory} predict 
     additivity $A$. 
     Every mark is an average over the same 46 topology-eligible trees used in
     Table~\ref{tab:variants}; vertical intervals on simulation, PhyloLM, and
-    subset summaries are $\pm1$ SE. Dashed curves are fractional-logit fits; odds ratios have
+    subset summaries are $\pm1$ SE. Dashed curves are fractional-logit fits. Odds ratios have
     95\% paired-bootstrap CIs over the 46 trees.}
   \label{fig:coherence_recovery}
 \end{figure}
@@ -382,14 +382,14 @@ Finally, we ask whether the diagnostics of \S\ref{sec:framework:theory} predict 
 
 While estimating phylogeny from weights is useful for safety and provenance, it can be of even more use if similarity in weights signals similarity in behavior. Inspired by \citet{cloud2025subliminal}'s subliminal-learning experiment, we test
 whether models closer in weight space produce more similar outputs on \textit{held-out} tasks, using translation
-(on a new set of trees that never trained on it) and four test tasks absent from the fine-tuning data: HellaSwag, ARC-Challenge, MMLU, and TruthfulQA.
+(on a new set of trees that never trained on it) and four test tasks that are not in the fine-tuning data (HellaSwag, ARC-Challenge, MMLU, and TruthfulQA).
 Because $r_{\mathrm{DL}}$ correlates weight \emph{distance} with output \emph{similarity}, a negative value means that models closer in weight space give more similar outputs, and a positive value means the reverse.
 Table~\ref{tab:behavior_holdout} shows a significant negative correlation on every held-out task in Llama. Empty, immediate
 end-of-sequence (EOS) responses are observed output and are represented as an explicit empty-output
 semantic state in the primary analysis. In the Llama full-FT runs,
 38.64\% of HellaSwag leaf outputs were empty, versus 0.02\% for TruthfulQA and 0.00\% for ARC-C
-and MMLU. For HellaSwag, including immediate EOS gives $r_{\mathrm{DL}}=-0.17$ [$-0.24,-0.10$], whereas excluding empty completions strengthens the all-node estimate to $-0.27$ [$-0.34,-0.19$] and leaves the other task estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). Thus shared fine-tuning ancestry is associated with more similar behavior on held-out tasks; the effects are modest ($|r_{\mathrm{DL}}|\approx0.2$) but significant.
-Flan is mixed: HellaSwag is significantly positive and held-out translation is near zero. Part of this reflects degenerate outputs after repeated Flan fine-tuning: 15--30\% of Flan outputs are only a label from a fine-tuning task (e.g., \texttt{entailment}), so the Flan row measures similarity among outputs rather than task performance (App.~\ref{app:regression}).
+and MMLU. For HellaSwag, including immediate EOS gives $r_{\mathrm{DL}}=-0.17$ [$-0.24,-0.10$], whereas excluding empty completions strengthens the all-node estimate to $-0.27$ [$-0.34,-0.19$] and leaves the other task estimates essentially unchanged (App.~\ref{app:empty-sensitivity}). Thus shared fine-tuning ancestry is associated with more similar behavior on held-out tasks. The effects are modest ($|r_{\mathrm{DL}}|\approx0.2$) but significant.
+Flan has inconsistent results. Its HellaSwag correlation is significantly positive, and its held-out translation correlation is near zero. Part of this reflects degenerate outputs after repeated Flan fine-tuning, where 15--30\% of Flan outputs are only a label from a fine-tuning task, such as \texttt{entailment}. The Flan row therefore measures similarity among outputs rather than task performance (App.~\ref{app:regression}).
 
 
 
@@ -415,10 +415,10 @@ Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \shortstack{$+
 \end{table}
 
 
-\paragraph{Weights versus behavior on a real family.}
+\paragraph{Weight- versus behavior-based estimation.}
 \label{sec:results:blackbox}
 
-When weights are unavailable or architectures differ, lineage must be inferred from behavior alone. Table~\ref{tab:variants} already compares our estimates with the behavior-only PhyloLM~\citep{yax2025phylolm} on the controlled trees; here we repeat the comparison on a real, documented family, scoring both against the same reference lineage. On the Mistral family (Fig.~\ref{fig:real-trees}), PhyloLM and our approach both recover all three forks, although the weight-based distances are more additive (informative-quartet $A=0.98$ vs.\ $0.83$).
+When weights are unavailable or architectures differ, lineage must be inferred from behavior alone. Table~\ref{tab:variants} already compares our estimates with the behavior-only PhyloLM~\citep{yax2025phylolm} on the controlled trees. Here we repeat the comparison on a real, documented family and score both methods against the same reference lineage. On the Mistral family (Fig.~\ref{fig:real-trees}), PhyloLM and our approach both recover all three forks, although the weight-based distances are more additive (informative-quartet $A=0.98$ vs.\ $0.83$).
 
 The Mistral forks are large RLHF or direct-preference-optimization (DPO) updates that shift behavior substantially. Our controlled fine-tunings are smaller, and there PhyloLM recovers only 24--52\% of clades versus 100\% for weights (Table~\ref{tab:variants}). Behavior thus carries some, but not all, of the lineage signal in the weights, and weight-based estimation does not depend on a choice of prompts. Overall, weight-based estimation matches behavior-based estimation on this real family and substantially outperforms it in the controlled experiments.
 
