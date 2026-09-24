@@ -3,7 +3,7 @@
 
 Deep learning lineage studies broadly infer model relationships from either \emph{model weights} or \emph{behavior}. These methods have been driven by different applications including provenance and IP \citep{horwitz2025mother, zeng2024huref, nikolic2026model}, model poisoning and misalignment \citep{cloud2025subliminal}, trait inheritance \citep{cloud2025subliminal, agents2026same}, and data auditing \citep{zhu2025independence}. 
 
-\textbf{Model weights:} Several works trace weight changes from fine-tuning or RLHF back to parent models. MoTHer \citep{horwitz2025mother} reconstructs directed model trees from weight similarity via a directed minimum spanning tree and evaluates against controlled, known model hierarchies; \citet{yu2025neural} identify parent--child and grandparent--child lineage with both a learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral DeTuning \citep{horwitz2024spectral} reconstructs base weights from shared LoRA variants. Unlike MoTHer, which reconstructs relationships among observed parent and descendant models, we observe only leaf models and infer a phylogeny with latent ancestral branching points. This setting is relevant to LLM family reconstruction, where intermediate or parent models may not be available.
+\textbf{Model weights:} Several works trace weight changes from fine-tuning or reinforcement learning from human feedback (RLHF) back to parent models. MoTHer \citep{horwitz2025mother} reconstructs directed model trees from weight similarity via a directed minimum spanning tree and evaluates against controlled, known model hierarchies; \citet{yu2025neural} identify parent--child and grandparent--child lineage with both a learning-free fine-tuning approximation and a learned detector ($>99\%$ accuracy). Beyond direct lineage, spectral weight ``fingerprints'' identify common ancestry \citep{ghostspec2025}, and Spectral DeTuning \citep{horwitz2024spectral} reconstructs base weights from shared LoRA variants. Unlike MoTHer, which reconstructs relationships among observed parent and descendant models, we observe only leaf models and infer a phylogeny with latent ancestral branching points. This setting is relevant to LLM family reconstruction, where intermediate or parent models may not be available.
 
 REEF \citep{zhang2025reef} compares internal representations using centered kernel alignment (CKA; \citealp{kornblith2019similarity}) to identify model derivation, while TensorGuard \citep{tensorguard2025} uses gradient-response fingerprints for pairwise model similarity and family classification.
 
@@ -14,25 +14,25 @@ Other works examine \emph{why} lineage is detectable in models. Models fine-tune
 \textbf{Our Approach:} We compare these weight and behavior based approaches, determine where phylogenetic signal can be detected, and evaluate the estimated phylogenies against known true trees. Our findings are consistent with prior work showing that inherited behavioral signals can be preserved under sufficient training signal \citep{cloud2025subliminal}, as well as phylogenetic results showing that the underlying tree can be correctly estimated when certain conditions on the estimated distances are satisfied \citep{atteson1999performance}.  As shown in Table~\ref{tab:related}, our work differs from other close methods due to our weight-based estimation, use of latent ancestors which allows for missing models, our LLM-based controlled experiments, link between weight and behavior, and use of a tree likeness score to express empirical confidence in our estimated phylogeny.
 
 \begin{table}[t]
-\caption{We compare with the closest prior methods. Controlled trees are families the authors fine-tuned.}
+\caption{We compare with the closest prior methods. Controlled trees are families the authors fine-tuned. Empirical confidence is a label-free score that is tested against estimation accuracy.}
 \label{tab:related}
 \begin{center}
 \small
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{lccccc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccc}
 \toprule
-Method & Access & \shortstack{Latent\\ancestors} & \shortstack{Controlled\\trees} & \shortstack{Weight--\\behavior} & \shortstack{Cross-\\arch.} \\
+Method & Access & \shortstack{Latent\\ancestors} & \shortstack{Controlled\\trees} & \shortstack{Weight--\\behavior} & \shortstack{Empirical\\confidence} & \shortstack{Cross-\\arch.} \\
 \midrule
 MoTHer \citep{horwitz2025mother}
-  & weights  & \ding{55}  & vision     & \ding{55}  & \ding{55} \\
+  & weights  & \ding{55}  & vision     & \ding{55}  & \ding{55}  & \ding{55} \\
 Neural Phylogeny \citep{yu2025neural}
-  & weights  & \ding{55}  & vision     & \ding{55}  & \ding{55} \\
+  & weights  & \ding{55}  & vision     & \ding{55}  & \ding{55}  & \ding{55} \\
 PhyloLM \citep{yax2025phylolm}
-  & behavior & \checkmark & \ding{55}  & \ding{55}  & \checkmark \\
+  & behavior & \checkmark & \ding{55}  & \ding{55}  & \ding{55}  & \checkmark \\
 LLM DNA \citep{wu2026llmdna}
-  & behavior & \checkmark & \ding{55}  & \ding{55}  & \checkmark \\
+  & behavior & \checkmark & \ding{55}  & \ding{55}  & \ding{55}  & \checkmark \\
 \textbf{Ours}
-  & \textbf{weights} & \checkmark & \textbf{LLM} & \checkmark & \ding{55} \\
+  & \textbf{weights} & \checkmark & \textbf{LLM} & \checkmark & \checkmark & \ding{55} \\
 \bottomrule
 \end{tabular}
 \end{center}
