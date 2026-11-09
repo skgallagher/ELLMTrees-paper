@@ -487,7 +487,7 @@ including all text, claims, and artifacts produced with the aid of generative AI
 \ifrevision
 \section*{\rev{Changes in This Revision}}
 {\revcolor
-Changed and added text is shown in blue and tagged with the review comment it addresses. ``Corr.'' marks a correction to the submitted version. Appendices~\ref{app:bhv}--\ref{app:pythia} are new.
+Changed and added text is shown in blue and tagged with the review comment it addresses. ``Corr.'' marks a correction to the submitted version. Appendices~\ref{app:bhv}--\ref{app:extra} are new.
 
 \begin{center}
 \small
@@ -499,6 +499,7 @@ Formula for the BHV Fr\'echet mean, with the geodesic distance and the averaging
 Hierarchical clustering and MoTHer baselines on the same 46 trees & \S\ref{sec:results}, App.~\ref{app:baselines} & tWEn W3, S8sV Q1 \\
 Harder trees, with the 20 hardest topologies retrained in five task-sampling arms, and the effect of shared datasets & \S\ref{sec:results}, App.~\ref{app:stress} & tWEn W1, W2; S8sV Q2 \\
 Same architecture without shared lineage (Pythia-160M seeds) & \S\ref{sec:discussion}, App.~\ref{app:pythia} & qfLP \\
+Observed ancestors, orthogonality of edge updates, and compute time & App.~\ref{app:extra} & FgwB Q2, W2; S8sV Q3 \\
 Table~\ref{tab:variants} BHV values recomputed from full-precision trees (Flan LoRA key only: 91\%, 83\%, FN 0.20; RF in Table~\ref{tab:rf}) & Abstract, \S\ref{sec:intro}, \S\ref{sec:results}, Fig.~\ref{fig:coherence_recovery}, \S\ref{sec:discussion}, App.~\ref{app:rf} & Corr. \\
 9 (not 10) of the 16 Llama key matrices estimate every clade & \S\ref{sec:results}, App.~\ref{app:layertrace} & Corr. \\
 PhyloLM tree-likeness on the documented families is the median of 11 sampling seeds (Mistral 0.82, Llama-2 0.66), and the figures show the median seed & \S\ref{sec:results}, App.~\ref{app:organic-additional} & Corr. \\
@@ -1044,5 +1045,57 @@ Llama & Mixed control & 18 & 86.1 & 100 & 88.3 \\
 
 NJ on the averaged distances, and on each of the 148 layers separately, places the original and the three data-seed runs in one clade. The runs that share only the data order with the original are not grouped with it. In raw weights, runs with independent initializations are nearly orthogonal. The median cosine distance between pairs of seeds 1--9 is 1.00 for the embedding, attention, and MLP weight matrices at steps 0, 8{,}000, 32{,}000, and 143{,}000. Runs that share an initialization remain closer after 143{,}000 steps on different data orders. Between the original run and data-seed 1, the median distances over layers are 0.60 for the embeddings, 0.81 for the MLP input matrices, and 0.78 for the attention q/k/v matrices. Within each of seeds 1--9, the checkpoints at steps 0, 1{,}000, 8{,}000, 32{,}000, and 143{,}000 descend from that run's initialization, and NJ on the averaged distances over these 45 checkpoints estimates all nine runs as clades.
 }
+
+\section{\rev{Observed Ancestors, Edge Updates, and Compute Time}}
+\label{app:extra}
+{\revcolor
+\paragraph{Observed ancestors.}\revtag{FgwB Q2} We use the paper's distance matrices over all trained models for full fine-tuning, which include every internal node, and apply NJ to the averaged distances for three sets of observed models. These are the leaves alone, the leaves plus every internal node, and the leaves plus a random half of the internal nodes (five draws per tree). The true splits over an observed set come from the true tree, with each observed ancestor on the same side as its descendants. On the 46 trees, NJ estimates 100\% of clades with 100\% full estimation in all three settings, for both Flan and Llama. Every observed ancestor receives a shorter terminal edge than every leaf in its tree (median 0.00012 vs.\ 0.00277 for Flan), so a near-zero terminal edge identifies an ancestor.
+
+\paragraph{Edge updates.}\revtag{S8sV Q3} For two edges $a\to b$ and $c\to d$, the cosine between their weight updates follows from the cosine distances as $(D_{bc}+D_{ad}-D_{bd}-D_{ac})/(2\sqrt{D_{ab}D_{cd}})$, because cosine distance is half the squared Euclidean distance between unit-normalized weights. On the paper's trees, the median cosine is $-0.03$ for consecutive edges and $0.01$ for sibling edges and for other pairs, for both Flan and Llama. In the harder trees of App.~\ref{app:stress}, edges trained on different datasets have a median cosine of $0.01$, and edges trained on the same dataset have $0.26$ for Flan and $0.47$ for Llama. The same pattern holds in attention key, other attention, and MLP matrices (Table~\ref{tab:edgecos}).
+
+\paragraph{Compute time.}\revtag{FgwB W2} Table~\ref{tab:compute} compares wall times on the same cluster. Weight distances run on CPU, and PhyloLM runs on one NVIDIA L40 GPU with the configuration of App.~\ref{app:blackbox}. The two methods take similar time at these scales. Weight distances need no GPU or prompts and are computed once, whereas PhyloLM's tree-likeness varies with the sampling seed (App.~\ref{app:organic-additional}).
+}
+
+\begin{table}[h]
+{\revcolor
+\caption{\rev{Median cosine between the weight updates on two non-adjacent edges in the harder trees, by whether the two edges were trained on the same dataset.}\revtag{S8sV Q3}}
+\label{tab:edgecos}
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{Flan} & \multicolumn{2}{c}{Llama} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Layers & Different & Same & Different & Same \\
+\midrule
+All layers (mean distance) & 0.010 & 0.257 & 0.008 & 0.473 \\
+Attention key & 0.002 & 0.239 & 0.010 & 0.451 \\
+Other attention & 0.005 & 0.362 & 0.008 & 0.474 \\
+MLP & 0.002 & 0.390 & 0.007 & 0.492 \\
+Embedding and output & 0.065 & 0.701 & 0.052 & 0.605 \\
+\bottomrule
+\end{tabular}\par
+}
+\end{table}
+
+\begin{table}[h]
+{\revcolor
+\caption{\rev{Wall time for weight distances (CPU) and PhyloLM (one GPU). Values for the controlled trees are medians over 100 trees of the harder-tree experiment.}\revtag{FgwB W2}}
+\label{tab:compute}
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Setting & Weight distances & PhyloLM \\
+\midrule
+Llama-3.2-1B tree & 138 s for 15 models (9.3 s each) & 81 s for 8 leaves (10.1 s each) \\
+Flan-T5-base tree & 43 s for 15 models (2.8 s each) & n/a \\
+Documented 7B families & 17 min for 20 models, 8 cores$^\ast$ & 5.5 min per family and seed \\
+\bottomrule
+\end{tabular}\par
+\vspace{2pt}
+{\footnotesize $^\ast$Includes converting five checkpoints to safetensors.\par}
+}
+\end{table}
 
 \end{document}
