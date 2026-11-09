@@ -20,6 +20,7 @@
 \usepackage{enumitem}
 \usepackage{pifont}
 \usepackage{tikz}
+\usetikzlibrary{calc}
 \DeclareMathSizes{9}{10}{7}{5}
 
 % Theorem environments and shared math notation.
@@ -939,7 +940,7 @@ TruthfulQA & 0.10\% & 0.04\% & 0.01\% & $<0.01\%$ \\
 \section{\rev{BHV Fr\'echet Mean}}
 \label{app:bhv}
 {\revcolor
-\revtag{FgwB W1}Each NJ tree on $n$ leaves is a point in Billera--Holmes--Vogtmann (BHV) tree space~\citep{billera2001geometry}. Its internal edges are splits of the leaves with positive lengths, so each unrooted binary topology corresponds to an orthant $\mathbb{R}_{\ge0}^{\,n-3}$ of internal edge lengths. Orthants are joined along their faces, where an edge length reaches zero and the tree has a polytomy. Pendant edge lengths add a Euclidean factor. The distance $d_{\mathrm{BHV}}(T,T')$ is the length of the shortest path (geodesic) between two trees in this space. Let $C$ be the splits present in both trees. \citet{owen2011fast} show that the remaining edges of $T$ and $T'$ can be partitioned into a sequence of pairs $(A_1,B_1),\dots,(A_k,B_k)$, with $A_i$ from $T$ and $B_i$ from $T'$ (one of the two may be empty), such that
+\revtag{FgwB W1}Each NJ tree on $n$ leaves is a point in Billera--Holmes--Vogtmann (BHV) tree space~\citep{billera2001geometry}. A pendant edge joins a leaf to the rest of the tree, and an internal edge joins two internal nodes. Removing an internal edge splits the leaves into two groups of at least two, and we write the split as, for example, $ab|cd$ when leaves $a$ and $b$ are on one side and $c$ and $d$ on the other. An unrooted binary tree on $n$ leaves has $n-3$ internal edges, so the trees with one topology form an orthant $\mathbb{R}_{\ge0}^{\,n-3}$, with one coordinate for the length of each internal edge. Orthants are joined along their faces, where an edge length reaches zero and the tree has a polytomy. Pendant edge lengths add a Euclidean factor. Figure~\ref{fig:bhv} shows the case of four leaves. The distance $d_{\mathrm{BHV}}(T,T')$ is the length of the shortest path (geodesic) between two trees in this space. Let $C$ be the splits present in both trees. \citet{owen2011fast} show that the remaining edges of $T$ and $T'$ can be partitioned into a sequence of pairs $(A_1,B_1),\dots,(A_k,B_k)$, with $A_i$ from $T$ and $B_i$ from $T'$ (one of the two may be empty), such that
 \[
 d_{\mathrm{BHV}}(T,T')^2=\sum_{i=1}^{k}\bigl(\lVert A_i\rVert+\lVert B_i\rVert\bigr)^2+\sum_{e\in C}\bigl(|e|_T-|e|_{T'}\bigr)^2+\sum_{v}\bigl(|v|_T-|v|_{T'}\bigr)^2 ,
 \]
@@ -950,18 +951,39 @@ The Fr\'echet mean of the layer trees $T_\ell$, $\ell\in\mathcal{L}$, is $\wideh
 
 \begin{figure}[h]
 \centering
-{\revcolor
-\begin{tikzpicture}[scale=1.0]
-  \draw[thick] (0,0) -- (90:2.3) node[above]{$ab\,|\,cd$};
-  \draw[thick] (0,0) -- (210:2.3) node[below left]{$ac\,|\,bd$};
-  \draw[thick] (0,0) -- (330:2.3) node[below right]{$ad\,|\,bc$};
-  \draw[dashed, very thick] (90:1.5) -- (0,0) -- (210:1.1);
-  \fill (90:1.5) circle (2.2pt) node[right=2pt]{$T$};
-  \fill (210:1.1) circle (2.2pt) node[above left]{$T'$};
-  \fill (0,0) circle (1.6pt) node[right=4pt]{star tree};
-\end{tikzpicture}
+\definecolor{bhvgeo}{RGB}{213,94,0}
+\tikzset{
+  pics/minitree/.style n args={4}{code={
+    \draw[thick] (-0.22,0) -- (0.22,0);
+    \draw[thick] (-0.22,0) -- (-0.44,0.22) node[anchor=east,inner sep=1pt]{\scriptsize $#1$};
+    \draw[thick] (-0.22,0) -- (-0.44,-0.22) node[anchor=east,inner sep=1pt]{\scriptsize $#2$};
+    \draw[thick] (0.22,0) -- (0.44,0.22) node[anchor=west,inner sep=1pt]{\scriptsize $#3$};
+    \draw[thick] (0.22,0) -- (0.44,-0.22) node[anchor=west,inner sep=1pt]{\scriptsize $#4$};
+  }},
+  pics/startree/.style={code={
+    \foreach \ang/\l in {135/a,225/b,45/c,315/d}{
+      \draw[thick] (0,0) -- (\ang:0.3);
+      \node[font=\scriptsize,inner sep=0pt] at (\ang:0.43) {$\l$};
+    }
+  }}
 }
-\caption{\rev{BHV tree space for four leaves $a,b,c,d$, internal edge only. Each ray is one unrooted binary topology, and a tree's distance from the origin is its internal edge length. The origin is the star tree, which has no internal split. The geodesic between $T$ and $T'$ (dashed), which have different topologies, passes through the star tree, so $d_{\mathrm{BHV}}(T,T')$ is the sum of their internal edge lengths.}\revtag{FgwB W1}}
+\begin{tikzpicture}[scale=1.0]
+  \foreach \ang in {90,210,330} \draw[line width=2.4pt, black!22] (0,0) -- (\ang:2.5);
+  \draw[line width=1.5pt, bhvgeo, dash pattern=on 5pt off 3pt] (90:1.5) -- (0,0) -- (210:1.1);
+  \fill (90:1.5) circle (2.3pt) node[right=3pt]{$T$};
+  \fill (210:1.1) circle (2.3pt) node[above left=1pt]{$T'$};
+  \fill (0,0) circle (1.8pt);
+  \pic at (90:3.05) {minitree={a}{b}{c}{d}};
+  \node[font=\small] at (90:3.55) {$ab\,|\,cd$};
+  \pic at (210:3.2) {minitree={a}{c}{b}{d}};
+  \node[font=\small] at ($(210:3.2)+(0,-0.5)$) {$ac\,|\,bd$};
+  \pic at (330:3.2) {minitree={a}{d}{b}{c}};
+  \node[font=\small] at ($(330:3.2)+(0,-0.5)$) {$ad\,|\,bc$};
+  \pic at (1.35,0.55) {startree};
+  \node[font=\small,anchor=north] at (1.35,0.05) {star tree};
+  \draw[->, black!50] (0.95,0.4) -- (0.12,0.05);
+\end{tikzpicture}
+\caption{\rev{BHV tree space for four leaves $a,b,c,d$, showing internal edges only. Each gray ray holds the trees with one unrooted binary topology, drawn at its end, and a tree's distance from the origin is the length of its internal edge. The origin is the star tree, in which all four pendant edges meet at one node. The geodesic between $T$ and $T'$ (dashed), which have different topologies, passes through the star tree, so $d_{\mathrm{BHV}}(T,T')$ is the sum of their internal edge lengths.}\revtag{FgwB W1}}
 \label{fig:bhv}
 \end{figure}
 
