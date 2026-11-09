@@ -357,7 +357,34 @@ Finally, we ask whether the tree likeness scores of \S\ref{sec:framework:theory}
 \end{figure}
 
 \paragraph{\rev{Harder trees.}}\revtag{tWEn W1, W2; S8sV Q2}
-\rev{We retrained the 20 topologies whose full fine-tuning distances had the lowest $A$ and $\widetilde m$ in five arms that differ only in how each node's dataset is drawn: with replacement from all 36 pairs (a mixed control) or from a single task family (App.~\ref{app:stress}). Weights correctly estimate 89\% of clades for Flan and 77\% for Llama (65--100\% by arm), compared with 29\% for PhyloLM (Llama) and 49--55\% for MoTHer's spanning tree. Estimation falls when leaves in different lineages are fine-tuned on the same dataset: removing the fewest leaves needed to eliminate such pairs restores 100\% clade estimation (NJ on the averaged distances) in every arm, whereas removing as many leaves at random does not. The fitted Atteson margin falls with it, and adding these 15 conditions to the fit of Figure~\ref{fig:coherence_recovery} gives an odds ratio of 4.8 per $0.10$ increase in $A$ (95\% CI 4.2--5.8).}
+\rev{We retrained the 20 topologies whose full fine-tuning distances had the lowest $A$ and $\widetilde m$ in five arms that differ only in how each node's dataset is drawn: with replacement from all 36 pairs (a mixed control) or from a single task family (App.~\ref{app:stress}). Weights correctly estimate 89\% of clades for Flan and 77\% for Llama (65--100\% by arm; Table~\ref{tab:stress}), compared with 29\% for PhyloLM (Llama) and 49--55\% for MoTHer's spanning tree. Estimation falls when leaves in different lineages are fine-tuned on the same dataset: removing the fewest leaves needed to eliminate such pairs restores 100\% clade estimation (NJ on the averaged distances) in every arm, whereas removing as many leaves at random does not. The fitted Atteson margin falls with it, and adding these 15 conditions to the fit of Figure~\ref{fig:coherence_recovery} gives an odds ratio of 4.8 per $0.10$ increase in $A$ (95\% CI 4.2--5.8).}
+
+\begin{table}[t]
+{\revcolor
+\caption{\rev{Harder trees: clade estimation / full estimation (\%) on 20 trees per cell, with the SE of weight clade estimation. $A$ is the mean and $\widetilde m$ the median for the weight distances. PhyloLM does not apply to Flan.}\revtag{tWEn W1, W2; S8sV Q2}}
+\label{tab:stress}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrrrr}
+\toprule
+Model & Arm & Weights (SE) & NJ on MoTHer's distance & MoTHer tree & PhyloLM & $A$ & $\widetilde m$ \\
+\midrule
+Flan & Mixed control & 82.5 (7.5) / 75 & 81.7 / 70 & 44.6 / 5 & n/a & 0.80 & 0.31 \\
+ & Summarization & 77.1 (5.0) / 45 & 75.4 / 45 & 31.7 / 5 & n/a & 0.65 & 0.20 \\
+ & Classification & 100 (0.0) / 100 & 98.8 / 95 & 77.1 / 50 & n/a & 0.83 & 1.09 \\
+ & QA & 100 (0.0) / 100 & 95.8 / 90 & 49.6 / 20 & n/a & 0.79 & 0.56 \\
+ & Translation & 86.2 (4.5) / 65 & 82.1 / 55 & 42.5 / 10 & n/a & 0.70 & 0.27 \\
+\midrule
+Llama & Mixed control & 77.5 (7.4) / 60 & 80.0 / 60 & 48.3 / 25 & 37.9 / 5 & 0.82 & 0.16 \\
+ & Summarization & 64.6 (7.3) / 35 & 57.1 / 25 & 40.4 / 10 & 22.9 / 5 & 0.64 & 0.12 \\
+ & Classification & 96.2 (2.7) / 90 & 97.1 / 90 & 78.8 / 55 & 35.4 / 15 & 0.76 & 0.36 \\
+ & QA & 77.5 (7.8) / 65 & 75.8 / 60 & 60.8 / 40 & 29.2 / 15 & 0.74 & 0.21 \\
+ & Translation & 67.5 (6.3) / 35 & 65.8 / 30 & 45.0 / 10 & 20.4 / 5 & 0.65 & 0.19 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
 
 
 \paragraph{Predicting held-out behavior.}
@@ -914,7 +941,7 @@ TruthfulQA & 0.10\% & 0.04\% & 0.01\% & $<0.01\%$ \\
 \[
 d_{\mathrm{BHV}}(T,T')^2=\sum_{i=1}^{k}\bigl(\lVert A_i\rVert+\lVert B_i\rVert\bigr)^2+\sum_{e\in C}\bigl(|e|_T-|e|_{T'}\bigr)^2+\sum_{v}\bigl(|v|_T-|v|_{T'}\bigr)^2 ,
 \]
-where $\lVert A\rVert=\bigl(\sum_{e\in A}|e|^2\bigr)^{1/2}$ and $v$ runs over the pendant edges, and they compute this sequence in polynomial time. Along the geodesic, the edges in $A_i$ shrink to zero length before those in $B_i$ appear, so the geodesic between trees with different topologies passes through trees with fewer resolved splits (Figure~\ref{fig:bhv}).
+where $\lVert A\rVert=\bigl(\sum_{e\in A}|e|^2\bigr)^{1/2}$ and $v$ runs over the pendant edges, and they compute this sequence in polynomial time. Our implementation reproduces the geodesic between the two trees of their Figure~1 (length $15\sqrt{2}$, their Example~2). Along the geodesic, the edges in $A_i$ shrink to zero length before those in $B_i$ appear, so the geodesic between trees with different topologies passes through trees with fewer resolved splits (Figure~\ref{fig:bhv}).
 
 The Fr\'echet mean of the layer trees $T_\ell$, $\ell\in\mathcal{L}$, is $\widehat{\mathcal{P}}=\arg\min_{T}\sum_{\ell\in\mathcal{L}}d_{\mathrm{BHV}}(T,T_\ell)^2$. BHV space has nonpositive curvature, so this minimizer exists and is unique~\citep{billera2001geometry,sturm2003probability}. We compute it with Sturm's algorithm~\citep{sturm2003probability}, a special case of the proximal-point methods of \citet{bacak2014computing}. Starting from the first layer tree, the $k$th step moves the current estimate $S$ a fraction $1/k$ of the way along the geodesic toward the next layer tree, $S\leftarrow\gamma(S,T_{\ell_k};1/k)$, where $\gamma(S,T;t)$ is the point a fraction $t$ along the geodesic from $S$ to $T$. The layer trees are visited in a new random order in each of 300 passes (seed 0). A split that appears in only some layer trees is pulled toward zero length by the trees that lack it; when it reaches zero, the mean has a polytomy there.
 }
@@ -983,32 +1010,6 @@ In each tree, we then remove the fewest leaves needed so that no two remaining l
 \paragraph{Tree-likeness and margin.} We add the 15 stress-test conditions (weights in ten model--arm cells and PhyloLM in five Llama arms, each averaged over its 20 trees) to the fractional-logit fits of Figure~\ref{fig:coherence_recovery}, weighting each condition by its number of trees and resampling the 46 and 20 trees separately in the paired bootstrap. The odds ratio is 4.8 per $0.10$ increase in $A$ (95\% CI 4.2--5.8) and 13.7 per tenfold increase in $\widetilde m$ (8.3--58.0), compared with 4.5 and 15.2 without them. Among weight-based estimators alone, the 228 conditions of Figure~\ref{fig:coherence_recovery} span only $A=0.82$--$0.92$ and give an odds ratio of 311 (69--1032) per $0.10$ increase in $A$; adding the ten stress-test weight conditions, which span $A=0.64$--$0.83$, gives 5.7 (4.5--7.9).
 }
 
-\begin{table}[h]
-{\revcolor
-\caption{\rev{Harder trees: clade estimation / full estimation (\%) on 20 trees per cell, with the SE of weight clade estimation. $A$ is the mean and $\widetilde m$ the median for the weight distances. PhyloLM does not apply to Flan.}\revtag{tWEn W1, W2; S8sV Q2}}
-\label{tab:stress}
-\centering
-\scriptsize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llrrrrrr}
-\toprule
-Model & Arm & Weights (SE) & NJ on MoTHer's distance & MoTHer tree & PhyloLM & $A$ & $\widetilde m$ \\
-\midrule
-Flan & Mixed control & 82.5 (7.5) / 75 & 81.7 / 70 & 44.6 / 5 & n/a & 0.80 & 0.31 \\
- & Summarization & 77.1 (5.0) / 45 & 75.4 / 45 & 31.7 / 5 & n/a & 0.65 & 0.20 \\
- & Classification & 100 (0.0) / 100 & 98.8 / 95 & 77.1 / 50 & n/a & 0.83 & 1.09 \\
- & QA & 100 (0.0) / 100 & 95.8 / 90 & 49.6 / 20 & n/a & 0.79 & 0.56 \\
- & Translation & 86.2 (4.5) / 65 & 82.1 / 55 & 42.5 / 10 & n/a & 0.70 & 0.27 \\
-\midrule
-Llama & Mixed control & 77.5 (7.4) / 60 & 80.0 / 60 & 48.3 / 25 & 37.9 / 5 & 0.82 & 0.16 \\
- & Summarization & 64.6 (7.3) / 35 & 57.1 / 25 & 40.4 / 10 & 22.9 / 5 & 0.64 & 0.12 \\
- & Classification & 96.2 (2.7) / 90 & 97.1 / 90 & 78.8 / 55 & 35.4 / 15 & 0.76 & 0.36 \\
- & QA & 77.5 (7.8) / 65 & 75.8 / 60 & 60.8 / 40 & 29.2 / 15 & 0.74 & 0.21 \\
- & Translation & 67.5 (6.3) / 35 & 65.8 / 30 & 45.0 / 10 & 20.4 / 5 & 0.65 & 0.19 \\
-\bottomrule
-\end{tabular}
-}
-\end{table}
 
 \begin{table}[h]
 {\revcolor
