@@ -340,11 +340,11 @@ Beyond shared lineage, the BHV Fr\'echet means estimate the full phylogeny (Tabl
 
 Treating each layer as a gene-like estimator reveals that a single weight matrix can estimate the phylogeny as well as the all-weight estimate under full fine-tuning. On the same 46 trees, each of the 12 Flan encoder self-attention key matrices on its own (0.24\% of the weights) correctly estimates 100\% of clades with 100\% full estimation, as do \rev{9}\revtag{Corr.} of the 16 Llama key matrices (0.085\% each), matching the all-weight estimate (App.~\ref{app:layertrace}; Table~\ref{tab:layer_subsets} reports the corresponding layer subsets). In Flan, every individual encoder attention and feed-forward matrix does the same. The signal also survives low-rank training: q/k/v LoRA adapters that train only 0.54\% of Flan's parameters give 99\% clade estimation and 98\% full estimation, and rank-8 q/k/v LoRA, which trains 0.10\% of Llama's parameters, gives 100\% and 100\% (Table~\ref{tab:variants}). The per-layer profile in App.~\ref{app:layertrace} shows which layers carry the strongest signal, and this depends on the architecture.
 
-Finally, we ask whether the tree likeness scores of \S\ref{sec:framework:theory} signal when estimation succeeds. Figure~\ref{fig:coherence_recovery} plots clade estimation against the fitted Atteson margin $\widetilde m$ and the tree-likeness score $A$ for 228 weight-based estimators on the same 46 trees (the seven all-weight conditions, 17 attention-layer subsets, and 204 single query, key, or value matrices) and the three PhyloLM conditions. In our experiments, both scores signal success. Clade estimation rises steeply as the distances become more tree-like and then levels off near 100\%. We fit a fractional-logit model to clade estimation $p_c$, the fraction of true clades correctly estimated, with $\operatorname{logit}(p_c)=\beta_0+\beta_1x$. The odds of correctly estimating a clade grow 4.5-fold per $0.10$ increase in $A$ (95\% CI 3.9--5.8, paired bootstrap over trees) and 15.2-fold per tenfold increase in $\widetilde m$ (95\% CI 8.5--68.0). Every weight-based estimator in Figure~\ref{fig:coherence_recovery} has $A\ge0.82$ and correctly estimates at least 84\% of clades, and the all-weight conditions and layer subsets, all of which have $\widetilde m>1$, estimate at least 90\%. In contrast, PhyloLM's behavioral distances have $A=0.56$--$0.60$ and $\widetilde m<0.25$, and PhyloLM correctly estimates 35--56\% of clades. Much of the range in Figure~\ref{fig:coherence_recovery} comes from this gap between weight- and behavior-based distances, but the association also holds among weight-based estimators alone (tree-level fit, odds ratio 5.7 per $0.10$, 95\% CI 4.0--9.3). Because $A$ needs no labels, it offers an empirical guide to how far to trust an estimated phylogeny, although a high score shows tree-like distances rather than a correct history.
+Finally, we ask whether the tree likeness scores of \S\ref{sec:framework:theory} signal when estimation succeeds. Figure~\ref{fig:coherence_recovery} plots clade estimation against the fitted Atteson margin $\widetilde m$ and the tree-likeness score $A$ for 228 weight-based estimators on the same 46 trees (the seven all-weight conditions, 17 attention-layer subsets, and 204 single query, key, or value matrices) and the three PhyloLM conditions. In our experiments, both scores signal success. Clade estimation rises steeply as the distances become more tree-like and then levels off near 100\%. We fit a fractional-logit model to clade estimation $p_c$, the fraction of true clades correctly estimated, with $\operatorname{logit}(p_c)=\beta_0+\beta_1x$. The odds of correctly estimating a clade grow 4.5-fold per $0.10$ increase in $A$ (95\% CI 3.9--5.8, paired bootstrap over trees) and 15.2-fold per tenfold increase in $\widetilde m$ (95\% CI 8.5--\rev{67.9}\revtag{Corr.}). Every weight-based estimator in Figure~\ref{fig:coherence_recovery} has $A\ge0.82$ and correctly estimates at least 84\% of clades, and the all-weight conditions and layer subsets, all of which have $\widetilde m>1$, estimate at least 90\%. In contrast, PhyloLM's behavioral distances have $A=0.56$--$0.60$ and $\widetilde m<0.25$, and PhyloLM correctly estimates 35--56\% of clades. Much of the range in Figure~\ref{fig:coherence_recovery} comes from this gap between weight- and behavior-based distances, but the association also holds among weight-based estimators alone (tree-level fit, odds ratio 5.7 per $0.10$, 95\% CI 4.0--9.3). Because $A$ needs no labels, it offers an empirical guide to how far to trust an estimated phylogeny, although a high score shows tree-like distances rather than a correct history.
 
 \begin{figure}[t]
   \begin{center}
-    \includegraphics[width=\linewidth]{\figpath/fig2_coherence_atteson_v6.pdf}
+    \includegraphics[width=\linewidth]{\figpath/fig2_coherence_atteson_v7.pdf}
   \end{center}
   \caption{Mean clade estimation (\% of true clades correctly estimated) against
     \textbf{(A)} the fitted Atteson margin $\widetilde m$ on a logarithmic x-axis and
@@ -352,7 +352,7 @@ Finally, we ask whether the tree likeness scores of \S\ref{sec:framework:theory}
     Each mark averages over the 46 trees used in
     Table~\ref{tab:variants}: seven all-weight conditions, 17 attention-layer subsets, 204 single $q$, $k$, or $v$ matrices, and three PhyloLM conditions. Vertical intervals on all-weight, PhyloLM, and
     subset points are $\pm1$ SE. Dashed curves are fractional-logit fits. Odds ratios have
-    95\% paired-bootstrap CIs over the 46 trees.}
+    95\% paired-bootstrap CIs over the 46 trees. \rev{The Flan LoRA key-only all-weight point uses the full-precision trees of Table~\ref{tab:variants}.}\revtag{Corr.}}
   \label{fig:coherence_recovery}
 \end{figure}
 
@@ -364,11 +364,11 @@ Finally, we ask whether the tree likeness scores of \S\ref{sec:framework:theory}
 \caption{\rev{Clade estimation / full estimation (\%) on the 20 harder trees for each model and arm, with the SE of weight clade estimation. $A$ is the mean and $\widetilde m$ the median for the weight distances. PhyloLM does not apply to Flan.}\revtag{tWEn W1, W2; S8sV Q2}}
 \label{tab:stress}
 \centering
-\scriptsize
-\setlength{\tabcolsep}{4pt}
+\small
+\setlength{\tabcolsep}{5pt}
 \begin{tabular}{llrrrrrr}
 \toprule
-Model & Arm & Weights (SE) & NJ on MoTHer's distance & MoTHer tree & PhyloLM & $A$ & $\widetilde m$ \\
+Model & Arm & \shortstack{Weights\\(SE)} & \shortstack{NJ on\\MoTHer dist.} & \shortstack{MoTHer\\tree} & PhyloLM & $A$ & $\widetilde m$ \\
 \midrule
 Flan & Mixed control & 82.5 (7.5) / 75 & 81.7 / 70 & 44.6 / 5 & n/a & 0.80 & 0.31 \\
  & Summarization & 77.1 (5.0) / 45 & 75.4 / 45 & 31.7 / 5 & n/a & 0.65 & 0.20 \\
@@ -382,7 +382,7 @@ Llama & Mixed control & 77.5 (7.4) / 60 & 80.0 / 60 & 48.3 / 25 & 37.9 / 5 & 0.8
  & QA & 77.5 (7.8) / 65 & 75.8 / 60 & 60.8 / 40 & 29.2 / 15 & 0.74 & 0.21 \\
  & Translation & 67.5 (6.3) / 35 & 65.8 / 30 & 45.0 / 10 & 20.4 / 5 & 0.65 & 0.19 \\
 \bottomrule
-\end{tabular}
+\end{tabular}\par
 }
 \end{table}
 
@@ -499,7 +499,7 @@ Formula for the BHV Fr\'echet mean, with the geodesic distance and the averaging
 Hierarchical clustering and MoTHer baselines on the same 46 trees & \S\ref{sec:results}, App.~\ref{app:baselines} & tWEn W3, S8sV Q1 \\
 Harder trees, with the 20 hardest topologies retrained in five task-sampling arms, and the effect of shared datasets & \S\ref{sec:results}, App.~\ref{app:stress} & tWEn W1, W2; S8sV Q2 \\
 Same architecture without shared lineage (Pythia-160M seeds) & \S\ref{sec:discussion}, App.~\ref{app:pythia} & qfLP \\
-Table~\ref{tab:variants} BHV values recomputed from full-precision trees (Flan LoRA key only: 91\%, 83\%, FN 0.20; RF in Table~\ref{tab:rf}) & Abstract, \S\ref{sec:intro}, \S\ref{sec:results}, \S\ref{sec:discussion}, App.~\ref{app:rf} & Corr. \\
+Table~\ref{tab:variants} BHV values recomputed from full-precision trees (Flan LoRA key only: 91\%, 83\%, FN 0.20; RF in Table~\ref{tab:rf}) & Abstract, \S\ref{sec:intro}, \S\ref{sec:results}, Fig.~\ref{fig:coherence_recovery}, \S\ref{sec:discussion}, App.~\ref{app:rf} & Corr. \\
 9 (not 10) of the 16 Llama key matrices estimate every clade & \S\ref{sec:results}, App.~\ref{app:layertrace} & Corr. \\
 PhyloLM tree-likeness on the documented families is the median of 11 sampling seeds (Mistral 0.82, Llama-2 0.66), and the figures show the median seed & \S\ref{sec:results}, App.~\ref{app:organic-additional} & Corr. \\
 The Llama-2 chat clade is in all 289 per-layer trees, with positive branch length in 275 & App.~\ref{app:organic-additional} & Corr. \\
@@ -1016,7 +1016,7 @@ In each tree, we then remove the fewest leaves needed so that no two remaining l
 \caption{\rev{Clade estimation (\%) by NJ on the averaged distances after removing leaves. ``Shared pairs removed'' drops the fewest leaves needed so that no two remaining leaves share a dataset below their most recent common ancestor. ``Random'' drops the same number of leaves uniformly at random (mean of 200 draws).}\revtag{tWEn W1, W2; S8sV Q2}}
 \label{tab:prune}
 \centering
-\scriptsize
+\small
 \begin{tabular}{llrrrr}
 \toprule
 Model & Arm & Trees & All leaves & Shared pairs removed & Random \\
@@ -1033,7 +1033,7 @@ Llama & Mixed control & 18 & 86.1 & 100 & 88.3 \\
  & QA & 12 & 72.2 & 100 & 86.7 \\
  & Translation & 15 & 65.6 & 100 & 75.6 \\
 \bottomrule
-\end{tabular}
+\end{tabular}\par
 }
 \end{table}
 
