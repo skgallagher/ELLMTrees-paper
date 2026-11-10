@@ -362,7 +362,7 @@ Finally, we ask whether the tree likeness scores of \S\ref{sec:framework:theory}
 \end{figure}
 
 \paragraph{\rev{Harder trees.}}\revtag{tWEn W1, W2; S8sV Q2}
-\rev{On the 20 harder trees (\S\ref{sec:exp:harder}), weights correctly estimate 89\% of clades for Flan and 77\% for Llama (65--100\% across task pools, Table~\ref{tab:stress}), compared with 29\% for PhyloLM on Llama and 49--55\% for MoTHer's spanning tree. Estimation falls when leaves in different lineages are fine-tuned on the same dataset, whose weight updates point in similar directions (App.~\ref{app:extra}). Removing the fewest leaves needed to eliminate such pairs restores 100\% clade estimation for every task pool (NJ on the averaged distances), whereas removing as many leaves at random does not. The fitted Atteson margin also falls in these trees. Adding these 15 conditions to the fit of Figure~\ref{fig:coherence_recovery} gives an odds ratio of 4.8 per $0.10$ increase in $A$ (95\% CI 4.2--5.8).}
+\rev{On the 20 harder trees (\S\ref{sec:exp:harder}), weights correctly estimate 89\% of clades for Flan and 77\% for Llama (65--100\% across task pools, Table~\ref{tab:stress}), compared with 29\% for PhyloLM on Llama and 49--55\% for MoTHer's spanning tree. Estimation falls when leaves in different lineages are fine-tuned on the same dataset, whose weight updates point in similar directions (App.~\ref{app:stress}). Removing the fewest leaves needed to eliminate such pairs restores 100\% clade estimation for every task pool (NJ on the averaged distances), whereas removing as many leaves at random does not. The fitted Atteson margin also falls in these trees. Adding these 15 conditions to the fit of Figure~\ref{fig:coherence_recovery} gives an odds ratio of 4.8 per $0.10$ increase in $A$ (95\% CI 4.2--5.8).}
 
 \begin{table}[t]
 {\revcolor
@@ -494,7 +494,7 @@ including all text, claims, and artifacts produced with the aid of generative AI
 \ifrevision
 \section*{\rev{Changes in This Revision}}
 {\revcolor
-Changed and added text is shown in blue and tagged with the review comment it addresses. ``Corr.'' marks a correction to the submitted version. Appendices~\ref{app:bhv}--\ref{app:extra} are new.
+Changed and added text is shown in blue and tagged with the review comment it addresses. ``Corr.'' marks a correction to the submitted version. Appendices~\ref{app:bhv}--\ref{app:pythia} are new.
 
 \begin{center}
 \small
@@ -506,7 +506,7 @@ Formula for the BHV Fr\'echet mean, with the geodesic distance and the averaging
 Hierarchical clustering and MoTHer baselines on the same 46 trees & \S\ref{sec:experiments}, \S\ref{sec:results}, App.~\ref{app:baselines} & tWEn W3, S8sV Q1 \\
 Harder trees, with the 20 hardest topologies retrained with five task pools, and the effect of shared datasets & Abstract, \S\ref{sec:intro}, \S\ref{sec:experiments}, \S\ref{sec:results}, App.~\ref{app:stress} & tWEn W1, W2; S8sV Q2 \\
 Same architecture without shared lineage (Pythia-160M seeds) & \S\ref{sec:discussion}, App.~\ref{app:pythia} & qfLP \\
-Observed ancestors, orthogonality of edge updates, and compute time & App.~\ref{app:extra} & FgwB Q2, W2; S8sV Q3 \\
+Orthogonality of edge updates & App.~\ref{app:stress} & S8sV Q3 \\
 Training length: preliminary results with 500-step and mixed-length fine-tuning; learning rate not varied & \S\ref{sec:discussion} & S8sV Q2 \\
 Table~\ref{tab:variants} BHV values recomputed from full-precision trees (Flan LoRA key only: 91\%, 83\%, FN 0.20; RF in Table~\ref{tab:rf}), including the Flan LoRA key-only point in Figure~\ref{fig:coherence_recovery} & Abstract, \S\ref{sec:intro}, \S\ref{sec:results}, Fig.~\ref{fig:coherence_recovery}, \S\ref{sec:discussion}, App.~\ref{app:rf} & Corr. \\
 9 (not 10) of the 16 Llama key matrices estimate every clade & \S\ref{sec:results}, App.~\ref{app:layertrace} & Corr. \\
@@ -1037,6 +1037,8 @@ Llama & LoRA: q/k/v ($r{=}8$) & 100/100 & 100/100 & 82/65 & 82/65 & 77/61 & 82/6
 
 In each tree, we then remove the fewest leaves needed so that no two remaining leaves share a dataset below their most recent common ancestor, and score NJ on the averaged distances against the true tree restricted to the remaining leaves. This gives 100\% clade estimation for every task pool, whereas removing the same number of leaves at random does not (Table~\ref{tab:prune}). Trees left with fewer than four leaves or no clade to estimate are excluded.
 
+\paragraph{Edge updates.}\revtag{S8sV Q3} The geometry of the weight updates explains why a single weight matrix can estimate the tree (\S\ref{sec:results:weighttree}) and why estimation fails in these trees. For one weight matrix, let $u_i$ be model $i$'s weights scaled to unit norm, so the cosine distance is $D_{ij}=\lVert u_i-u_j\rVert^2/2$, and call $u_b-u_a$ the update on edge $a\to b$. For two leaves, the updates they share cancel, so $u_i-u_j$ is the sum of the updates on the path between them. If updates on different edges are orthogonal, $D_{ij}$ is the sum of $\lVert u_b-u_a\rVert^2/2$ over the edges on that path, which is an additive tree metric, the property NJ needs (\S\ref{sec:framework:theory}). The cosine between the updates on two edges $a\to b$ and $c\to d$ follows from the cosine distances as $(D_{bc}+D_{ad}-D_{bd}-D_{ac})/(2\sqrt{D_{ab}D_{cd}})$. On the main trees, the median cosine is $-0.03$ for consecutive edges and $0.01$ for sibling edges and for other pairs, for both Flan and Llama. In the harder trees, edges trained on different datasets have a median cosine of $0.01$, and edges trained on the same dataset have $0.26$ for Flan and $0.47$ for Llama (Table~\ref{tab:edgecos}), in every layer type. Leaves in different lineages that were fine-tuned on the same dataset are therefore closer than their positions in the tree imply.
+
 \paragraph{Tree-likeness and margin.} Each point in Figure~\ref{fig:coherence_recovery} is one estimator averaged over the 46 trees. We add 15 points from the harder trees, the weights for each model and task pool and PhyloLM for each Llama task pool, each averaged over its 20 trees. Refitting the fractional-logit models with each point weighted by its number of trees, and resampling the 46 and 20 trees separately in the bootstrap, gives an odds ratio of 4.8 per $0.10$ increase in $A$ (95\% CI 4.2--5.8, compared with 4.5) and 13.7 per tenfold increase in $\widetilde m$ (8.3--58.0, compared with 15.2). The 228 weight-based points of Figure~\ref{fig:coherence_recovery} span only $A=0.82$--$0.92$, and a fit to them alone gives 311 (69--1032) per $0.10$. Adding the ten harder-tree weight points, which span $A=0.64$--$0.83$, gives 5.7 (4.5--7.9).
 }
 
@@ -1067,24 +1069,6 @@ Llama & All tasks & 18 & 86.1 & 100 & 88.3 \\
 }
 \end{table}
 
-\section{\rev{Same Architecture Without Shared Lineage}}
-\label{app:pythia}
-{\revcolor
-\revtag{qfLP}We test whether models that share an architecture but not an ancestor are placed together as relatives, using the final checkpoints (step 143{,}000) of 15 PolyPythias runs~\citep{vanderwal2025polypythias}, Pythia-160M models~\citep{biderman2023pythia} pretrained on the Pile with different seeds. They are the original run, three runs with the same initialization and different data orders (data-seed 1--3), two runs with the same data order and different initializations (the corrected weight-seed 1--2 releases), and nine runs that differ in both (seeds 1--9). Only the original and data-seed runs share an ancestor, their identical step-0 model. We apply NJ to the cosine distances of all 148 floating-point tensors.
-
-NJ on the averaged distances, and on each tensor separately, places the original and the three data-seed runs in one clade, and does not place the runs that share only its data order in a clade with it. Runs with independent initializations are nearly orthogonal, with a median cosine distance of 1.00 between seeds 1--9 for the embedding, attention, and MLP matrices at steps 0, 8{,}000, 32{,}000, and 143{,}000. The original run and data-seed 1 remain closer after 143{,}000 steps on different data orders (median 0.60 for the embeddings, 0.81 for the MLP input matrices, and 0.78 for attention q/k/v). Over the checkpoints of seeds 1--9 at steps 0, 1{,}000, 8{,}000, 32{,}000, and 143{,}000, NJ estimates each run's five checkpoints as a clade.
-}
-
-\section{\rev{Observed Ancestors, Edge Updates, and Compute Time}}
-\label{app:extra}
-{\revcolor
-\paragraph{Observed ancestors.}\revtag{FgwB Q2} Using the full fine-tuning distances over all trained models, NJ on the averaged distances estimates 100\% of clades with 100\% full estimation on the 46 trees, for Flan and Llama, whether we observe the leaves alone, the leaves and every internal node, or the leaves and a random half of the internal nodes (five draws per tree). Each observed ancestor is placed with its descendants in the true splits. Every observed ancestor receives a shorter terminal edge than every leaf in its tree (median 0.00012 vs.\ 0.00277 for Flan), so a near-zero terminal edge identifies an ancestor.
-
-\paragraph{Edge updates.}\revtag{S8sV Q3} This analysis explains why a single weight matrix can estimate the tree (\S\ref{sec:results:weighttree}) and why estimation fails in the harder trees (App.~\ref{app:stress}). For one weight matrix, let $u_i$ be model $i$'s weights scaled to unit norm, so the cosine distance is $D_{ij}=\lVert u_i-u_j\rVert^2/2$, and call $u_b-u_a$ the update on edge $a\to b$. For two leaves, the updates they share cancel, so $u_i-u_j$ is the sum of the updates on the path between them. If updates on different edges are orthogonal, $D_{ij}$ is the sum of $\lVert u_b-u_a\rVert^2/2$ over the edges on that path, which is an additive tree metric, the property NJ needs (\S\ref{sec:framework:theory}). The cosine between the updates on two edges $a\to b$ and $c\to d$ follows from the cosine distances as $(D_{bc}+D_{ad}-D_{bd}-D_{ac})/(2\sqrt{D_{ab}D_{cd}})$. On the paper's trees, the median cosine is $-0.03$ for consecutive edges and $0.01$ for sibling edges and for other pairs, for both Flan and Llama. In the harder trees, edges trained on different datasets have a median cosine of $0.01$, and edges trained on the same dataset have $0.26$ for Flan and $0.47$ for Llama (Table~\ref{tab:edgecos}), in every layer type. Leaves in different lineages that were fine-tuned on the same dataset are therefore closer than their positions in the tree imply.
-
-\paragraph{Compute time.}\revtag{FgwB W2} Table~\ref{tab:compute} compares wall times on the same cluster. Weight distances run on CPU, and PhyloLM runs on one NVIDIA L40 GPU with the configuration of App.~\ref{app:blackbox}. The two methods take similar time at these scales. Weight distances need no GPU or prompts and are computed once, whereas PhyloLM's tree-likeness varies with the sampling seed (App.~\ref{app:organic-additional}).
-}
-
 \begin{table}[h]
 {\revcolor
 \caption{\rev{Median cosine between the weight updates on two non-adjacent edges in the harder trees, by whether the two edges were trained on the same dataset.}\revtag{S8sV Q3}}
@@ -1107,24 +1091,12 @@ Embedding and output & 0.065 & 0.701 & 0.052 & 0.605 \\
 }
 \end{table}
 
-\begin{table}[h]
+\section{\rev{Same Architecture Without Shared Lineage}}
+\label{app:pythia}
 {\revcolor
-\caption{\rev{Wall time for weight distances (CPU) and PhyloLM (one GPU). Values for the controlled trees are medians over 100 trees of the harder-tree experiment.}\revtag{FgwB W2}}
-\label{tab:compute}
-\centering
-\small
-\begin{tabular}{lll}
-\toprule
-Setting & Weight distances & PhyloLM \\
-\midrule
-Llama-3.2-1B tree & 138 s for 15 models (9.3 s each) & 81 s for 8 leaves (10.1 s each) \\
-Flan-T5-base tree & 43 s for 15 models (2.8 s each) & n/a \\
-Documented 7B families & 17 min for 20 models, 8 cores$^\ast$ & 5.5 min per family and seed \\
-\bottomrule
-\end{tabular}\par
-\vspace{2pt}
-{\footnotesize $^\ast$Includes converting five checkpoints to safetensors.\par}
+\revtag{qfLP}We test whether models that share an architecture but not an ancestor are placed together as relatives, using the final checkpoints (step 143{,}000) of 15 PolyPythias runs~\citep{vanderwal2025polypythias}, Pythia-160M models~\citep{biderman2023pythia} pretrained on the Pile with different seeds. They are the original run, three runs with the same initialization and different data orders (data-seed 1--3), two runs with the same data order and different initializations (the corrected weight-seed 1--2 releases), and nine runs that differ in both (seeds 1--9). Only the original and data-seed runs share an ancestor, their identical step-0 model. We apply NJ to the cosine distances of all 148 floating-point tensors.
+
+NJ on the averaged distances, and on each tensor separately, places the original and the three data-seed runs in one clade, and does not place the runs that share only its data order in a clade with it. Runs with independent initializations are nearly orthogonal, with a median cosine distance of 1.00 between seeds 1--9 for the embedding, attention, and MLP matrices at steps 0, 8{,}000, 32{,}000, and 143{,}000. The original run and data-seed 1 remain closer after 143{,}000 steps on different data orders (median 0.60 for the embeddings, 0.81 for the MLP input matrices, and 0.78 for attention q/k/v). Over the checkpoints of seeds 1--9 at steps 0, 1{,}000, 8{,}000, 32{,}000, and 143{,}000, NJ estimates each run's five checkpoints as a clade.
 }
-\end{table}
 
 \end{document}
