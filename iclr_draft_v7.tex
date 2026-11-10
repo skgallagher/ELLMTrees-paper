@@ -366,7 +366,7 @@ Finally, we ask whether the tree likeness scores of \S\ref{sec:framework:theory}
 
 \begin{table}[t]
 {\revcolor
-\caption{\rev{Clade estimation / full estimation (\%) on the 20 harder trees for each model and task pool. For the weights, clade and full estimation are shown separately with SEs over trees, $A$ is the mean (SE), and $\widetilde m$ is the median (bootstrap SE). PhyloLM does not apply to Flan.}\revtag{tWEn W1, W2; S8sV Q2}}
+\caption{\rev{Clade estimation / full estimation (\%) on the 20 harder trees for each model and task pool. For the weights, clade and full estimation are shown separately with SEs over trees, and $A$ and $\widetilde m$ are means over the 20 trees (SE), as in Figure~\ref{fig:coherence_recovery}. PhyloLM does not apply to Flan.}\revtag{tWEn W1, W2; S8sV Q2}}
 \label{tab:stress}
 \centering
 \small
@@ -377,16 +377,16 @@ Finally, we ask whether the tree likeness scores of \S\ref{sec:framework:theory}
 \cmidrule(lr){3-4}
 Model & Task pool & Clade & Full & \shortstack{NJ on\\MoTHer dist.} & \shortstack{MoTHer\\tree} & PhyloLM & $A$ & $\widetilde m$ \\
 \midrule
-Flan & All tasks & 82.5 (7.5) & 75 (9.9) & 81.7 / 70 & 44.6 / 5 & n/a & 0.80 (0.02) & 0.31 (0.05) \\
- & Summarization & 77.1 (5.0) & 45 (11.4) & 75.4 / 45 & 31.7 / 5 & n/a & 0.65 (0.01) & 0.20 (0.02) \\
- & Classification & 100 (0.0) & 100 (0.0) & 98.8 / 95 & 77.1 / 50 & n/a & 0.83 (0.01) & 1.09 (0.21) \\
- & QA & 100 (0.0) & 100 (0.0) & 95.8 / 90 & 49.6 / 20 & n/a & 0.79 (0.01) & 0.56 (0.10) \\
- & Translation & 86.2 (4.5) & 65 (10.9) & 82.1 / 55 & 42.5 / 10 & n/a & 0.70 (0.01) & 0.27 (0.03) \\
+Flan & All tasks & 82.5 (7.5) & 75 (9.9) & 81.7 / 70 & 44.6 / 5 & n/a & 0.80 (0.02) & 0.54 (0.14) \\
+ & Summarization & 77.1 (5.0) & 45 (11.4) & 75.4 / 45 & 31.7 / 5 & n/a & 0.65 (0.01) & 0.25 (0.05) \\
+ & Classification & 100 (0.0) & 100 (0.0) & 98.8 / 95 & 77.1 / 50 & n/a & 0.83 (0.01) & 1.47 (0.19) \\
+ & QA & 100 (0.0) & 100 (0.0) & 95.8 / 90 & 49.6 / 20 & n/a & 0.79 (0.01) & 0.73 (0.12) \\
+ & Translation & 86.2 (4.5) & 65 (10.9) & 82.1 / 55 & 42.5 / 10 & n/a & 0.70 (0.01) & 0.36 (0.08) \\
 \midrule
-Llama & All tasks & 77.5 (7.4) & 60 (11.2) & 80.0 / 60 & 48.3 / 25 & 37.9 / 5 & 0.82 (0.01) & 0.16 (0.02) \\
- & Summarization & 64.6 (7.3) & 35 (10.9) & 57.1 / 25 & 40.4 / 10 & 22.9 / 5 & 0.64 (0.01) & 0.12 (0.02) \\
- & Classification & 96.2 (2.7) & 90 (6.9) & 97.1 / 90 & 78.8 / 55 & 35.4 / 15 & 0.76 (0.02) & 0.36 (0.06) \\
- & QA & 77.5 (7.8) & 65 (10.9) & 75.8 / 60 & 60.8 / 40 & 29.2 / 15 & 0.74 (0.02) & 0.21 (0.05) \\
+Llama & All tasks & 77.5 (7.4) & 60 (11.2) & 80.0 / 60 & 48.3 / 25 & 37.9 / 5 & 0.82 (0.01) & 0.26 (0.10) \\
+ & Summarization & 64.6 (7.3) & 35 (10.9) & 57.1 / 25 & 40.4 / 10 & 22.9 / 5 & 0.64 (0.01) & 0.16 (0.03) \\
+ & Classification & 96.2 (2.7) & 90 (6.9) & 97.1 / 90 & 78.8 / 55 & 35.4 / 15 & 0.76 (0.02) & 0.52 (0.15) \\
+ & QA & 77.5 (7.8) & 65 (10.9) & 75.8 / 60 & 60.8 / 40 & 29.2 / 15 & 0.74 (0.02) & 0.26 (0.04) \\
  & Translation & 67.5 (6.3) & 35 (10.9) & 65.8 / 30 & 45.0 / 10 & 20.4 / 5 & 0.65 (0.01) & 0.19 (0.03) \\
 \bottomrule
 \end{tabular}\par
@@ -1033,7 +1033,7 @@ Llama & LoRA: q/k/v ($r{=}8$) & 100/100 & 100/100 & 82/65 & 82/65 & 77/61 & 82/6
 {\revcolor
 \paragraph{Design.}\revtag{tWEn W1, W2; S8sV Q2} We selected the 20 of the 46 topologies with the lowest average rank of $A$ and $\widetilde m$, ranked separately for the Flan and Llama full fine-tuning distances of Table~\ref{tab:variants}, without using estimation results. Each topology was retrained under full fine-tuning for both models with each of five task pools, all 36 pairs or the pairs of one task (summarization, classification, QA, or translation). Each node draws a pair uniformly with replacement from the pool, except that siblings receive different pairs, since every node trains with the same seed and siblings with the same pair would be identical. A child may receive its parent's pair. Other settings follow App.~\ref{app:details}, giving 200 trees and 2{,}710 trained nodes. We score the cosine BHV Fr\'echet mean, MoTHer's spanning tree, NJ on MoTHer's distance (App.~\ref{app:baselines}), and, for Llama, PhyloLM (Table~\ref{tab:stress}).
 
-\paragraph{Shared datasets.} With all 36 pairs in the pool, the harder trees differ from the main trees only in drawing pairs with replacement. On the same 20 topologies, the main trees give 100\% clade estimation, and the all-task pool 82.5\% (Flan) and 77.5\% (Llama). In 19 of these 20 trees, at least one pair of leaves (8\% of leaf pairs) has lineages that were both fine-tuned on the same dataset below their most recent common ancestor. When we fit edge lengths on the true topology, the pair with the largest misfit is one of them in 17 of 20 trees for each model. Relative to the mean distance, the largest misfit is 0.24 for Flan and 0.39 for Llama, compared with 0.04 and 0.03 in the main trees, while the shortest fitted internal edge is not shorter (0.19 and 0.16, compared with 0.13 and 0.12). The median $\widetilde m$ falls from 1.7 to 0.31 for Flan and to 0.16 for Llama, and the mean $A$ from 0.840 to 0.805 and from 0.853 to 0.820.
+\paragraph{Shared datasets.} With all 36 pairs in the pool, the harder trees differ from the main trees only in drawing pairs with replacement. On the same 20 topologies, the main trees give 100\% clade estimation, and the all-task pool 82.5\% (Flan) and 77.5\% (Llama). In 19 of these 20 trees, at least one pair of leaves (8\% of leaf pairs) has lineages that were both fine-tuned on the same dataset below their most recent common ancestor. When we fit edge lengths on the true topology, the pair with the largest misfit is one of them in 17 of 20 trees for each model. Relative to the mean distance, the largest misfit is 0.24 for Flan and 0.39 for Llama, compared with 0.04 and 0.03 in the main trees, while the shortest fitted internal edge is not shorter (0.19 and 0.16, compared with 0.13 and 0.12). The mean $\widetilde m$ falls from 2.15 to 0.54 for Flan and from 1.75 to 0.26 for Llama, and the mean $A$ from 0.840 to 0.805 and from 0.853 to 0.820.
 
 In each tree, we then remove the fewest leaves needed so that no two remaining leaves share a dataset below their most recent common ancestor, and score NJ on the averaged distances against the true tree restricted to the remaining leaves. This gives 100\% clade estimation for every task pool, whereas removing the same number of leaves at random does not (Table~\ref{tab:prune}). Trees left with fewer than four leaves or no clade to estimate are excluded.
 
