@@ -431,9 +431,9 @@ Flan-T5-base & \shortstack{$-0.10$\\{\scriptsize$[-.16,-.04]$}} & \shortstack{$+
 \paragraph{Weight- versus behavior-based estimation.}
 \label{sec:results:blackbox}
 
-When weights are unavailable or architectures differ, lineage must be inferred from behavior alone. Table~\ref{tab:variants} already compares our estimates with the behavior-only PhyloLM~\citep{yax2025phylolm} on the controlled trees. We also score both approaches against two documented Hugging Face families, Mistral-7B and Llama-2-7B. Our weight-based estimates contain every documented clade, and so do PhyloLM's, although the weight-based distances are more tree-like ($A=0.86$ vs.\ \rev{$0.82$} for Mistral and $0.82$ vs.\ \rev{$0.66$} for Llama-2\rev{, PhyloLM medians over 11 sampling seeds}; App.~\ref{app:organic-additional})\revtag{Corr.}.
+When weights are unavailable or architectures differ, lineage must be inferred from behavior alone. Table~\ref{tab:variants} already compares our estimates with the behavior-only PhyloLM~\citep{yax2025phylolm} on the controlled trees. We also score both approaches against two documented Hugging Face families, Mistral-7B and Llama-2-7B. Our weight-based estimates contain every documented clade, and so do PhyloLM's, although the weight-based distances are more tree-like ($A=0.86$ vs.\ \rev{$0.82$} for Mistral and $0.82$ vs.\ \rev{$0.66$} for Llama-2\rev{, PhyloLM medians over 11 sampling seeds}; App.~\ref{app:organic-additional})\revtag{Corr.}. \rev{With two more families that include distillation from DeepSeek-R1, the weights estimate every documented clade in three of the four families and PhyloLM in all four. The clade the weights miss contains OpenThinker-7B, which was trained on DeepSeek-R1's outputs, and its weight update leans toward that of another model distilled from the same teacher (App.~\ref{app:organic-additional}).}\revtag{S8sV}
 
-The Mistral forks are large RLHF or direct preference optimization (DPO) updates that shift behavior substantially. Our controlled fine-tunings are smaller, and there PhyloLM correctly estimates only 35--56\% of clades versus 100\% for weights (Table~\ref{tab:variants}). Behavior thus carries some, but not all, of the lineage signal in the weights, and weight-based estimation does not depend on a choice of prompts. Overall, weight-based estimation matches behavior-based estimation on these real families and substantially outperforms it in the controlled experiments.
+The Mistral forks are large RLHF or direct preference optimization (DPO) updates that shift behavior substantially. Our controlled fine-tunings are smaller, and there PhyloLM correctly estimates only 35--56\% of clades versus 100\% for weights (Table~\ref{tab:variants}). Behavior thus carries some, but not all, of the lineage signal in the weights, and weight-based estimation does not depend on a choice of prompts. Overall, weight-based estimation matches behavior-based estimation on \rev{three of the four}\revtag{S8sV} real families and substantially outperforms it in the controlled experiments.
 
 % -----------------------------------------------------------------------
 \section{Discussion}
@@ -445,7 +445,7 @@ We show that model family phylogeny can be estimated from weights alone, and tha
 
 \paragraph{Implications.} Our results suggest three uses beyond estimating controlled trees. First, weight-based phylogenies can fingerprint models and help chart the largely undocumented atlas of fine-tuned models on public hubs \citep{horwitz2025chartatlasworldsmodels}, at least within a shared architecture. Second, the tree-likeness score offers a label-free measure of empirical confidence. In our experiments, clade estimation rose sharply with $A$ (odds ratio 4.5 per $0.10$), so a practitioner without a true tree can use $A$ as a heuristic for how far to trust an estimated lineage, which brings a classical idea from phylogenetics to model auditing. Third, a tiny, architecture-dependent fraction of the weights suffices. A single weight matrix, such as one attention key matrix (0.1--0.2\% of the weights), matches the all-weight estimate, which makes lineage estimates affordable even for large models.
 
-\paragraph{Limitations.} One limitation is that our methods for phylogeny estimation using weights currently only work when the underlying architecture is identical, i.e., the weight space is the same.  This means that Llama cannot directly be compared to Mistral, for example. \rev{A shared architecture and shared training data do not by themselves place models in one clade. Among 15 Pythia-160M pretraining runs~\citep{vanderwal2025polypythias}, the weights group the four runs that share an initialization in a single clade, in every layer, but not the runs that share only a data order (App.~\ref{app:pythia}).}\revtag{qfLP} Moreover, unlike \citet{horwitz2025mother}, our method treats every observed model as a leaf. Another issue is that our controlled training tree generation results from a fairly simple process that may not result in the most realistic training trees.  We attempt to mitigate that with two documented real-world families. \rev{Every fine-tuning in the controlled trees also runs for 2,000 steps with one learning rate per model and training regime. In preliminary results for Llama full fine-tuning on the 20 harder topologies, keeping each node's dataset from the main trees, weights correctly estimate every clade when every fine-tuning runs for 500 steps (11 of 20 trees completed) and when each fine-tuning is assigned 500, 1,000, 2,000, or 4,000 steps at random (8 of 20), and $A$ changes by at most 0.01. We did not vary learning rates.}\revtag{S8sV Q2} Future directions include better relating models across different architectures such as with CKA\rev{, adapting NJ to find ancestors among the observed models,}\revtag{FgwB} and further exploring the mechanism by which lineage is inherited. 
+\paragraph{Limitations.} One limitation is that our methods for phylogeny estimation using weights currently only work when the underlying architecture is identical, i.e., the weight space is the same.  This means that Llama cannot directly be compared to Mistral, for example. \rev{A shared architecture and shared training data do not by themselves place models in one clade. Among 15 Pythia-160M pretraining runs~\citep{vanderwal2025polypythias}, the weights group the four runs that share an initialization in a single clade, in every layer, but not the runs that share only a data order (App.~\ref{app:pythia}).}\revtag{qfLP} Moreover, unlike \citet{horwitz2025mother}, our method treats every observed model as a leaf. Another issue is that our controlled training tree generation results from a fairly simple process that may not result in the most realistic training trees.  We attempt to mitigate that with two documented real-world families. \rev{Every fine-tuning in the main trees also runs for 2,000 steps with one learning rate per model and training regime. With 500 steps, or 500 to 4,000 steps assigned at random, weights still estimate every clade of the 20 harder topologies (App.~\ref{app:stress}), but we did not vary learning rates.}\revtag{S8sV Q2} Future directions include better relating models across different architectures such as with CKA\rev{, adapting NJ to find ancestors among the observed models,}\revtag{FgwB} and further exploring the mechanism by which lineage is inherited. 
 
 In summary, we hope that our work continues to illuminate the need to consider models holistically rather than only as a collection of benchmark scores, and shows how analyzing weight space can shed light on model behavior, especially traits passed down through fine-tuning.
 
@@ -506,9 +506,9 @@ Formula for the BHV Fr\'echet mean, with the geodesic distance and the averaging
 Hierarchical clustering and MoTHer baselines on the same 46 trees & \S\ref{sec:experiments}, \S\ref{sec:results}, App.~\ref{app:baselines} & tWEn W3, S8sV Q1 \\
 Harder trees, with the 20 hardest topologies retrained with five task pools, and the effect of shared datasets & Abstract, \S\ref{sec:intro}, \S\ref{sec:experiments}, \S\ref{sec:results}, App.~\ref{app:stress} & tWEn W1, W2; S8sV Q2 \\
 Same architecture without shared lineage (Pythia-160M seeds) & \S\ref{sec:discussion}, App.~\ref{app:pythia} & qfLP \\
-Two documented families with DeepSeek-R1 distillation (Llama-3.1-8B, Qwen2.5-7B) & App.~\ref{app:organic-additional} & S8sV \\
+Two documented families with DeepSeek-R1 distillation (Llama-3.1-8B, Qwen2.5-7B) & \S\ref{sec:results}, App.~\ref{app:organic-additional} & S8sV \\
 Orthogonality of edge updates & App.~\ref{app:stress} & S8sV Q3 \\
-Training length: preliminary results with 500-step and mixed-length fine-tuning; learning rate not varied & \S\ref{sec:discussion} & S8sV Q2 \\
+Training length: 500-step and mixed-length fine-tuning on the 20 harder topologies; learning rate not varied & \S\ref{sec:discussion}, App.~\ref{app:stress} & S8sV Q2, tWEn W2 \\
 Table~\ref{tab:variants} BHV values recomputed from full-precision trees (Flan LoRA key only: 91\%, 83\%, FN 0.20; RF in Table~\ref{tab:rf}), including the Flan LoRA key-only point in Figure~\ref{fig:coherence_recovery} & Abstract, \S\ref{sec:intro}, \S\ref{sec:results}, Fig.~\ref{fig:coherence_recovery}, \S\ref{sec:discussion}, App.~\ref{app:rf} & Corr. \\
 9 (not 10) of the 16 Llama key matrices estimate every clade & \S\ref{sec:results}, App.~\ref{app:layertrace} & Corr. \\
 PhyloLM tree-likeness on the documented families is the median of 11 sampling seeds (Mistral 0.82, Llama-2 0.66), and the figures show the median seed & \S\ref{sec:results}, App.~\ref{app:organic-additional} & Corr. \\
@@ -833,7 +833,7 @@ OpenHermes-2.5 & \texttt{teknium/OpenHermes-2.5-Mistral-7B} & chat-oasst1-ft & \
 \end{figure}
 
 {\revcolor
-\paragraph{Two families with distillation.}\revtag{S8sV} We add two documented families that include distillation from DeepSeek-R1 (Table~\ref{tab:distill_checkpoints}). In the Llama-3.1-8B family, Tulu-3 is a chain of SFT, DPO, and RL with verifiable rewards, and DeepSeek-R1-Distill-Llama-8B and Hermes-3 were fine-tuned from the base. In the Qwen2.5-7B family, Qwen2.5-Math-7B and Qwen2.5-Coder-7B are continued-pretraining lines with their own instruction-tuned models, DeepSeek-R1-Distill-Qwen-7B was distilled from DeepSeek-R1 into Qwen2.5-Math-7B, and OpenThinker-7B was fine-tuned from Qwen2.5-7B-Instruct on reasoning traces generated by DeepSeek-R1. Parents come from the model cards. We use every shared tensor except the token embeddings and output head, and compute the weight trees at full precision with 300 passes, as for Table~\ref{tab:variants}. Recomputing the Mistral-7B and Llama-2-7B families this way gives the same estimates and tree-likeness scores as above.
+\paragraph{Two families with distillation.}\revtag{S8sV} We add two documented families that include distillation from DeepSeek-R1 (Table~\ref{tab:distill_checkpoints}; Figures~\ref{fig:distill-llama} and~\ref{fig:distill-qwen}). In the Llama-3.1-8B family, Tulu-3 is a chain of SFT, DPO, and RL with verifiable rewards, and DeepSeek-R1-Distill-Llama-8B and Hermes-3 were fine-tuned from the base. In the Qwen2.5-7B family, Qwen2.5-Math-7B and Qwen2.5-Coder-7B are continued-pretraining lines with their own instruction-tuned models, DeepSeek-R1-Distill-Qwen-7B was distilled from DeepSeek-R1 into Qwen2.5-Math-7B, and OpenThinker-7B was fine-tuned from Qwen2.5-7B-Instruct on reasoning traces generated by DeepSeek-R1. Parents come from the model cards. We use every shared tensor except the token embeddings and output head, and compute the weight trees at full precision with 300 passes, as for Table~\ref{tab:variants}. Recomputing the Mistral-7B and Llama-2-7B families this way gives the same estimates and tree-likeness scores as above.
 
 The weights estimate both Tulu clades and the Math and Coder clades, and place both R1 distillations with their documented parents ($A=0.85$ and $0.92$). They miss one clade, \{Qwen2.5-7B-Instruct, OpenThinker-7B\}, and place OpenThinker with the Math and Coder lines. The update from the base to Qwen2.5-7B-Instruct, which defines this clade, is small in weight space (cosine distance $8.5\times10^{-5}$, against $0.28$ and $0.36$ for the Math and Coder lines). OpenThinker's own update leans toward that of DeepSeek-R1-Distill-Qwen-7B, which was trained on outputs of the same teacher (cosine $0.07$ between the two updates, the largest between OpenThinker's update and any other edge in the family; App.~\ref{app:stress}). In all five four-point comparisons of the two models with the base and a model from the Math or Coder line, the distances favor the wrong pairing, most strongly with DeepSeek-R1-Distill-Qwen-7B. PhyloLM estimates every documented clade of both families in all 11 sampling seeds, with lower tree-likeness ($A=0.69$ for both families, ranges $0.63$--$0.74$ and $0.66$--$0.73$). Instruction tuning changes behavior far more than weights, and OpenThinker inherits Qwen2.5-7B-Instruct's behavior (in the reference seed, PhyloLM distance $0.12$ to Instruct and $0.20$ to the base), so here behavior-based estimation recovers what the weights miss.
 \par}
@@ -852,18 +852,35 @@ The weights estimate both Tulu clades and the Math and Coder clades, and place b
 Name & Repository & Name & Repository \\
 \midrule
 Llama-3.1-8B (base) & \texttt{meta-llama/Llama-3.1-8B} & Qwen2.5-7B (base) & \texttt{Qwen/Qwen2.5-7B} \\
-Llama-3.1-8B-Instruct & \texttt{meta-llama/Llama-3.1-8B-Instruct} & Qwen2.5-7B-Instruct & \texttt{Qwen/Qwen2.5-7B-Instruct} \\
-Tulu-3-SFT & \texttt{allenai/Llama-3.1-Tulu-3-8B-SFT} & OpenThinker-7B & \texttt{open-thoughts/OpenThinker-7B} \\
-Tulu-3-DPO & \texttt{allenai/Llama-3.1-Tulu-3-8B-DPO} & Qwen2.5-Math-7B & \texttt{Qwen/Qwen2.5-Math-7B} \\
-Tulu-3 (RL) & \texttt{allenai/Llama-3.1-Tulu-3-8B} & Qwen2.5-Math-7B-Instruct & \texttt{Qwen/Qwen2.5-Math-7B-Instruct} \\
-R1-Distill-Llama-8B & \texttt{deepseek-ai/DeepSeek-R1-Distill-Llama-8B} & R1-Distill-Qwen-7B & \texttt{deepseek-ai/DeepSeek-R1-Distill-Qwen-7B} \\
-Hermes-3 & \texttt{NousResearch/Hermes-3-Llama-3.1-8B} & Qwen2.5-Coder-7B & \texttt{Qwen/Qwen2.5-Coder-7B} \\
- & & Qwen2.5-Coder-7B-Instruct & \texttt{Qwen/Qwen2.5-Coder-7B-Instruct} \\
+Llama-3.1-Instruct & \texttt{meta-llama/Llama-3.1-8B-Instruct} & Qwen2.5-Instruct & \texttt{Qwen/Qwen2.5-7B-Instruct} \\
+Tulu-3-SFT & \texttt{allenai/Llama-3.1-Tulu-3-8B-SFT} & OpenThinker & \texttt{open-thoughts/OpenThinker-7B} \\
+Tulu-3-DPO & \texttt{allenai/Llama-3.1-Tulu-3-8B-DPO} & Qwen2.5-Math & \texttt{Qwen/Qwen2.5-Math-7B} \\
+Tulu-3 (RL) & \texttt{allenai/Llama-3.1-Tulu-3-8B} & Math-Instruct & \texttt{Qwen/Qwen2.5-Math-7B-Instruct} \\
+R1-Distill-Llama & \texttt{deepseek-ai/DeepSeek-R1-Distill-Llama-8B} & R1-Distill-Qwen & \texttt{deepseek-ai/DeepSeek-R1-Distill-Qwen-7B} \\
+Hermes-3 & \texttt{NousResearch/Hermes-3-Llama-3.1-8B} & Qwen2.5-Coder & \texttt{Qwen/Qwen2.5-Coder-7B} \\
+ & & Coder-Instruct & \texttt{Qwen/Qwen2.5-Coder-7B-Instruct} \\
 \bottomrule
 \end{tabular}
 }
 }
 \end{table}
+
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/hf_llama31_hero_3panel_v7.pdf}
+  \end{center}
+  \caption{\rev{\textbf{Documented Llama-3.1-8B family:} true tree (left), our weight-based estimate (middle), and PhyloLM's estimate (right), with panel headers and the PhyloLM seed choice as in Fig.~\ref{fig:real-trees}. Both estimate the two documented Tulu-3 clades.}\revtag{S8sV}}
+  \label{fig:distill-llama}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=\linewidth]{\figpath/hf_qwen25_hero_3panel_v7.pdf}
+  \end{center}
+  \caption{\rev{\textbf{Documented Qwen2.5-7B family:} panels as in Fig.~\ref{fig:distill-llama}. The weights estimate the Math and Coder clades but place OpenThinker, which was trained on DeepSeek-R1's outputs, with the Math and Coder lines instead of with Qwen2.5-Instruct. PhyloLM estimates all three documented clades.}\revtag{S8sV}}
+  \label{fig:distill-qwen}
+\end{figure}
 
 \section{Behavioral Meta-Analysis Diagnostics}
 \label{app:regression}
@@ -1074,6 +1091,8 @@ In each tree, we then remove the fewest leaves needed so that no two remaining l
 \paragraph{Edge updates.}\revtag{S8sV Q3} For one weight matrix, let $u_i$ be model $i$'s weights scaled to unit norm, so the cosine distance is $D_{ij}=\lVert u_i-u_j\rVert^2/2$, and call $u_b-u_a$ the update on edge $a\to b$. For two leaves, the updates on their shared path cancel, so $u_i-u_j$ is the sum of the updates on the path between them. If updates on different edges are orthogonal, $D_{ij}$ is the sum of $\lVert u_b-u_a\rVert^2/2$ over that path, so the distances are additive on the tree, the property NJ needs (\S\ref{sec:framework:theory}). This holds for each matrix separately, which is one reason a single matrix can estimate the tree, although it does not explain why Flan's decoder matrices do less well than its encoder matrices (Figure~\ref{fig:layertrace_grid}). To check orthogonality, we measure the cosine of the angle between the updates on two edges $a\to b$ and $c\to d$, where a value near zero means the updates are orthogonal. This cosine needs no weights, because it equals $(D_{bc}+D_{ad}-D_{bd}-D_{ac})/(2\sqrt{D_{ab}D_{cd}})$ and so follows from the cosine distances among all trained models. On the main trees, with distances averaged over layers, the median cosine is $-0.03$ for consecutive edges and $0.01$ for sibling edges and for other pairs, so the updates are nearly orthogonal. In the harder trees, the median is $0.01$ for edges trained on different datasets but $0.26$ for Flan and $0.47$ for Llama for edges trained on the same dataset, in every layer type (Table~\ref{tab:edgecos}). Leaves in different lineages that were fine-tuned on the same dataset are therefore closer than their positions in the tree imply, and this is where estimation fails.
 
 \paragraph{Tree-likeness and margin.} Each point in Figure~\ref{fig:coherence_recovery} is one estimator averaged over the 46 trees. We add 15 points from the harder trees, the weights for each model and task pool and PhyloLM for each Llama task pool, each averaged over its 20 trees. Refitting the fractional-logit models with each point weighted by its number of trees, and resampling the 46 and 20 trees separately in the bootstrap, gives an odds ratio of 4.8 per $0.10$ increase in $A$ (95\% CI 4.2--5.8, compared with 4.5) and 13.7 per tenfold increase in $\widetilde m$ (8.3--58.0, compared with 15.2). The 228 weight-based points of Figure~\ref{fig:coherence_recovery} span only $A=0.82$--$0.92$, and a fit to them alone gives 311 (69--1032) per $0.10$. Adding the ten harder-tree weight points, which span $A=0.64$--$0.83$, gives 5.7 (4.5--7.9).
+
+\paragraph{Training length.}\revtag{S8sV Q2; tWEn W2} We also retrained the 20 topologies under Llama full fine-tuning with the main trees' datasets and learning rate, changing only the number of steps. In one version every fine-tuning ran for 500 steps, and in the other each fine-tuning was assigned 500, 1,000, 2,000, or 4,000 steps at random, so the edges of one tree differ in length by up to a factor of eight. Table~\ref{tab:length} compares both with the main trees' 2,000 steps on the same topologies. The weights estimate every clade of every tree in both versions, and $A$ and $\widetilde m$ stay close to their 2,000-step values. MoTHer's spanning tree does better with short, even training and worse with mixed lengths.
 }
 
 
@@ -1120,6 +1139,25 @@ Attention key & 0.002 & 0.239 & 0.010 & 0.451 \\
 Other attention & 0.005 & 0.362 & 0.008 & 0.474 \\
 MLP & 0.002 & 0.390 & 0.007 & 0.492 \\
 Embedding and output & 0.065 & 0.701 & 0.052 & 0.605 \\
+\bottomrule
+\end{tabular}\par
+}
+\end{table}
+
+\begin{table}[h]
+{\revcolor
+\caption{\rev{Clade estimation / full estimation (\%) on the 20 harder topologies under Llama full fine-tuning with the main trees' datasets, by training length. $A$ and $\widetilde m$ are means (SE) for the weights.}\revtag{S8sV Q2; tWEn W2}}
+\label{tab:length}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Steps & Weights & \shortstack{NJ on\\MoTHer dist.} & \shortstack{MoTHer\\tree} & PhyloLM & $A$ & $\widetilde m$ \\
+\midrule
+2,000 (main trees) & 100 / 100 & 96.7 / 90 & 68.8 / 30 & 43.3 / 20 & 0.85 (0.01) & 1.75 (0.16) \\
+500 & 100 / 100 & 100 / 100 & 90.4 / 75 & 30.0 / 10 & 0.86 (0.01) & 2.17 (0.20) \\
+500--4,000 at random & 100 / 100 & 90.4 / 75 & 57.1 / 20 & 34.6 / 15 & 0.83 (0.01) & 1.63 (0.17) \\
 \bottomrule
 \end{tabular}\par
 }
